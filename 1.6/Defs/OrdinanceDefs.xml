@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+    <!--
+        Stats are inherited from a source projectile during ResolveReferences. The
+        projectile is auto-resolved in this priority order:
+            1. Explicit <projectileDef> on this OrdinanceDef.
+            2. thingDef.projectileWhenLoaded (every vanilla mortar shell sets this,
+               so for shell-based ordnance neither projectileDef nor any of the stat
+               fields below are needed in XML).
+        Anything set explicitly here overrides the inherited value.
+
+        Label and description aren't set — the gizmo and float menu render the cargo
+        item's label (thingDef.LabelCap) directly.
+
+        Adding a new ordinance: minimum is defName + thingDef. The strike pattern
+        (single drop vs. bombing run) is decided by which gizmo the player clicks, not
+        by the ordinance — any ordinance works for both Precision Strike and Bombing Run.
+    -->
+
+    <AirstrikeMod.OrdinanceDef>
+        <defName>Ordinance_HighExplosive</defName>
+        <thingDef>Shell_HighExplosive</thingDef>
+    </AirstrikeMod.OrdinanceDef>
+
+    <AirstrikeMod.OrdinanceDef>
+        <defName>Ordinance_Incendiary</defName>
+        <thingDef>Shell_Incendiary</thingDef>
+        <!-- Override vanilla's 0.25 fuel-splatter chance — we want noticeably more burn. -->
+        <preExplosionSpawnChance>0.5</preExplosionSpawnChance>
+    </AirstrikeMod.OrdinanceDef>
+
+    <AirstrikeMod.OrdinanceDef>
+        <defName>Ordinance_EMP</defName>
+        <thingDef>Shell_EMP</thingDef>
+    </AirstrikeMod.OrdinanceDef>
+
+    <AirstrikeMod.OrdinanceDef>
+        <defName>Ordinance_Smoke</defName>
+        <thingDef>Shell_Smoke</thingDef>
+    </AirstrikeMod.OrdinanceDef>
+
+    <AirstrikeMod.OrdinanceDef>
+        <defName>Ordinance_Firefoam</defName>
+        <thingDef>Shell_Firefoam</thingDef>
+    </AirstrikeMod.OrdinanceDef>
+
+    <AirstrikeMod.OrdinanceDef>
+        <defName>Ordinance_AntigrainWarhead</defName>
+        <thingDef>Shell_AntigrainWarhead</thingDef>
+    </AirstrikeMod.OrdinanceDef>
+
+</Defs>

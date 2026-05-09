@@ -18,4 +18,24 @@
         </skyfaller>
     </ThingDef>
 
+    <!--
+        Falling-bomb projectile skyfaller. Spawned from VehicleSkyfaller_Bombing.Detonate
+        when the buzz crosses a target cell — animates the ordnance falling from the
+        aircraft to the impact point, then runs the airstrike's explosion (with our
+        OrdinanceDef overrides intact). Mirrors VF's vanilla ProjectileSkyfaller def
+        but with our subclass as thingClass.
+    -->
+    <ThingDef>
+        <defName>RocketsAirstrike_FallingBomb</defName>
+        <label>falling bomb</label>
+        <thingClass>AirstrikeMod.ProjectileSkyfaller_AirstrikeBomb</thingClass>
+        <category>Projectile</category>
+        <useHitPoints>false</useHitPoints>
+        <drawOffscreen>true</drawOffscreen>
+        <tickerType>Normal</tickerType>
+        <altitudeLayer>Skyfaller</altitudeLayer>
+        <drawerType>RealtimeOnly</drawerType>
+        <neverMultiSelect>true</neverMultiSelect>
+    </ThingDef>
+
 </Defs>

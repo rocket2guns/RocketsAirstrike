@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 using Verse;
@@ -24,25 +24,16 @@ namespace AirstrikeMod
             var listing = new Listing_Standard();
             listing.Begin(inRect);
 
-            listing.Label("Airstrike fuel cost (chemfuel)");
-            Settings.fuelCost = listing.Slider(Settings.fuelCost, 0f, 500f);
-            listing.Label($"  current: {Settings.fuelCost:0}");
+            listing.Label("Airstrike fuel cost (% of one world-tile flight)");
+            Settings.fuelScale = listing.Slider(Settings.fuelScale, 0f, 1f);
+            listing.Label($"  current: {Settings.fuelScale * 100f:0}%");
 
             listing.GapLine();
 
             listing.CheckboxLabeled(
                 "Fast takeoff/landing animation",
                 ref Settings.fastTakeoffLanding,
-                "Doubles the speed of takeoff and landing animations during airstrike runs. " +
-                "Borrowed wholesale from the Local Flight mod.");
-
-            listing.GapLine();
-
-            listing.Label($"Bomb explosion radius: {Settings.bombRadius:0.0}");
-            Settings.bombRadius = listing.Slider(Settings.bombRadius, 1f, 12f);
-
-            listing.Label($"Bomb damage amount: {Settings.bombDamage:0}");
-            Settings.bombDamage = listing.Slider(Settings.bombDamage, 10f, 500f);
+                "Doubles the speed of takeoff and landing animations during airstrike runs.");
 
             listing.End();
             base.DoSettingsWindowContents(inRect);
@@ -51,18 +42,14 @@ namespace AirstrikeMod
 
     public class AirstrikeModSettings : ModSettings
     {
-        public float fuelCost = 50f;
+        public float fuelScale = 1f;
         public bool fastTakeoffLanding = true;
-        public float bombRadius = 4.5f;
-        public float bombDamage = 120f;
 
         public override void ExposeData()
         {
             base.ExposeData();
-            Scribe_Values.Look(ref fuelCost, nameof(fuelCost), 50f);
+            Scribe_Values.Look(ref fuelScale, nameof(fuelScale), 1f);
             Scribe_Values.Look(ref fastTakeoffLanding, nameof(fastTakeoffLanding), true);
-            Scribe_Values.Look(ref bombRadius, nameof(bombRadius), 4.5f);
-            Scribe_Values.Look(ref bombDamage, nameof(bombDamage), 120f);
         }
     }
 }

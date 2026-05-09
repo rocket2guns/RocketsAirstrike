@@ -14,10 +14,13 @@
             <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Mosquito"]/comps</xpath>
             <value>
                 <li Class="AirstrikeMod.CompProperties_Airstrike">
-                    <fuelCost>50</fuelCost>
-                    <bombRadius>4.5</bombRadius>
-                    <bombDamage>120</bombDamage>
                     <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+                    <!-- Helicopter: precision-only. Bombing run is for fixed-wing aircraft. -->
+                    <allowedPatterns>
+                        <li>Single</li>
+                    </allowedPatterns>
+                    <!-- Less stable platform → looser groupings. -->
+                    <scatter>3</scatter>
                 </li>
             </value>
         </match>
@@ -32,10 +35,9 @@
             <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Warbird"]/comps</xpath>
             <value>
                 <li Class="AirstrikeMod.CompProperties_Airstrike">
-                    <fuelCost>50</fuelCost>
-                    <bombRadius>4.5</bombRadius>
-                    <bombDamage>120</bombDamage>
                     <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+                    <!-- Stable bombing platform → tighter groupings. -->
+                    <scatter>2</scatter>
                 </li>
             </value>
         </match>

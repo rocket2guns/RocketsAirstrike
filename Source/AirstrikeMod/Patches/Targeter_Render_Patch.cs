@@ -1,16 +1,11 @@
 using HarmonyLib;
 using RimWorld;
-using UnityEngine;
 using Verse;
 
 namespace AirstrikeMod.Patches
 {
     /// <summary>
-    /// Draws the explosion radius ring at the cursor while the airstrike's stage-A
-    /// bomb-cell targeter is active. RimWorld's <see cref="Targeter"/> doesn't expose
-    /// a per-frame draw hook for callers using <c>BeginTargeting(TargetingParameters,...)</c>,
-    /// so we postfix <c>TargeterUpdate</c> (called every frame in world space) and gate
-    /// on the static flag set by <see cref="CompAirstrike.StartBombTargeting"/>.
+    /// Draws the explosion radius ring at the cursor during stage-A bomb-cell targeting.
     /// </summary>
     [HarmonyPatch(typeof(Targeter), nameof(Targeter.TargeterUpdate))]
     public static class Targeter_TargeterUpdate_Patch
@@ -19,13 +14,23 @@ namespace AirstrikeMod.Patches
         {
             if (!CompAirstrike.BombTargetingActive) return;
 
-            Map map = CompAirstrike.BombTargetingMap;
+            var map = CompAirstrike.BombTargetingMap;
             if (map == null || map != Find.CurrentMap) return;
-
-            IntVec3 cell = UI.MouseCell();
+            var cell = UI.MouseCell();
             if (!cell.InBounds(map)) return;
-
             GenDraw.DrawRadiusRing(cell, CompAirstrike.BombTargetingRadius);
         }
+    }
+
+    [HarmonyPatch(typeof(Targeter), nameof(Targeter.TargeterOnGUI))]
+    public static class Targeter_TargeterOnGUI_Patch
+    {
+        public static void Postfix() => CursorLabel.Draw();
+    }
+
+    [HarmonyPatch(typeof(Vehicles.LandingTargeter), nameof(Vehicles.LandingTargeter.TargeterOnGUI))]
+    public static class LandingTargeter_TargeterOnGUI_Patch
+    {
+        public static void Postfix() => CursorLabel.Draw();
     }
 }

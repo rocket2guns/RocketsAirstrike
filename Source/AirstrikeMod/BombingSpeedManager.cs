@@ -1,18 +1,12 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Vehicles;
 
 namespace AirstrikeMod
 {
-    /// <summary>
-    /// Tracks which vehicles have a "fast takeoff/landing" flag set, used by
-    /// <see cref="Patches.LaunchProtocol_TickPatches"/> to advance an extra tick per real
-    /// tick. Lifted from the Local Flight mod.
-    ///
-    /// The HashSet is process-global and not save-persisted: it's only valid for the
-    /// duration of a single airstrike run. <see cref="VehicleSkyfaller_Bombing.ExitMap"/>
-    /// removes the flag on the return leg so landing plays at normal speed (unless the
-    /// global setting opts back in).
-    /// </summary>
+    // Process-global, not save-persisted. Vehicles get marked at airstrike launch and
+    // unmarked when their landing skyfaller's FinalizeLanding fires (via Harmony postfix
+    // in LaunchProtocol_TickPatches). Without that postfix, a vehicle that did one strike
+    // would have fast takeoff/landing on every subsequent vanilla launch too.
     public static class BombingSpeedManager
     {
         private static readonly HashSet<VehiclePawn> FastVehicles = new HashSet<VehiclePawn>();

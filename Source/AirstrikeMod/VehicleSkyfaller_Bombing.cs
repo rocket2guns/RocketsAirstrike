@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using RimWorld;
 using RimWorld.Planet;
@@ -10,40 +11,33 @@ using Verse;
 
 namespace AirstrikeMod
 {
-    /// <summary>
-    /// In-map bombing skyfaller. Animates the vehicle from <see cref="startCell"/> to
-    /// <see cref="endCell"/> over <see cref="totalTicks"/>, drops a bomb when the moving
-    /// position passes <see cref="bombCell"/>, then spawns a vanilla
-    /// <see cref="VehicleSkyfaller_Arriving"/> at <see cref="returnCell"/> for landing.
-    ///
-    /// Rendering: we call <c>vehicle.DrawAt</c> directly instead of going through
-    /// <c>launchProtocol.Draw</c>. The protocol path applies takeoff/landing animation
-    /// curves on top of our position, which is fine for vehicles whose end-of-takeoff
-    /// curves are small (Mosquito's PropellerTakeoff: x+1, z+15) but disastrous for
-    /// vehicles whose curves are large (Warbird's DirectionalTakeoff: x+250 — plane
-    /// renders 250 cells east of where we put it, off the map).
-    ///
-    /// We still call <c>base.Tick</c> every tick so <c>launchProtocol.Tick</c> fires —
-    /// <c>PropellerTakeoff.TickTakeoff</c> calls <c>vehicle.DrawTracker.overlayRenderer
-    /// .SetAcceleration(...)</c> per tick, and that one call both sets and advances the
-    /// rotor's rotation. Skipping it freezes the rotor.
-    /// </summary>
+    // In-map bombing skyfaller. Lerps the vehicle from startCell to endCell over
+    // totalTicks, drops ordnance at each bombCells entry as the moving position crosses
+    // it, then spawns a vanilla VehicleSkyfaller_Arriving for landing.
+    //
+    // Renders via vehicle.DrawAt directly rather than launchProtocol.Draw. The protocol
+    // path applies takeoff/landing curves on top of our position; small for Mosquito's
+    // PropellerTakeoff, catastrophic for Warbird's DirectionalTakeoff (x+250 offsets the
+    // plane off the map). We still call base.Tick every tick because PropellerTakeoff's
+    // TickTakeoff calls overlayRenderer.SetAcceleration, which is what advances the
+    // rotor's rotation per tick. Skipping it freezes the rotor.
     public class VehicleSkyfaller_Bombing : VehicleSkyfaller
     {
         public IntVec3 startCell;
         public IntVec3 endCell;
-        public IntVec3 bombCell;
-        public float bombRadius = 4.5f;
-        public float bombDamage = 120f;
+        public List<IntVec3> bombCells;
+        public OrdinancePattern pattern = OrdinancePattern.Single;
+        public OrdinanceDef ordinance;
 
         public IntVec3 returnCell;
         public Rot4 returnRot;
 
         public int totalTicks = 240;
         public float visualAltitude = 6f;
+        public float scatter = 0f;
 
         protected int ticksRunning;
-        protected bool bombDropped;
+        protected List<bool> bombsDropped;
 
         [Obsolete("Implemented for Xml Deserialization only. Use VehicleSkyfallerMaker instead.")]
         [UsedImplicitly]
@@ -53,26 +47,24 @@ namespace AirstrikeMod
 
         protected float Progress => Mathf.Clamp01((float)ticksRunning / Math.Max(1, totalTicks));
 
-        // Position directly under the vehicle (shadow target). Lerped along the buzz line
-        // at the actual map ground altitude — no visual-altitude offset.
+        /// <summary>
+        /// Where the shadow lands (lerped, ground altitude, no z offset).
+        /// </summary>
         private Vector3 GroundPos
         {
             get
             {
-                Vector3 a = startCell.ToVector3Shifted();
-                Vector3 b = endCell.ToVector3Shifted();
+                var a = startCell.ToVector3Shifted();
+                var b = endCell.ToVector3Shifted();
                 return Vector3.Lerp(a, b, Progress);
             }
         }
 
-        // Where the vehicle sprite is drawn — GroundPos plus a +z offset for the iso
-        // "altitude" illusion (in RimWorld's iso projection, +z shifts the sprite up the
-        // screen). The shadow stays at GroundPos so the vehicle appears to hover.
         public override Vector3 DrawPos
         {
             get
             {
-                Vector3 pos = GroundPos;
+                var pos = GroundPos;
                 pos.y = AltitudeLayer.Skyfaller.AltitudeFor();
                 pos.z += visualAltitude;
                 return pos;
@@ -81,13 +73,8 @@ namespace AirstrikeMod
 
         protected override void DrawAt(Vector3 drawLoc, bool flip = false)
         {
-            Vector3 pos = DrawPos;
-            // Always render East since the buzz line is always west→east. Some launch
-            // protocols (notably DirectionalTakeoff) leave forcedRotation pointing at
-            // whichever runway direction was used for takeoff — using that here gives a
-            // backwards-facing plane half the time.
-            vehicle.DrawAt(in pos, Rot8.East, 0f);
-
+            var pos = DrawPos;
+            vehicle.DrawAt(in pos, Rotation, 0f);
             DrawShadow();
         }
 
@@ -99,28 +86,30 @@ namespace AirstrikeMod
             }
             if (cachedShadowMaterial == null) return;
 
-            // Shadow rendered at the ground position (no altitude offset). Pass a
-            // ticksToLand value proportional to visualAltitude so the shadow scales
-            // appropriately — formula in DrawDropSpotShadow is scale = 1 + ticks/100.
-            int shadowTicks = Mathf.RoundToInt(visualAltitude * 10f);
+            // ticksToLand drives shadow scale (1 + ticks/100) inside DrawDropSpotShadow.
+            var shadowTicks = Mathf.RoundToInt(visualAltitude * 10f);
             DrawDropSpotShadow(GroundPos, Rotation, cachedShadowMaterial, def.skyfaller.shadowSize, shadowTicks);
         }
 
         protected override void Tick()
         {
-            // PropellerTakeoff.TickTakeoff calls overlayRenderer.SetAcceleration each
-            // tick, which both sets speed AND advances the rotor's rotation. Skipping
-            // base.Tick freezes the rotor.
             base.Tick();
 
             ticksRunning++;
 
-            if (!bombDropped && Spawned && Map != null)
+            if (Spawned && Map != null && bombCells != null && bombCells.Count > 0)
             {
-                if (PastBombCell(GroundPos.ToIntVec3()))
+                EnsureDropTracker();
+                var currentCell = GroundPos.ToIntVec3();
+                var n = bombCells.Count;
+                for (var i = 0; i < n; i++)
                 {
-                    DropBomb();
-                    bombDropped = true;
+                    if (bombsDropped[i]) continue;
+                    if (PastBombCell(currentCell, bombCells[i]))
+                    {
+                        Detonate(bombCells[i]);
+                        bombsDropped[i] = true;
+                    }
                 }
             }
 
@@ -130,45 +119,106 @@ namespace AirstrikeMod
             }
         }
 
-        // Side-of-line cross product. Trips the moment the moving position crosses the
-        // perpendicular through bombCell along the start→end vector.
-        private bool PastBombCell(IntVec3 currentCell)
+        private void EnsureDropTracker()
         {
-            int dx = endCell.x - startCell.x;
-            int dz = endCell.z - startCell.z;
+            if (bombsDropped == null || bombsDropped.Count != bombCells.Count)
+            {
+                bombsDropped = new List<bool>(bombCells.Count);
+                for (var i = 0; i < bombCells.Count; i++)
+                    bombsDropped.Add(false);
+            }
+        }
+
+        /// <summary>
+        /// Side-of-line cross product. Resilient to fast skyfallers skipping past in a single tick (which a simple distance check would miss).
+        /// </summary>
+        private bool PastBombCell(IntVec3 currentCell, IntVec3 cell)
+        {
+            var dx = endCell.x - startCell.x;
+            var dz = endCell.z - startCell.z;
             if (dx == 0 && dz == 0) return true;
 
-            long bombDot = (long)(bombCell.x - startCell.x) * dx + (long)(bombCell.z - startCell.z) * dz;
-            long currentDot = (long)(currentCell.x - startCell.x) * dx + (long)(currentCell.z - startCell.z) * dz;
+            var bombDot = (long)(cell.x - startCell.x) * dx + (long)(cell.z - startCell.z) * dz;
+            var currentDot = (long)(currentCell.x - startCell.x) * dx + (long)(currentCell.z - startCell.z) * dz;
             return currentDot >= bombDot;
         }
 
-        protected virtual void DropBomb()
+        private static ThingDef _fallingBombDef;
+        private static ThingDef FallingBombDef =>
+            _fallingBombDef ??= DefDatabase<ThingDef>.GetNamedSilentFail("RocketsAirstrike_FallingBomb");
+
+        private void Detonate(IntVec3 cell)
         {
+            if (ordinance == null) return;
+            var impactCell = ApplyScatter(cell);
+
+            var def = FallingBombDef;
+            var projectileDef = ordinance.projectileDef;
+            if (def == null || projectileDef == null)
+            {
+                DetonateInline(impactCell);
+                return;
+            }
+
+            var bomb = (ProjectileSkyfaller_AirstrikeBomb)ThingMaker.MakeThing(def);
+            bomb.caster = vehicle;
+            bomb.ordinance = ordinance;
+            bomb.projectileDef = projectileDef;
+            bomb.origin = DrawPos;
+            bomb.destination = impactCell.ToVector3Shifted();
+            GenSpawn.Spawn(bomb, impactCell, Map);
+        }
+
+        /// <summary>
+        /// Defensive fallback when the falling-bomb visual can't be set up. Shouldn't happen in normal play.
+        /// </summary>
+        private void DetonateInline(IntVec3 cell)
+        {
+            var damDef = ordinance.damageDef ?? DamageDefOf.Bomb;
             GenExplosion.DoExplosion(
-                center: bombCell,
+                center: cell,
                 map: Map,
-                radius: bombRadius,
-                damType: DamageDefOf.Bomb,
+                radius: ordinance.radius,
+                damType: damDef,
                 instigator: vehicle,
-                damAmount: Mathf.RoundToInt(bombDamage),
+                damAmount: Mathf.RoundToInt(ordinance.damage),
                 armorPenetration: -1f,
                 explosionSound: null,
                 weapon: null,
                 projectile: null,
-                intendedTarget: null);
+                intendedTarget: null,
+                postExplosionSpawnThingDef: ordinance.postExplosionSpawnThingDef,
+                postExplosionSpawnChance: ordinance.postExplosionSpawnChance,
+                postExplosionSpawnThingCount: ordinance.postExplosionSpawnThingCount,
+                preExplosionSpawnThingDef: ordinance.preExplosionSpawnThingDef,
+                preExplosionSpawnChance: ordinance.preExplosionSpawnChance,
+                preExplosionSpawnThingCount: ordinance.preExplosionSpawnThingCount);
+        }
+
+        /// <summary>
+        /// Linear distance distribution biases toward the target.
+        /// </summary>
+        private IntVec3 ApplyScatter(IntVec3 cell)
+        {
+            if (scatter <= 0f) return cell;
+            var angle = Rand.Range(0f, 360f) * Mathf.Deg2Rad;
+            var distance = Rand.Range(0f, scatter);
+            var dx = Mathf.RoundToInt(Mathf.Cos(angle) * distance);
+            var dz = Mathf.RoundToInt(Mathf.Sin(angle) * distance);
+            var offset = new IntVec3(cell.x + dx, cell.y, cell.z + dz);
+            return offset.InBounds(Map) ? offset : cell;
         }
 
         protected virtual void ExitMap()
         {
-            Map map = Map;
+            var map = Map;
             if (map == null)
             {
                 Destroy();
                 return;
             }
 
-            ThingDef arrivingDef = vehicle.CompVehicleLauncher.Props.skyfallerIncoming;
+            var arrivingDef = vehicle.CompVehicleLauncher.Props.skyfallerIncoming;
             if (arrivingDef == null)
             {
                 Log.Warning("[Rockets.Airstrike] Vehicle has no skyfallerIncoming def; landing vehicle directly.");
@@ -177,10 +227,10 @@ namespace AirstrikeMod
                 return;
             }
 
-            VehicleSkyfaller_Arriving arriving = (VehicleSkyfaller_Arriving)
+            var arriving = (VehicleSkyfaller_Arriving)
                 VehicleSkyfallerMaker.MakeSkyfaller(arrivingDef, vehicle);
             arriving.rotatePostLanding = returnRot;
-            Rot4 landingRot = vehicle.CompVehicleLauncher.launchProtocol.LandingProperties?.forcedRotation
+            var landingRot = vehicle.CompVehicleLauncher.launchProtocol.LandingProperties?.forcedRotation
                               ?? returnRot;
             GenSpawn.Spawn(arriving, returnCell, map, landingRot);
 
@@ -192,20 +242,19 @@ namespace AirstrikeMod
             base.ExposeData();
             Scribe_Values.Look(ref startCell, nameof(startCell));
             Scribe_Values.Look(ref endCell, nameof(endCell));
-            Scribe_Values.Look(ref bombCell, nameof(bombCell));
-            Scribe_Values.Look(ref bombRadius, nameof(bombRadius));
-            Scribe_Values.Look(ref bombDamage, nameof(bombDamage));
+            Scribe_Collections.Look(ref bombCells, nameof(bombCells), LookMode.Value);
+            Scribe_Values.Look(ref pattern, nameof(pattern), OrdinancePattern.Single);
+            Scribe_Defs.Look(ref ordinance, nameof(ordinance));
             Scribe_Values.Look(ref returnCell, nameof(returnCell));
             Scribe_Values.Look(ref returnRot, nameof(returnRot));
             Scribe_Values.Look(ref totalTicks, nameof(totalTicks), 240);
+            Scribe_Values.Look(ref scatter, nameof(scatter));
             Scribe_Values.Look(ref ticksRunning, nameof(ticksRunning));
-            Scribe_Values.Look(ref bombDropped, nameof(bombDropped));
+            Scribe_Collections.Look(ref bombsDropped, nameof(bombsDropped), LookMode.Value);
         }
     }
 
-    /// <summary>
-    /// Fallback used when we somehow lose the origin map reference at world-flight arrival.
-    /// </summary>
+    // Caravan fallback if the destination map disappears between launch and arrival.
     internal class ArrivalAction_LandInMap_NoOp : VehicleArrivalAction
     {
         public override bool DestroyOnArrival => true;
