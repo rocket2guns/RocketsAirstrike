@@ -1,0 +1,24 @@
+# Build output
+Source/**/bin/
+Source/**/obj/
+Source/**/obj/*
+
+# Built assemblies (these are copied into 1.6/Assemblies via the csproj OutputPath)
+# Comment these out if you want to track the built DLL.
+Source/Assemblies/
+
+# IDE / Rider / Visual Studio
+*.user
+*.suo
+*.DotSettings.user
+.idea/
+.vs/
+
+# NuGet
+*.nupkg
+packages/
+
+# Local notes / agent context
+CLAUDE.md
+**/CLAUDE.md
+.claude/

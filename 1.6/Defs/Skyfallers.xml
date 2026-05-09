@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+    <!--
+        Bombing-pass skyfaller. Graphicless (draws the contained vehicle).
+
+        Animation is fully owned by AirstrikeMod.VehicleSkyfaller_Bombing — it lerps
+        startCell→endCell over its own ticksRunning counter and ignores the launch
+        protocol. So we deliberately don't set movementType/speed/ticksToImpactRange
+        here; VF's VehicleSkyfaller_FlyOver pipeline (which would have read those) is
+        broken and we don't go through it.
+    -->
+    <ThingDef ParentName="VehicleSkyfallerBase">
+        <defName>RocketsAirstrike_BombingPass</defName>
+        <thingClass>AirstrikeMod.VehicleSkyfaller_Bombing</thingClass>
+        <skyfaller>
+            <shadowSize>(3, 3)</shadowSize>
+        </skyfaller>
+    </ThingDef>
+
+</Defs>

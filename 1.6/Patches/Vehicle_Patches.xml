@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adds CompAirstrike to specific VehicleDefs. Each Operation block is wrapped in a
+    PatchOperationFindMod so the patch silently no-ops if the source mod isn't loaded.
+-->
+<Patch>
+
+    <!-- Vanilla Vehicles Expanded — Mosquito (PropellerTakeoff, helicopter) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Mosquito"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_Airstrike">
+                    <fuelCost>50</fuelCost>
+                    <bombRadius>4.5</bombRadius>
+                    <bombDamage>120</bombDamage>
+                    <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+    <!-- Vanilla Vehicles Expanded — Warbird (DirectionalTakeoff, plane) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Warbird"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_Airstrike">
+                    <fuelCost>50</fuelCost>
+                    <bombRadius>4.5</bombRadius>
+                    <bombDamage>120</bombDamage>
+                    <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+</Patch>
