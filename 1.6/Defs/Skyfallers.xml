@@ -13,9 +13,11 @@
     <ThingDef ParentName="VehicleSkyfallerBase">
         <defName>RocketsAirstrike_BombingPass</defName>
         <thingClass>AirstrikeMod.VehicleSkyfaller_Bombing</thingClass>
-        <skyfaller>
-            <shadowSize>(3, 3)</shadowSize>
-        </skyfaller>
+        <!--
+            shadowSize intentionally not set here — VehicleSkyfaller_Bombing.DrawShadow
+            pulls vehicle.VehicleGraphic.data.drawSize at runtime so each vehicle gets a
+            silhouette-sized shadow.
+        -->
     </ThingDef>
 
     <!--

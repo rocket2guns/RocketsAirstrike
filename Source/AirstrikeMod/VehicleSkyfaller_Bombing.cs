@@ -14,13 +14,6 @@ namespace AirstrikeMod
     // In-map bombing skyfaller. Lerps the vehicle from startCell to endCell over
     // totalTicks, drops ordnance at each bombCells entry as the moving position crosses
     // it, then spawns a vanilla VehicleSkyfaller_Arriving for landing.
-    //
-    // Renders via vehicle.DrawAt directly rather than launchProtocol.Draw. The protocol
-    // path applies takeoff/landing curves on top of our position; small for Mosquito's
-    // PropellerTakeoff, catastrophic for Warbird's DirectionalTakeoff (x+250 offsets the
-    // plane off the map). We still call base.Tick every tick because PropellerTakeoff's
-    // TickTakeoff calls overlayRenderer.SetAcceleration, which is what advances the
-    // rotor's rotation per tick. Skipping it freezes the rotor.
     public class VehicleSkyfaller_Bombing : VehicleSkyfaller
     {
         public IntVec3 startCell;
@@ -86,18 +79,26 @@ namespace AirstrikeMod
             }
             if (cachedShadowMaterial == null) return;
 
+            // Pulled from the vehicle's own draw size (matches VF's DynamicShadowData.CreateFrom),
+            // so each vehicle gets a silhouette-sized shadow without per-def XML.
+            var shadowSize = vehicle.VehicleGraphic?.data?.drawSize ?? def.skyfaller.shadowSize;
             // ticksToLand drives shadow scale (1 + ticks/100) inside DrawDropSpotShadow.
             var shadowTicks = Mathf.RoundToInt(visualAltitude * 10f);
-            DrawDropSpotShadow(GroundPos, Rotation, cachedShadowMaterial, def.skyfaller.shadowSize, shadowTicks);
+            DrawDropSpotShadow(GroundPos, Rotation, cachedShadowMaterial, shadowSize, shadowTicks);
+        }
+
+        public override void SpawnSetup(Map map, bool respawningAfterLoad)
+        {
+            base.SpawnSetup(map, respawningAfterLoad);
+            if (!respawningAfterLoad) 
+                vehicle.EventRegistry[VehicleEventDefOf.AerialVehicleLanding].ExecuteEvents();
         }
 
         protected override void Tick()
         {
             base.Tick();
-
             ticksRunning++;
-
-            if (Spawned && Map != null && bombCells != null && bombCells.Count > 0)
+            if (Spawned && Map != null && bombCells is { Count: > 0 })
             {
                 EnsureDropTracker();
                 var currentCell = GroundPos.ToIntVec3();
@@ -112,11 +113,8 @@ namespace AirstrikeMod
                     }
                 }
             }
-
-            if (ticksRunning >= totalTicks)
-            {
+            if (ticksRunning >= totalTicks) 
                 ExitMap();
-            }
         }
 
         private void EnsureDropTracker()
@@ -226,15 +224,15 @@ namespace AirstrikeMod
                 Destroy();
                 return;
             }
-
             var arriving = (VehicleSkyfaller_Arriving)
                 VehicleSkyfallerMaker.MakeSkyfaller(arrivingDef, vehicle);
             arriving.rotatePostLanding = returnRot;
             var landingRot = vehicle.CompVehicleLauncher.launchProtocol.LandingProperties?.forcedRotation
                               ?? returnRot;
             GenSpawn.Spawn(arriving, returnCell, map, landingRot);
-
             Destroy();
+            vehicle.SetSustainerTarget(arriving);
+            vehicle.EventRegistry[VehicleEventDefOf.AerialVehicleLanding].ExecuteEvents();
         }
 
         public override void ExposeData()
@@ -254,7 +252,7 @@ namespace AirstrikeMod
         }
     }
 
-    // Caravan fallback if the destination map disappears between launch and arrival.
+    // caravan fallback if the destination map disappears between launch and arrival.
     internal class ArrivalAction_LandInMap_NoOp : VehicleArrivalAction
     {
         public override bool DestroyOnArrival => true;

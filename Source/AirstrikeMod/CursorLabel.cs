@@ -3,9 +3,7 @@ using Verse;
 
 namespace AirstrikeMod
 {
-    // Set Current when entering a targeting phase, clear it on exit. Each targeter's
-    // OnGUI fires only while it's active, so the per-phase patch hook (or the targeter
-    // itself) drawing this label is naturally scoped to the right phase.
+    // set Current when entering a targeting phase, clear it on exit.
     public static class CursorLabel
     {
         public static string Current;

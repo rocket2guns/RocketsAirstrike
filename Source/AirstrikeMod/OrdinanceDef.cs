@@ -6,20 +6,13 @@ namespace AirstrikeMod
     public class OrdinanceDef : Def
     {
         public ThingDef thingDef;
-
-        // Optional. Falls back to thingDef.projectileWhenLoaded so vanilla shells need
-        // no projectile field. Stats below inherit from the resolved projectile in
-        // ResolveReferences; explicit XML wins over inherited.
         public ThingDef projectileDef;
-
         public DamageDef damageDef;
         public float radius = 0f;
         public float damage = -1f;
-
         public ThingDef preExplosionSpawnThingDef;
         public float preExplosionSpawnChance = 0f;
         public int preExplosionSpawnThingCount = 0;
-
         public ThingDef postExplosionSpawnThingDef;
         public float postExplosionSpawnChance = 0f;
         public int postExplosionSpawnThingCount = 0;
@@ -28,8 +21,7 @@ namespace AirstrikeMod
         {
             base.ResolveReferences();
 
-            if (projectileDef == null)
-                projectileDef = thingDef?.projectileWhenLoaded;
+            projectileDef ??= thingDef?.projectileWhenLoaded;
 
             var pp = projectileDef?.projectile;
             if (pp != null)

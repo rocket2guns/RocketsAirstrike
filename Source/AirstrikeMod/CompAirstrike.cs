@@ -16,9 +16,7 @@ namespace AirstrikeMod
 
         private OrdinanceDef selectedOrdinance;
 
-        // Lazy-loaded on first gizmo enumeration (main thread). A static field
-        // initializer would run on whichever thread first touched the type; for
-        // save-load that's the worker thread, where ContentFinder.Get throws.
+        // lazy-loaded on first gizmo enumeration (main thread)
         private static Texture2D _precisionIcon;
         private static Texture2D PrecisionIcon =>
             _precisionIcon ??= ContentFinder<Texture2D>.Get("UI/ButtonPrecisionStrike", reportFailure: false)
@@ -182,8 +180,6 @@ namespace AirstrikeMod
                 var empty = count <= 0;
                 var captured = ord;
 
-                // Empty types render greyed (rich-text label color, half-alpha icon)
-                // but stay clickable so the player can pre-select before loading cargo.
                 var baseLabel = $"{ord.thingDef.LabelCap} (×{count})";
                 var label = empty ? $"<color=#888888>{baseLabel}</color>" : baseLabel;
                 var iconColor = empty ? new Color(1f, 1f, 1f, 0.5f) : Color.white;
@@ -375,8 +371,6 @@ namespace AirstrikeMod
             return total;
         }
 
-        // Atomic: only consumes if the full count is available. A Bombing Run that
-        // can't pay won't half-consume the cargo.
         private bool ConsumeFromCargo(ThingDef def, int count)
         {
             if (def == null || count <= 0) return false;
