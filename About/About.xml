@@ -23,5 +23,6 @@
   <loadAfter>
     <li>brrainz.harmony</li>
     <li>SmashPhil.VehicleFramework</li>
+    <li>OskarPotocki.VanillaVehiclesExpanded</li>
   </loadAfter>
 </ModMetaData>

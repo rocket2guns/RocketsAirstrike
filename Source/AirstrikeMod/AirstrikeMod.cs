@@ -17,23 +17,24 @@ namespace AirstrikeMod
             harmony.PatchAll(Assembly.GetExecutingAssembly());
         }
 
-        public override string SettingsCategory() => "Rocket's Airstrike";
+        public override string SettingsCategory() => "RocketsAirstrike_SettingsCategory".Translate();
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
             var listing = new Listing_Standard();
             listing.Begin(inRect);
 
-            listing.Label("Airstrike fuel cost (% of one world-tile flight)");
+            listing.Label("RocketsAirstrike_FuelScaleLabel".Translate());
             Settings.fuelScale = listing.Slider(Settings.fuelScale, 0f, 1f);
-            listing.Label($"  current: {Settings.fuelScale * 100f:0}%");
+            listing.Label("RocketsAirstrike_FuelScaleCurrent".Translate(
+                (Settings.fuelScale * 100f).ToString("0")));
 
             listing.GapLine();
 
             listing.CheckboxLabeled(
-                "Fast takeoff/landing animation",
+                "RocketsAirstrike_FastAnimationLabel".Translate(),
                 ref Settings.fastTakeoffLanding,
-                "Doubles the speed of takeoff and landing animations during airstrike runs.");
+                "RocketsAirstrike_FastAnimationDesc".Translate());
 
             listing.End();
             base.DoSettingsWindowContents(inRect);

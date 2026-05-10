@@ -1,5 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-    <Airstrike>Airstrike</Airstrike>
-    <AirstrikeDesc>Take off, make a bombing pass over a target cell, and return.</AirstrikeDesc>
+
+    <!-- Settings window -->
+    <RocketsAirstrike_SettingsCategory>Rocket's Airstrike</RocketsAirstrike_SettingsCategory>
+    <RocketsAirstrike_FuelScaleLabel>Airstrike fuel cost (% of one world-tile flight)</RocketsAirstrike_FuelScaleLabel>
+    <RocketsAirstrike_FuelScaleCurrent>  current: {0}%</RocketsAirstrike_FuelScaleCurrent>
+    <RocketsAirstrike_FastAnimationLabel>Fast takeoff/landing animation</RocketsAirstrike_FastAnimationLabel>
+    <RocketsAirstrike_FastAnimationDesc>Doubles the speed of takeoff and landing animations during airstrike runs.</RocketsAirstrike_FastAnimationDesc>
+
+    <!-- Ordinance picker gizmo -->
+    <RocketsAirstrike_SelectOrdinance>Select ordinance</RocketsAirstrike_SelectOrdinance>
+    <RocketsAirstrike_OrdinanceGizmoDesc>Pick which loaded shell type the airstrike will drop. Shells are consumed from cargo.</RocketsAirstrike_OrdinanceGizmoDesc>
+    <RocketsAirstrike_OrdinanceCount>{0} (×{1})</RocketsAirstrike_OrdinanceCount>
+    <RocketsAirstrike_NoOrdinanceLoaded>(no ordinance defs loaded)</RocketsAirstrike_NoOrdinanceLoaded>
+    <RocketsAirstrike_ClearSelection>Clear selection</RocketsAirstrike_ClearSelection>
+
+    <!-- Strike gizmos -->
+    <RocketsAirstrike_PrecisionStrike>Precision Strike</RocketsAirstrike_PrecisionStrike>
+    <RocketsAirstrike_PrecisionStrikeDesc>Make a single bombing pass over a chosen cell, dropping one round.</RocketsAirstrike_PrecisionStrikeDesc>
+    <RocketsAirstrike_BombingRun>Bombing Run</RocketsAirstrike_BombingRun>
+    <RocketsAirstrike_BombingRunDesc>Make a bombing pass dropping {0} rounds along a chosen line.</RocketsAirstrike_BombingRunDesc>
+
+    <!-- Gizmo disable reasons -->
+    <RocketsAirstrike_NoLauncherComp>Vehicle has no launcher comp.</RocketsAirstrike_NoLauncherComp>
+    <RocketsAirstrike_SelectOrdinanceFirst>Select an ordinance type first.</RocketsAirstrike_SelectOrdinanceFirst>
+    <RocketsAirstrike_NeedShellsHave>Need {0} {1} in cargo (have {2}).</RocketsAirstrike_NeedShellsHave>
+    <RocketsAirstrike_NotEnoughFuel>Not enough chemfuel (needs {0}).</RocketsAirstrike_NotEnoughFuel>
+
+    <!-- Map-pick FloatMenu -->
+    <RocketsAirstrike_ThisMap>this map</RocketsAirstrike_ThisMap>
+    <RocketsAirstrike_MapDistanceFuel>{0} tiles, {1} fuel</RocketsAirstrike_MapDistanceFuel>
+    <RocketsAirstrike_MapOptionLabel>{0} ({1})</RocketsAirstrike_MapOptionLabel>
+    <RocketsAirstrike_MapOptionDisabled>{0} — {1}</RocketsAirstrike_MapOptionDisabled>
+    <RocketsAirstrike_OutOfRange>out of range</RocketsAirstrike_OutOfRange>
+    <RocketsAirstrike_NeedsFuel>needs {0} fuel</RocketsAirstrike_NeedsFuel>
+
+    <!-- Targeting cursor labels -->
+    <RocketsAirstrike_SelectTargetLocation>Select Target Location</RocketsAirstrike_SelectTargetLocation>
+    <RocketsAirstrike_SelectTargetRun>Select Target Run</RocketsAirstrike_SelectTargetRun>
+    <RocketsAirstrike_SelectLandingLocation>Select Landing Location</RocketsAirstrike_SelectLandingLocation>
+
+    <!-- Reject messages -->
+    <RocketsAirstrike_NoOrdinanceSelected>No ordinance selected.</RocketsAirstrike_NoOrdinanceSelected>
+    <RocketsAirstrike_NeedShells>Need {0} {1} in cargo.</RocketsAirstrike_NeedShells>
+
 </LanguageData>

@@ -1,32 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Adds CompAirstrike to specific VehicleDefs. Each Operation block is wrapped in a
-    PatchOperationFindMod so the patch silently no-ops if the source mod isn't loaded.
--->
 <Patch>
-
-    <!-- Vanilla Vehicles Expanded — Mosquito (PropellerTakeoff, helicopter) -->
-    <Operation Class="PatchOperationFindMod">
-        <mods>
-            <li>Vanilla Vehicles Expanded</li>
-        </mods>
-        <match Class="PatchOperationAdd">
-            <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Mosquito"]/comps</xpath>
-            <value>
-                <li Class="AirstrikeMod.CompProperties_Airstrike">
-                    <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
-                    <!-- Helicopter: precision-only. Bombing run is for fixed-wing aircraft. -->
-                    <allowedPatterns>
-                        <li>Single</li>
-                    </allowedPatterns>
-                    <!-- Less stable platform → looser groupings. -->
-                    <scatter>3</scatter>
-                </li>
-            </value>
-        </match>
-    </Operation>
-
-    <!-- Vanilla Vehicles Expanded — Warbird (DirectionalTakeoff, plane) -->
+    <!-- Vanilla Vehicles Expanded -->
     <Operation Class="PatchOperationFindMod">
         <mods>
             <li>Vanilla Vehicles Expanded</li>
@@ -36,11 +10,12 @@
             <value>
                 <li Class="AirstrikeMod.CompProperties_Airstrike">
                     <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
-                    <!-- Stable bombing platform → tighter groupings. -->
+                    <allowedPatterns>
+                        <li>Single</li>
+                    </allowedPatterns>
                     <scatter>2</scatter>
                 </li>
             </value>
         </match>
     </Operation>
-
 </Patch>

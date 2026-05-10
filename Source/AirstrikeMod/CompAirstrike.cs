@@ -16,7 +16,7 @@ namespace AirstrikeMod
 
         private OrdinanceDef selectedOrdinance;
 
-        // lazy-loaded on first gizmo enumeration (main thread)
+        // Lazy on first gizmo enumeration; main thread only (cctor threading hazard).
         private static Texture2D _precisionIcon;
         private static Texture2D PrecisionIcon =>
             _precisionIcon ??= ContentFinder<Texture2D>.Get("UI/ButtonPrecisionStrike", reportFailure: false)
@@ -41,15 +41,18 @@ namespace AirstrikeMod
         public static Map BombTargetingMap;
         public static float BombTargetingRadius;
 
-        private float ResolvedFuelCost
+        private float ResolvedFuelCost => ComputeFuelCost(Vehicle.Map);
+
+        // Same-map: just the buzz overhead (one tile of fuel scaled by fuelScale).
+        // Cross-map: round-trip world flight + buzz overhead.
+        private float ComputeFuelCost(Map destMap)
         {
-            get
-            {
-                var launcher = Vehicle.CompVehicleLauncher;
-                if (launcher == null || Vehicle.CompFueledTravel == null) return 0f;
-                var oneTileFuel = launcher.FuelNeededToLaunchAtDist(Find.WorldGrid.AverageTileSize);
-                return oneTileFuel * AirstrikeMod.Settings.fuelScale;
-            }
+            var launcher = Vehicle.CompVehicleLauncher;
+            if (launcher == null || Vehicle.CompFueledTravel == null) return 0f;
+            var buzzCost = launcher.FuelNeededToLaunchAtDist(Find.WorldGrid.AverageTileSize)
+                           * AirstrikeMod.Settings.fuelScale;
+            if (destMap == null || destMap == Vehicle.Map) return buzzCost;
+            return launcher.FuelNeededToLaunchAtDist(destMap.Tile) * 2f + buzzCost;
         }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
@@ -81,14 +84,14 @@ namespace AirstrikeMod
             }
             else
             {
-                label = "Select ordinance";
+                label = "RocketsAirstrike_SelectOrdinance".Translate();
                 icon = EmptySlotIcon;
             }
 
             return new Command_Action
             {
                 defaultLabel = label,
-                defaultDesc = "Pick which loaded shell type the airstrike will drop. Shells are consumed from cargo.",
+                defaultDesc = "RocketsAirstrike_OrdinanceGizmoDesc".Translate(),
                 icon = icon,
                 action = _showOrdinanceMenuDelegate ??= ShowOrdinanceMenu,
             };
@@ -97,8 +100,8 @@ namespace AirstrikeMod
         private Gizmo BuildPrecisionStrikeGizmo()
         {
             return BuildLaunchGizmo(
-                label: "Precision Strike",
-                desc: "Make a single bombing pass over a chosen cell, dropping one round.",
+                label: "RocketsAirstrike_PrecisionStrike".Translate(),
+                desc: "RocketsAirstrike_PrecisionStrikeDesc".Translate(),
                 topIcon: PrecisionIcon,
                 requiredShells: 1,
                 onClick: _startPrecisionDelegate ??= StartPrecisionTargeting);
@@ -107,8 +110,8 @@ namespace AirstrikeMod
         private Gizmo BuildBombingRunGizmo()
         {
             return BuildLaunchGizmo(
-                label: "Bombing Run",
-                desc: $"Make a bombing pass dropping {BombingRunTargeter.DropCount} rounds along a chosen line.",
+                label: "RocketsAirstrike_BombingRun".Translate(),
+                desc: "RocketsAirstrike_BombingRunDesc".Translate(BombingRunTargeter.DropCount),
                 topIcon: BombingRunIcon,
                 requiredShells: BombingRunTargeter.DropCount,
                 onClick: _startBombingRunDelegate ??= StartBombingRunTargeting);
@@ -135,7 +138,7 @@ namespace AirstrikeMod
 
             if (launcherComp == null)
             {
-                cmd.Disable("Vehicle has no launcher comp.");
+                cmd.Disable("RocketsAirstrike_NoLauncherComp".Translate());
                 return cmd;
             }
 
@@ -152,15 +155,16 @@ namespace AirstrikeMod
             }
             else if (selectedOrdinance == null)
             {
-                cmd.Disable("Select an ordinance type first.");
+                cmd.Disable("RocketsAirstrike_SelectOrdinanceFirst".Translate());
             }
             else if (countInCargo < requiredShells)
             {
-                cmd.Disable($"Need {requiredShells} {selectedOrdinance.thingDef.label} in cargo (have {countInCargo}).");
+                cmd.Disable("RocketsAirstrike_NeedShellsHave".Translate(
+                    requiredShells, selectedOrdinance.thingDef.label, countInCargo));
             }
             else if (notEnoughFuel)
             {
-                cmd.Disable($"Not enough chemfuel (needs {cost:0}).");
+                cmd.Disable("RocketsAirstrike_NotEnoughFuel".Translate(cost.ToString("0")));
             }
 
             return cmd;
@@ -180,7 +184,8 @@ namespace AirstrikeMod
                 var empty = count <= 0;
                 var captured = ord;
 
-                var baseLabel = $"{ord.thingDef.LabelCap} (×{count})";
+                var baseLabel = "RocketsAirstrike_OrdinanceCount".Translate(
+                    ord.thingDef.LabelCap, count).Resolve();
                 var label = empty ? $"<color=#888888>{baseLabel}</color>" : baseLabel;
                 var iconColor = empty ? new Color(1f, 1f, 1f, 0.5f) : Color.white;
                 var iconTex = ord.thingDef.uiIcon ?? EmptySlotIcon;
@@ -194,11 +199,14 @@ namespace AirstrikeMod
 
             if (options.Count == 0)
             {
-                options.Add(new FloatMenuOption("(no ordinance defs loaded)", null));
+                options.Add(new FloatMenuOption(
+                    "RocketsAirstrike_NoOrdinanceLoaded".Translate(), null));
             }
             else if (selectedOrdinance != null)
             {
-                options.Add(new FloatMenuOption("Clear selection", () => selectedOrdinance = null));
+                options.Add(new FloatMenuOption(
+                    "RocketsAirstrike_ClearSelection".Translate(),
+                    () => selectedOrdinance = null));
             }
 
             Find.WindowStack.Add(new FloatMenu(options));
@@ -206,9 +214,80 @@ namespace AirstrikeMod
 
         private void StartPrecisionTargeting()
         {
+            PickDestinationMap(destMap => StartPrecisionTargeting(destMap));
+        }
+
+        private void StartBombingRunTargeting()
+        {
+            PickDestinationMap(destMap => StartBombingRunTargeting(destMap));
+        }
+
+        // Single-map: skip the menu and target the vehicle's map directly. Multi-map:
+        // present every loaded map, greyed-with-reason when unreachable.
+        private void PickDestinationMap(Action<Map> onPicked)
+        {
+            var maps = Find.Maps;
+            if (maps == null || maps.Count <= 1)
+            {
+                onPicked(Vehicle.Map);
+                return;
+            }
+
+            var options = new List<FloatMenuOption>(maps.Count);
+            for (var i = 0; i < maps.Count; i++)
+            {
+                var map = maps[i];
+                if (map?.Parent == null) continue;
+                options.Add(BuildMapOption(map, onPicked));
+            }
+            Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        private FloatMenuOption BuildMapOption(Map destMap, Action<Map> onPicked)
+        {
+            var sameMap = destMap == Vehicle.Map;
+            var launcher = Vehicle.CompVehicleLauncher;
+            var fuelComp = Vehicle.CompFueledTravel;
+            var fuel = fuelComp?.Fuel ?? 0f;
+            var fuelCost = ComputeFuelCost(destMap);
+            var notEnoughFuel = fuelComp != null && fuel < fuelCost;
+
+            var tileDist = 0;
+            var outOfRange = false;
+            if (!sameMap && launcher != null)
+            {
+                tileDist = Mathf.RoundToInt(
+                    Find.WorldGrid.ApproxDistanceInTiles(Vehicle.Map.Tile, destMap.Tile));
+                outOfRange = launcher.MaxLaunchDistance > 0 && tileDist > launcher.MaxLaunchDistance;
+            }
+
+            var detail = sameMap
+                ? "RocketsAirstrike_ThisMap".Translate().Resolve()
+                : "RocketsAirstrike_MapDistanceFuel".Translate(
+                    tileDist, fuelCost.ToString("0")).Resolve();
+            var label = "RocketsAirstrike_MapOptionLabel".Translate(
+                destMap.Parent.LabelCap, detail).Resolve();
+            string disableReason = null;
+            if (outOfRange)
+                disableReason = "RocketsAirstrike_OutOfRange".Translate();
+            else if (notEnoughFuel)
+                disableReason = "RocketsAirstrike_NeedsFuel".Translate(fuelCost.ToString("0"));
+            if (disableReason != null)
+                label = "RocketsAirstrike_MapOptionDisabled".Translate(label, disableReason).Resolve();
+
+            Action action = disableReason == null ? (() => onPicked(destMap)) : null;
+            return new FloatMenuOption(label, action);
+        }
+
+        private void StartPrecisionTargeting(Map destMap)
+        {
             if (Find.Targeter.IsTargeting || LandingTargeter.Instance.IsTargeting
                 || BombingRunTargeter.Instance.IsTargeting)
                 return;
+
+            var originalMap = Current.Game.CurrentMap;
+            if (Current.Game.CurrentMap != destMap)
+                Current.Game.CurrentMap = destMap;
 
             var targetingParameters = new TargetingParameters
             {
@@ -217,14 +296,14 @@ namespace AirstrikeMod
                 canTargetPawns = false,
                 canTargetItems = false,
                 canTargetBuildings = false,
-                validator = t => t.Cell.InBounds(Vehicle.Map)
-                                 && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, Vehicle.Map),
+                validator = t => t.Cell.InBounds(destMap)
+                                 && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, destMap),
             };
 
             BombTargetingActive = true;
-            BombTargetingMap = Vehicle.Map;
+            BombTargetingMap = destMap;
             BombTargetingRadius = selectedOrdinance != null ? selectedOrdinance.radius : 3f;
-            CursorLabel.Current = "Select Target Location";
+            CursorLabel.Current = "RocketsAirstrike_SelectTargetLocation".Translate();
 
             var cursorIcon = selectedOrdinance?.thingDef?.uiIcon ?? PrecisionIcon;
 
@@ -235,72 +314,97 @@ namespace AirstrikeMod
                     BombTargetingActive = false;
                     CursorLabel.Current = null;
                     var cells = new List<IntVec3>(1) { bombTarget.Cell };
-                    StartLandingTargeting(cells, Rot4.East, OrdinancePattern.Single);
+                    StartLandingTargeting(destMap, cells, Rot4.East, OrdinancePattern.Single,
+                        originalMap);
                 },
                 actionWhenFinished: () =>
                 {
                     BombTargetingActive = false;
-                    // Keep the label set if we're chaining into stage B; clear on cancel.
+                    // Keep state alive if we're chaining into stage B; clear on cancel.
                     if (!LandingTargeter.Instance.IsTargeting)
+                    {
                         CursorLabel.Current = null;
+                        RestoreCurrentMap(originalMap);
+                    }
                 },
                 mouseAttachment: cursorIcon);
         }
 
-        private void StartBombingRunTargeting()
+        private void StartBombingRunTargeting(Map destMap)
         {
             if (Find.Targeter.IsTargeting || LandingTargeter.Instance.IsTargeting
                 || BombingRunTargeter.Instance.IsTargeting)
                 return;
             if (selectedOrdinance == null) return;
 
+            var originalMap = Current.Game.CurrentMap;
+            if (Current.Game.CurrentMap != destMap)
+                Current.Game.CurrentMap = destMap;
+
             var cursorIcon = selectedOrdinance.thingDef?.uiIcon ?? BombingRunIcon;
-            CursorLabel.Current = "Select Target Run";
+            CursorLabel.Current = "RocketsAirstrike_SelectTargetRun".Translate();
 
             BombingRunTargeter.Instance.BeginTargeting(
                 vehicle: Vehicle,
-                map: Vehicle.Map,
+                map: destMap,
                 ordinance: selectedOrdinance,
                 action: (cells, dir) =>
                 {
                     CursorLabel.Current = null;
-                    StartLandingTargeting(cells, dir, OrdinancePattern.Line);
+                    StartLandingTargeting(destMap, cells, dir, OrdinancePattern.Line, originalMap);
                 },
-                targetValidator: t => t.Cell.InBounds(Vehicle.Map)
-                                      && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, Vehicle.Map),
+                targetValidator: t => t.Cell.InBounds(destMap)
+                                      && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, destMap),
                 actionWhenFinished: () =>
                 {
                     if (!LandingTargeter.Instance.IsTargeting)
+                    {
                         CursorLabel.Current = null;
+                        RestoreCurrentMap(originalMap);
+                    }
                 },
                 mouseAttachment: cursorIcon);
         }
 
-        private void StartLandingTargeting(List<IntVec3> bombCells, Rot4 flightDir, OrdinancePattern pattern)
+        private void StartLandingTargeting(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
+            OrdinancePattern pattern, Map originalMap)
         {
             if (LandingTargeter.Instance.IsTargeting) return;
 
-            // VTOLs (no LandingProperties.restriction) skip the landing prompt and land
-            // back at takeoff.
+            // VTOLs lack LandingProperties.restriction; skip the prompt and land back at
+            // takeoff.
             if (!LandingNeedsTargeting())
             {
-                OnTargetsChosen(bombCells, flightDir, pattern, Vehicle.Position, Vehicle.Rotation);
+                OnTargetsChosen(destMap, bombCells, flightDir, pattern,
+                    Vehicle.Position, Vehicle.Rotation);
+                RestoreCurrentMap(originalMap);
                 return;
             }
 
-            CursorLabel.Current = "Select Landing Location";
+            CursorLabel.Current = "RocketsAirstrike_SelectLandingLocation".Translate();
 
-            LandingTargeter.Instance.BeginTargeting(
+            // Landing always happens on the vehicle's home map; jump there so the player
+            // can see runway clearance.
+            LandingTargeter.Instance.BeginTargetingAndFocusMap(
                 vehicle: Vehicle,
                 map: Vehicle.Map,
                 action: (landingTarget, landingRot)
-                    => OnTargetsChosen(bombCells, flightDir, pattern, landingTarget, landingRot),
+                    => OnTargetsChosen(destMap, bombCells, flightDir, pattern, landingTarget, landingRot),
                 targetValidator: _isLandingValidDelegate ??= IsLandingValid,
-                actionOnStart: null,
-                actionWhenFinished: () => CursorLabel.Current = null,
+                actionWhenFinished: () =>
+                {
+                    CursorLabel.Current = null;
+                    RestoreCurrentMap(originalMap);
+                },
                 mouseAttachment: null,
                 allowRotating: true,
                 forcedTargeting: true);
+        }
+
+        private static void RestoreCurrentMap(Map originalMap)
+        {
+            if (originalMap != null && Current.Game.CurrentMap != originalMap)
+                Current.Game.CurrentMap = originalMap;
         }
 
         private bool LandingNeedsTargeting()
@@ -314,33 +418,37 @@ namespace AirstrikeMod
                 && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, target.Cell, Vehicle.Map);
         }
 
-        private void OnTargetsChosen(List<IntVec3> bombCells, Rot4 flightDir, OrdinancePattern pattern,
-            LocalTargetInfo landingTarget, Rot4 landingRot)
+        private void OnTargetsChosen(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
+            OrdinancePattern pattern, LocalTargetInfo landingTarget, Rot4 landingRot)
         {
             if (selectedOrdinance == null)
             {
-                Messages.Message("No ordinance selected.", MessageTypeDefOf.RejectInput, false);
+                Messages.Message("RocketsAirstrike_NoOrdinanceSelected".Translate(),
+                    MessageTypeDefOf.RejectInput, false);
                 return;
             }
 
             var needed = bombCells.Count;
             if (!ConsumeFromCargo(selectedOrdinance.thingDef, needed))
             {
-                Messages.Message($"Need {needed} {selectedOrdinance.thingDef.label} in cargo.",
+                Messages.Message(
+                    "RocketsAirstrike_NeedShells".Translate(needed, selectedOrdinance.thingDef.label),
                     MessageTypeDefOf.RejectInput, false);
                 return;
             }
 
-            var mapParent = Vehicle.Map.Parent;
+            var crossMap = destMap != Vehicle.Map;
+            var originMapParent = Vehicle.Map.Parent;
+            var destMapParent = destMap.Parent;
 
-            Vehicle.CompFueledTravel?.ConsumeFuel(ResolvedFuelCost);
+            Vehicle.CompFueledTravel?.ConsumeFuel(ComputeFuelCost(destMap));
 
             if (AirstrikeMod.Settings.fastTakeoffLanding)
                 BombingSpeedManager.MarkFast(Vehicle);
 
             var arrival = new ArrivalAction_BombMap(
                 Vehicle,
-                mapParent,
+                destMapParent,
                 bombCells: bombCells,
                 flightDir: flightDir,
                 pattern: pattern,
@@ -348,10 +456,11 @@ namespace AirstrikeMod
                 returnRot: landingRot,
                 bombingSkyfallerDef: Props.skyfallerBombing
                                      ?? Vehicle.CompVehicleLauncher.Props.skyfallerStrafing,
-                ordinance: selectedOrdinance);
+                ordinance: selectedOrdinance,
+                originMapParent: crossMap ? originMapParent : null);
 
             var targetData = new TargetData<GlobalTargetInfo>();
-            targetData.targets.Add(new GlobalTargetInfo(Vehicle.Map.Tile));
+            targetData.targets.Add(new GlobalTargetInfo(destMap.Tile));
 
             Vehicle.CompVehicleLauncher.Launch(targetData, arrival);
         }

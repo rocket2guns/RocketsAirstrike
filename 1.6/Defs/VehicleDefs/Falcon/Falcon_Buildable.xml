@@ -26,21 +26,24 @@
 		</researchPrerequisites>
 		
 		<costList>
-			<VVE_EngineBlock>2</VVE_EngineBlock>
+			<VVE_EngineBlock>4</VVE_EngineBlock>
 			<VVE_CarAlternator>2</VVE_CarAlternator>
 			<VVE_CarExhaust>4</VVE_CarExhaust>
 			<VVE_CarSuspension>3</VVE_CarSuspension>
 			<VVE_CarWheel>3</VVE_CarWheel>
 			<VVE_CarTransmission>1</VVE_CarTransmission>
 			<VVE_CarWiring>1</VVE_CarWiring>
-			<VVE_CarFuelTank>2</VVE_CarFuelTank>
+			<VVE_CarFuelTank>4</VVE_CarFuelTank>
 			<Steel>240</Steel>
-			<ComponentIndustrial>8</ComponentIndustrial>
+			<Plasteel>120</Plasteel>
+			<Silver>100</Silver>
+			<ComponentIndustrial>20</ComponentIndustrial>
+			<ComponentSpacer>4</ComponentSpacer>
 		</costList>
 		
 		<soundImpactDefault>BulletImpact_Metal</soundImpactDefault>
 		<thingToSpawn>ROCKET_Falcon</thingToSpawn>
 		
-		<constructionSkillPrerequisite>6</constructionSkillPrerequisite>
+		<constructionSkillPrerequisite>10</constructionSkillPrerequisite>
 	</Vehicles.VehicleBuildDef>
 </Defs>

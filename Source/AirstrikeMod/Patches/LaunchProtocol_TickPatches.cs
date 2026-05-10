@@ -3,9 +3,6 @@ using Vehicles;
 
 namespace AirstrikeMod.Patches
 {
-    /// <summary>
-    /// Each prefix bumps TicksPassed by 1, then the original method runs and bumps another tick of its own. Net: 2 animation ticks per real tick for flagged vehicles.
-    /// </summary>
     [HarmonyPatch(typeof(LaunchProtocol), "TickTakeoff")]
     public static class LaunchProtocol_TickTakeoff_Patch
     {
@@ -31,7 +28,7 @@ namespace AirstrikeMod.Patches
     }
 
     /// <summary>
-    /// Clears the fast flag once landing finishes. Safe to run for every landing since UnmarkFast on a non-flagged vehicle is a no-op.
+    /// Clears the fast flag once landing finishes.
     /// </summary>
     [HarmonyPatch(typeof(VehicleSkyfaller_Arriving), nameof(VehicleSkyfaller_Arriving.FinalizeLanding))]
     public static class VehicleSkyfaller_Arriving_FinalizeLanding_Patch

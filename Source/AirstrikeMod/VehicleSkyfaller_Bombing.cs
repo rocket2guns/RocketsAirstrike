@@ -13,7 +13,8 @@ namespace AirstrikeMod
 {
     // In-map bombing skyfaller. Lerps the vehicle from startCell to endCell over
     // totalTicks, drops ordnance at each bombCells entry as the moving position crosses
-    // it, then spawns a vanilla VehicleSkyfaller_Arriving for landing.
+    // it, then routes through ExitMap (same-map: spawn arriving skyfaller; cross-map:
+    // build a return AerialVehicleInFlight back to originMapParent).
     public class VehicleSkyfaller_Bombing : VehicleSkyfaller
     {
         public IntVec3 startCell;
@@ -24,6 +25,9 @@ namespace AirstrikeMod
 
         public IntVec3 returnCell;
         public Rot4 returnRot;
+
+        // Null = same-map. Non-null = return-flight target for cross-map.
+        public MapParent originMapParent;
 
         public int totalTicks = 240;
         public float visualAltitude = 6f;
@@ -41,17 +45,11 @@ namespace AirstrikeMod
         protected float Progress => Mathf.Clamp01((float)ticksRunning / Math.Max(1, totalTicks));
 
         /// <summary>
-        /// Where the shadow lands (lerped, ground altitude, no z offset).
+        /// Lerped along startCell -> endCell at ground altitude. Used for the shadow and
+        /// the bomb-trip cross product.
         /// </summary>
-        private Vector3 GroundPos
-        {
-            get
-            {
-                var a = startCell.ToVector3Shifted();
-                var b = endCell.ToVector3Shifted();
-                return Vector3.Lerp(a, b, Progress);
-            }
-        }
+        private Vector3 GroundPos =>
+            Vector3.Lerp(startCell.ToVector3Shifted(), endCell.ToVector3Shifted(), Progress);
 
         public override Vector3 DrawPos
         {
@@ -69,20 +67,15 @@ namespace AirstrikeMod
             var pos = DrawPos;
             vehicle.DrawAt(in pos, Rotation, 0f);
             DrawShadow();
+            CompEngineFlame.DrawFlamesFor(vehicle, pos, Rotation);
         }
 
         private void DrawShadow()
         {
             if (cachedShadowMaterial == null && !string.IsNullOrEmpty(def.skyfaller.shadow))
-            {
                 cachedShadowMaterial = MaterialPool.MatFrom(def.skyfaller.shadow, ShaderDatabase.Transparent);
-            }
             if (cachedShadowMaterial == null) return;
-
-            // Pulled from the vehicle's own draw size (matches VF's DynamicShadowData.CreateFrom),
-            // so each vehicle gets a silhouette-sized shadow without per-def XML.
             var shadowSize = vehicle.VehicleGraphic?.data?.drawSize ?? def.skyfaller.shadowSize;
-            // ticksToLand drives shadow scale (1 + ticks/100) inside DrawDropSpotShadow.
             var shadowTicks = Mathf.RoundToInt(visualAltitude * 10f);
             DrawDropSpotShadow(GroundPos, Rotation, cachedShadowMaterial, shadowSize, shadowTicks);
         }
@@ -128,7 +121,8 @@ namespace AirstrikeMod
         }
 
         /// <summary>
-        /// Side-of-line cross product. Resilient to fast skyfallers skipping past in a single tick (which a simple distance check would miss).
+        /// Side-of-line cross product. Resilient to fast skyfallers skipping past in a
+        /// single tick (which a simple distance check would miss).
         /// </summary>
         private bool PastBombCell(IntVec3 currentCell, IntVec3 cell)
         {
@@ -168,7 +162,7 @@ namespace AirstrikeMod
         }
 
         /// <summary>
-        /// Defensive fallback when the falling-bomb visual can't be set up. Shouldn't happen in normal play.
+        /// Defensive fallback when the falling-bomb visual can't be set up.
         /// </summary>
         private void DetonateInline(IntVec3 cell)
         {
@@ -215,7 +209,18 @@ namespace AirstrikeMod
                 Destroy();
                 return;
             }
+            var crossMap = originMapParent != null && originMapParent != map.Parent;
+            if (crossMap)
+            {
+                ExitMapToWorldFlight(map);
+                return;
+            }
+            ExitMapSameMap(map);
+        }
 
+        // Same-map: spawn a VehicleSkyfaller_Arriving directly. No return world-flight.
+        private void ExitMapSameMap(Map map)
+        {
             var arrivingDef = vehicle.CompVehicleLauncher.Props.skyfallerIncoming;
             if (arrivingDef == null)
             {
@@ -235,6 +240,25 @@ namespace AirstrikeMod
             vehicle.EventRegistry[VehicleEventDefOf.AerialVehicleLanding].ExecuteEvents();
         }
 
+        // Cross-map: build a fresh AerialVehicleInFlight bound for the origin tile.
+        private void ExitMapToWorldFlight(Map map)
+        {
+            if (originMapParent == null)
+            {
+                Log.Error("[Rockets.Airstrike] Cross-map exit requested but originMapParent is null.");
+                ExitMapSameMap(map);
+                return;
+            }
+
+            var aerial = AerialVehicleInFlight.Create(vehicle, map.Tile);
+            var arrival = new ArrivalAction_LandToCell(vehicle, originMapParent, returnCell, returnRot);
+            aerial.OrderFlyToTiles(
+                new List<FlightNode> { new FlightNode(originMapParent.Tile) },
+                arrival);
+
+            Destroy();
+        }
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -245,6 +269,7 @@ namespace AirstrikeMod
             Scribe_Defs.Look(ref ordinance, nameof(ordinance));
             Scribe_Values.Look(ref returnCell, nameof(returnCell));
             Scribe_Values.Look(ref returnRot, nameof(returnRot));
+            Scribe_References.Look(ref originMapParent, nameof(originMapParent));
             Scribe_Values.Look(ref totalTicks, nameof(totalTicks), 240);
             Scribe_Values.Look(ref scatter, nameof(scatter));
             Scribe_Values.Look(ref ticksRunning, nameof(ticksRunning));
@@ -252,7 +277,7 @@ namespace AirstrikeMod
         }
     }
 
-    // caravan fallback if the destination map disappears between launch and arrival.
+    // Caravan fallback if the destination map disappears between launch and arrival.
     internal class ArrivalAction_LandInMap_NoOp : VehicleArrivalAction
     {
         public override bool DestroyOnArrival => true;

@@ -3,7 +3,6 @@ using Verse;
 
 namespace AirstrikeMod
 {
-    // set Current when entering a targeting phase, clear it on exit.
     public static class CursorLabel
     {
         public static string Current;

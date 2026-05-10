@@ -3,13 +3,12 @@ using Vehicles;
 
 namespace AirstrikeMod
 {
-    // Process-global, not save-persisted. Vehicles get marked at airstrike launch and
-    // unmarked when their landing skyfaller's FinalizeLanding fires (via Harmony postfix
-    // in LaunchProtocol_TickPatches). Without that postfix, a vehicle that did one strike
-    // would have fast takeoff/landing on every subsequent vanilla launch too.
+    // Process-global, not save-persisted. Marked at airstrike launch, unmarked by the
+    // LaunchProtocol_TickPatches FinalizeLanding postfix; without that the flag would
+    // bleed into every subsequent vanilla launch by the same vehicle.
     public static class BombingSpeedManager
     {
-        private static readonly HashSet<VehiclePawn> FastVehicles = new HashSet<VehiclePawn>();
+        private static readonly HashSet<VehiclePawn> FastVehicles = new();
 
         public static void MarkFast(VehiclePawn vehicle)
         {

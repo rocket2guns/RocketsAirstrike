@@ -8,11 +8,11 @@ using Verse;
 
 namespace AirstrikeMod
 {
-    // Arrival action for the (degenerate same-tile) world flight. Synchronously hands
-    // off to a VehicleSkyfaller_Bombing on the destination map, then ClearAndDestroys
-    // the AerialVehicleInFlight before returning. The clear-and-destroy MUST happen
-    // before Arrived returns: otherwise MoveForward calls InitializeNextFlight on an
-    // empty FlightPath and SetSpeed reads First[0], throwing IndexOutOfRange.
+    // For same-map strikes the world-flight leg is degenerate (origin == destination
+    // tile); ClearAndDestroy MUST run synchronously, otherwise MoveForward calls
+    // InitializeNextFlight on an empty FlightPath and SetSpeed reads First[0],
+    // throwing IndexOutOfRange. For cross-map the flight is real but the same path
+    // works once Arrived has consumed the last node.
     public class ArrivalAction_BombMap : VehicleArrivalAction
     {
         protected MapParent mapParent;
@@ -25,6 +25,10 @@ namespace AirstrikeMod
 
         protected ThingDef bombingSkyfallerDef;
         protected OrdinanceDef ordinance;
+
+        // Null = same-map. Non-null = cross-map: the bombing skyfaller's ExitMap builds
+        // a return AerialVehicleInFlight back to this MapParent.
+        protected MapParent originMapParent;
 
         public override bool DestroyOnArrival => false;
 
@@ -41,7 +45,8 @@ namespace AirstrikeMod
             IntVec3 returnCell,
             Rot4 returnRot,
             ThingDef bombingSkyfallerDef,
-            OrdinanceDef ordinance)
+            OrdinanceDef ordinance,
+            MapParent originMapParent = null)
             : base(vehicle)
         {
             this.mapParent = mapParent;
@@ -52,6 +57,7 @@ namespace AirstrikeMod
             this.returnRot = returnRot;
             this.bombingSkyfallerDef = bombingSkyfallerDef;
             this.ordinance = ordinance;
+            this.originMapParent = originMapParent;
         }
 
         public override void Arrived(GlobalTargetInfo target)
@@ -101,6 +107,7 @@ namespace AirstrikeMod
             skyfaller.ordinance = ordinance;
             skyfaller.returnCell = returnCell;
             skyfaller.returnRot = returnRot;
+            skyfaller.originMapParent = originMapParent;
             skyfaller.totalTicks = ComputeBuzzTicks(start, end, vehicle);
             skyfaller.scatter = vehicle.GetComp<CompAirstrike>()?.Props?.scatter ?? 0f;
 
@@ -110,7 +117,8 @@ namespace AirstrikeMod
         }
 
         /// <summary>
-        /// Larger constant = slower buzz. Bounded so pathological FlightSpeed values don't produce a one-frame blur or a 60-second camera lock.
+        /// Larger constant = slower buzz. Bounded so pathological FlightSpeed values
+        /// don't produce a one-frame blur or a 60-second camera lock.
         /// </summary>
         private const float BuzzTimeConstant = 30f;
 
@@ -122,9 +130,10 @@ namespace AirstrikeMod
             var ticks = Mathf.RoundToInt(distanceInCells * BuzzTimeConstant / flightSpeed);
             return Mathf.Clamp(ticks, 60, 1800);
         }
-        
+
         /// <summary>
-        /// Full-map edge-to-edge in flightDir. The buzz always enters and exits off-map for visual consistency regardless of where the target is.
+        /// Full-map edge-to-edge in flightDir. The buzz always enters and exits off-map
+        /// for visual consistency regardless of where the target is.
         /// </summary>
         private static void ChooseFlightLine(Map map, IntVec3 anchor, Rot4 dir,
             out IntVec3 start, out IntVec3 end)
@@ -168,6 +177,7 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref returnRot, nameof(returnRot));
             Scribe_Defs.Look(ref bombingSkyfallerDef, nameof(bombingSkyfallerDef));
             Scribe_Defs.Look(ref ordinance, nameof(ordinance));
+            Scribe_References.Look(ref originMapParent, nameof(originMapParent));
         }
     }
 }
