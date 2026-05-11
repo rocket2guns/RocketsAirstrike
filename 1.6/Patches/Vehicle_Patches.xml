@@ -8,11 +8,8 @@
         <match Class="PatchOperationAdd">
             <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Warbird"]/comps</xpath>
             <value>
-                <li Class="AirstrikeMod.CompProperties_Airstrike">
+                <li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
                     <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
-                    <allowedPatterns>
-                        <li>Single</li>
-                    </allowedPatterns>
                     <scatter>2</scatter>
                 </li>
             </value>

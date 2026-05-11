@@ -8,14 +8,14 @@
 			<texPath>Things/Vehicles/Falcon/Falcon</texPath>
 			<graphicClass>Vehicles.Graphic_Vehicle</graphicClass>
 			<shaderType>CutoutComplexPattern</shaderType>
-			<drawSize>(9, 9)</drawSize>
+			<drawSize>(11, 11)</drawSize>
 			<color>(72, 77, 72)</color>
 			<colorTwo>(56, 55, 50)</colorTwo>
 			<colorThree>(100, 69, 59)</colorThree>
 		</graphicData>
 		<fillPercent>0.7</fillPercent>
 		<buildDef>ROCKET_Falcon_Blueprint</buildDef>
-		<size>(7, 7)</size>
+		<size>(7, 9)</size>
 		<canCaravan LockSetting="True">false</canCaravan>
 		<vehicleCategory>Transport</vehicleCategory>
 		<techLevel>Industrial</techLevel>
@@ -356,9 +356,14 @@
 			</li>
 		</modExtensions>
 		<comps>
-			<li Class="AirstrikeMod.CompProperties_Airstrike">
+			<li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
+				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+				<scatter>0</scatter>
+			</li>
+			<li Class="AirstrikeMod.CompProperties_AirstrikeBombingRun">
 				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
 				<scatter>1</scatter>
+				<dropCount>5</dropCount>
 			</li>
 			<li Class="Vehicles.CompProperties_FueledTravel">
 				<fuelType>Chemfuel</fuelType>
@@ -375,7 +380,7 @@
 							<flipHorizontal>West</flipHorizontal>
 							<lockShadowZ>true</lockShadowZ>
 							<restriction Class="Vehicles.LaunchRestriction_Runway">
-								<width>(-2, 30)</width>
+								<width>(-2, 40)</width>
 								<height>(-3, 3)</height>
 								<fillPercent>0.21</fillPercent>
 							</restriction>
@@ -523,15 +528,14 @@
 				</launchProtocol>
 			</li>
 			<li Class="AirstrikeMod.CompProperties_EngineFlame">
-				<texturePath>Things/Vehicles/ExhaustFlame</texturePath>
 				<flameSize>(9,3)</flameSize>
 				<rotationDeg>-90</rotationDeg>
 				<pivot>(1, 0.5)</pivot>
 				<enginePoints>
-					<li>(0, -4)</li>
+					<li>(0, -5)</li>
 				</enginePoints>
 				<enginePointsVertical>
-					<li>(0, -2)</li>
+					<li>(0, -3)</li>
 				</enginePointsVertical>
 			</li>
 		</comps>

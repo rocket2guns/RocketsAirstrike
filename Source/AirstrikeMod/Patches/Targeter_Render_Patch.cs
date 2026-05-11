@@ -12,13 +12,13 @@ namespace AirstrikeMod.Patches
     {
         public static void Postfix()
         {
-            if (!CompAirstrike.BombTargetingActive) return;
+            if (!CompAirstrikeBase.BombTargetingActive) return;
 
-            var map = CompAirstrike.BombTargetingMap;
+            var map = CompAirstrikeBase.BombTargetingMap;
             if (map == null || map != Find.CurrentMap) return;
             var cell = UI.MouseCell();
             if (!cell.InBounds(map)) return;
-            GenDraw.DrawRadiusRing(cell, CompAirstrike.BombTargetingRadius);
+            GenDraw.DrawRadiusRing(cell, CompAirstrikeBase.BombTargetingRadius);
         }
     }
 

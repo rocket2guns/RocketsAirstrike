@@ -13,14 +13,13 @@ namespace AirstrikeMod
     // ctor and storing the singleton in PostInit is the entire registration.
     public class BombingRunTargeter : BaseTargeter
     {
-        public const int DropCount = 5;
-
         public static BombingRunTargeter Instance { get; private set; }
 
         private static float middleMouseDownTime;
 
         private Map map;
         private OrdinanceDef ordinance;
+        private int dropCount = 5;
         private Action<List<IntVec3>, Rot4> action;
         private Func<LocalTargetInfo, bool> targetValidator;
         private Rot4 rotation = Rot4.East;
@@ -33,6 +32,7 @@ namespace AirstrikeMod
         public override void PostInit() => Instance = this;
 
         public void BeginTargeting(VehiclePawn vehicle, Map map, OrdinanceDef ordinance,
+            int dropCount,
             Action<List<IntVec3>, Rot4> action,
             Func<LocalTargetInfo, bool> targetValidator = null,
             Action actionWhenFinished = null,
@@ -41,6 +41,7 @@ namespace AirstrikeMod
             this.vehicle = vehicle;
             this.map = map;
             this.ordinance = ordinance;
+            this.dropCount = Mathf.Max(1, dropCount);
             this.action = action;
             this.targetValidator = targetValidator;
             this.actionWhenFinished = actionWhenFinished;
@@ -70,7 +71,7 @@ namespace AirstrikeMod
                 if (action != null && cursorCell.InBounds(map) && IsValidPlacement(cursorCell))
                 {
                     SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
-                    var drops = ComputeDropCells(cursorCell, rotation, ordinance);
+                    var drops = ComputeDropCells(cursorCell, rotation, ordinance, dropCount);
                     var callback = action;
                     var rot = rotation;
                     StopTargeting();
@@ -135,7 +136,7 @@ namespace AirstrikeMod
                 return;
 
             footprintBuffer.Clear();
-            FillFootprint(cursorCell, rotation, ordinance, footprintBuffer);
+            FillFootprint(cursorCell, rotation, ordinance, dropCount, footprintBuffer);
             var color = IsValidPlacement(cursorCell)
                 ? Color.white
                 : new Color(1f, 0.3f, 0.2f);
@@ -145,13 +146,14 @@ namespace AirstrikeMod
         private static int Spacing(OrdinanceDef ord) =>
             Mathf.Max(1, Mathf.RoundToInt(ord.radius * 2f));
 
-        private static List<IntVec3> ComputeDropCells(IntVec3 cursor, Rot4 dir, OrdinanceDef ord)
+        private static List<IntVec3> ComputeDropCells(IntVec3 cursor, Rot4 dir, OrdinanceDef ord,
+            int dropCount)
         {
             var spacing = Spacing(ord);
-            var half = (DropCount - 1) / 2;
-            var cells = new List<IntVec3>(DropCount);
+            var half = (dropCount - 1) / 2;
+            var cells = new List<IntVec3>(dropCount);
 
-            for (var i = 0; i < DropCount; i++)
+            for (var i = 0; i < dropCount; i++)
             {
                 var offset = (i - half) * spacing;
                 if (dir == Rot4.North)
@@ -167,11 +169,11 @@ namespace AirstrikeMod
         }
 
         private static void GetBoxBounds(IntVec3 cursor, Rot4 dir, OrdinanceDef ord,
-            out int xMin, out int xMax, out int zMin, out int zMax)
+            int dropCount, out int xMin, out int xMax, out int zMin, out int zMax)
         {
             var spacing = Spacing(ord);
             var width = spacing;
-            var length = spacing * DropCount;
+            var length = spacing * dropCount;
             var halfW = width / 2;
             var halfL = length / 2;
 
@@ -193,9 +195,10 @@ namespace AirstrikeMod
         }
 
         private static void FillFootprint(IntVec3 cursor, Rot4 dir, OrdinanceDef ord,
-            List<IntVec3> buffer)
+            int dropCount, List<IntVec3> buffer)
         {
-            GetBoxBounds(cursor, dir, ord, out var xMin, out var xMax, out var zMin, out var zMax);
+            GetBoxBounds(cursor, dir, ord, dropCount,
+                out var xMin, out var xMax, out var zMin, out var zMax);
             for (var x = xMin; x <= xMax; x++)
                 for (var z = zMin; z <= zMax; z++)
                     buffer.Add(new IntVec3(x, 0, z));
@@ -205,7 +208,7 @@ namespace AirstrikeMod
         {
             if (targetValidator != null && !targetValidator(cursorCell))
                 return false;
-            GetBoxBounds(cursorCell, rotation, ordinance,
+            GetBoxBounds(cursorCell, rotation, ordinance, dropCount,
                 out var xMin, out var xMax, out var zMin, out var zMax);
             return xMin >= 0 && zMin >= 0 && xMax < map.Size.x && zMax < map.Size.z;
         }

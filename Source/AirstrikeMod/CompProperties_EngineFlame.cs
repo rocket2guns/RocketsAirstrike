@@ -25,6 +25,9 @@ namespace AirstrikeMod
         // texture-space pivot in [0..1]; (0.5, 0.5) = centre, (1, 0.5) = right-middle.
         public Vector2 pivot = new(0.5f, 0.5f);
 
+        // 0 = snap immediately. 60 = ~1 in-game second at normal speed
+        public int rampTicks = 60;
+
         public CompProperties_EngineFlame()
         {
             compClass = typeof(CompEngineFlame);

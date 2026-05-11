@@ -25,6 +25,7 @@ namespace AirstrikeMod
 
         protected ThingDef bombingSkyfallerDef;
         protected OrdinanceDef ordinance;
+        protected float scatter;
 
         // Null = same-map. Non-null = cross-map: the bombing skyfaller's ExitMap builds
         // a return AerialVehicleInFlight back to this MapParent.
@@ -46,6 +47,7 @@ namespace AirstrikeMod
             Rot4 returnRot,
             ThingDef bombingSkyfallerDef,
             OrdinanceDef ordinance,
+            float scatter = 0f,
             MapParent originMapParent = null)
             : base(vehicle)
         {
@@ -57,6 +59,7 @@ namespace AirstrikeMod
             this.returnRot = returnRot;
             this.bombingSkyfallerDef = bombingSkyfallerDef;
             this.ordinance = ordinance;
+            this.scatter = scatter;
             this.originMapParent = originMapParent;
         }
 
@@ -109,7 +112,7 @@ namespace AirstrikeMod
             skyfaller.returnRot = returnRot;
             skyfaller.originMapParent = originMapParent;
             skyfaller.totalTicks = ComputeBuzzTicks(start, end, vehicle);
-            skyfaller.scatter = vehicle.GetComp<CompAirstrike>()?.Props?.scatter ?? 0f;
+            skyfaller.scatter = scatter;
 
             GenSpawn.Spawn(skyfaller, start, map, flightDir);
 
@@ -177,6 +180,7 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref returnRot, nameof(returnRot));
             Scribe_Defs.Look(ref bombingSkyfallerDef, nameof(bombingSkyfallerDef));
             Scribe_Defs.Look(ref ordinance, nameof(ordinance));
+            Scribe_Values.Look(ref scatter, nameof(scatter));
             Scribe_References.Look(ref originMapParent, nameof(originMapParent));
         }
     }

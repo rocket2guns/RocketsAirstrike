@@ -9,6 +9,8 @@ namespace AirstrikeMod
     {
         public CompProperties_EngineFlame Props => (CompProperties_EngineFlame)props;
         private Material _flameMaterial;
+        private int _lastDrawTick = -10;
+        private int _rampStartTick = -10;
 
         private Material GetFlameMaterial()
         {
@@ -53,6 +55,14 @@ namespace AirstrikeMod
             var paused = Find.TickManager?.Paused ?? false;
             var jitterEnabled = flicker > 0f && !paused;
             var altitude = basePos.y + 0.05f;
+
+            var tick = Find.TickManager?.TicksGame ?? 0;
+            if (tick > _lastDrawTick + 1) _rampStartTick = tick;
+            _lastDrawTick = tick;
+            var ramp = props.rampTicks > 0
+                ? Mathf.Clamp01((float)(tick - _rampStartTick) / props.rampTicks)
+                : 1f;
+
             var n = enginePoints.Count;
             for (var i = 0; i < n; i++)
             {
@@ -60,7 +70,7 @@ namespace AirstrikeMod
                 var pos = basePos + rotPos * new Vector3(local.x, 0f, local.y);
                 pos.y = altitude;
                 var scale = jitterEnabled ? 1f + (Rand.Value - 0.5f) * 2f * flicker : 1f;
-                var size = new Vector3(flameSize.x * scale, 1f, flameSize.y * scale);
+                var size = new Vector3(flameSize.x * scale, 1f, flameSize.y * scale * ramp);
                 var pivotShift = rotQuad * new Vector3((0.5f - pivot.x) * size.x, 0f, (0.5f - pivot.y) * size.z);
                 var matrix = Matrix4x4.TRS(pos + pivotShift, rotQuad, size);
                 Graphics.DrawMesh(MeshPool.plane10, matrix, mat, 0);
