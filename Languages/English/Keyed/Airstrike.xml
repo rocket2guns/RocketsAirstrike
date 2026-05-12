@@ -5,8 +5,8 @@
     <RocketsAirstrike_SettingsCategory>Rocket's Airstrike</RocketsAirstrike_SettingsCategory>
     <RocketsAirstrike_FuelScaleLabel>Airstrike fuel cost (% of one world-tile flight)</RocketsAirstrike_FuelScaleLabel>
     <RocketsAirstrike_FuelScaleCurrent>  current: {0}%</RocketsAirstrike_FuelScaleCurrent>
-    <RocketsAirstrike_FastAnimationLabel>Fast takeoff/landing animation</RocketsAirstrike_FastAnimationLabel>
-    <RocketsAirstrike_FastAnimationDesc>Doubles the speed of takeoff and landing animations during airstrike runs.</RocketsAirstrike_FastAnimationDesc>
+    <RocketsAirstrike_HideEmptyOrdinanceLabel>Hide unavailable ordinance</RocketsAirstrike_HideEmptyOrdinanceLabel>
+    <RocketsAirstrike_HideEmptyOrdinanceDesc>When picking ordinance for an airstrike, hide types that have zero in cargo instead of showing them greyed out.</RocketsAirstrike_HideEmptyOrdinanceDesc>
 
     <!-- Ordinance picker gizmo -->
     <RocketsAirstrike_SelectOrdinance>Select ordinance</RocketsAirstrike_SelectOrdinance>
@@ -38,7 +38,6 @@
     <!-- Targeting cursor labels -->
     <RocketsAirstrike_SelectTargetLocation>Select Target Location</RocketsAirstrike_SelectTargetLocation>
     <RocketsAirstrike_SelectTargetRun>Select Target Run</RocketsAirstrike_SelectTargetRun>
-    <RocketsAirstrike_SelectLandingLocation>Select Landing Location</RocketsAirstrike_SelectLandingLocation>
 
     <!-- Reject messages -->
     <RocketsAirstrike_NoOrdinanceSelected>No ordinance selected.</RocketsAirstrike_NoOrdinanceSelected>

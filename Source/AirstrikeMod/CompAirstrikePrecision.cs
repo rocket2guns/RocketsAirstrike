@@ -27,7 +27,8 @@ namespace AirstrikeMod
                 desc: "RocketsAirstrike_PrecisionStrikeDesc".Translate(),
                 topIcon: Icon,
                 requiredShells: RequiredShells,
-                onClick: _startDelegate ??= () => PickDestinationMap(StartTargeting));
+                onClick: _startDelegate ??= () => PickDestinationMap(StartTargeting),
+                useSingleVariantIcon: true);
         }
 
         protected override void StartTargeting(Map destMap)
@@ -54,7 +55,7 @@ namespace AirstrikeMod
 
             BombTargetingActive = true;
             BombTargetingMap = destMap;
-            BombTargetingRadius = sel != null ? sel.radius : 3f;
+            BombTargetingRadius = sel?.radius ?? 3f;
             CursorLabel.Current = "RocketsAirstrike_SelectTargetLocation".Translate();
 
             var cursorIcon = sel?.thingDef?.uiIcon ?? Icon;
@@ -66,17 +67,13 @@ namespace AirstrikeMod
                     BombTargetingActive = false;
                     CursorLabel.Current = null;
                     var cells = new List<IntVec3>(1) { bombTarget.Cell };
-                    StartLandingTargeting(destMap, cells, Rot4.East, originalMap);
+                    LaunchStrike(destMap, cells, Rot4.East, originalMap);
                 },
                 actionWhenFinished: () =>
                 {
                     BombTargetingActive = false;
-                    // Keep state alive if we're chaining into stage B; clear on cancel.
-                    if (!LandingTargeter.Instance.IsTargeting)
-                    {
-                        CursorLabel.Current = null;
-                        RestoreCurrentMap(originalMap);
-                    }
+                    CursorLabel.Current = null;
+                    RestoreCurrentMap(originalMap);
                 },
                 mouseAttachment: cursorIcon);
         }

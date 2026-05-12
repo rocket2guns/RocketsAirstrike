@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+    <!--
+        High-explosive bomb. Airstrike-only ordinance derived from vanilla
+        Shell_HighExplosive but deliberately distinct: it lives in the custom
+        RocketsAirstrike_Bombs thingCategory (so mortars' MortarShells filter
+        won't accept it), carries no MortarShell tradeTag, and has no
+        CompProperties_Explosive (so it does not cook off when damaged and
+        cannot be used as a placed trap). Projectile retains the doubled
+        explosion radius (2.9 -> 5.8). Mass is 5x vanilla (1.25 -> 6.25).
+        Recipe upgrades a vanilla HE shell with chemfuel and an advanced
+        component. Texture paths currently point at placeholders.
+    -->
+
+    <ThingDef ParentName="MakeableShellBase">
+        <defName>RocketsAirstrike_Bomb_HighExplosive</defName>
+        <label>high-explosive bomb</label>
+        <description>A large aerial bomb filled with high explosives. Delivered onto targets by carrier aircraft during bombing runs; too bulky and aerodynamically shaped to be fired from a mortar.</description>
+        <possessionCount>1</possessionCount>
+        <statBases>
+            <Mass>7</Mass>
+        </statBases>
+        <thingCategories>
+            <li>RocketsAirstrike_Bombs</li>
+        </thingCategories>
+        <tradeTags />
+        <graphicData>
+            <texPath>Things/Item/Resource/Bomb</texPath>
+            <graphicClass>Graphic_StackCount</graphicClass>
+        </graphicData>
+        <projectileWhenLoaded>RocketsAirstrike_Bullet_Bomb_HighExplosive</projectileWhenLoaded>
+        <costList>
+            <Shell_HighExplosive>1</Shell_HighExplosive>
+            <Chemfuel>15</Chemfuel>
+            <ComponentSpacer>1</ComponentSpacer>
+        </costList>
+        <recipeMaker>
+            <researchPrerequisite>Mortars</researchPrerequisite>
+        </recipeMaker>
+    </ThingDef>
+
+    <ThingDef ParentName="BaseBullet">
+        <defName>RocketsAirstrike_Bullet_Bomb_HighExplosive</defName>
+        <label>high-explosive bomb</label>
+        <graphicData>
+            <!-- TODO: replace with custom texture. -->
+            <texPath>Things/Projectile/ShellHighExplosive</texPath>
+            <graphicClass>Graphic_Single</graphicClass>
+            <shaderType>TransparentPostLight</shaderType>
+        </graphicData>
+        <thingClass>Projectile_Explosive</thingClass>
+        <projectile>
+            <damageDef>Bomb</damageDef>
+            <damageAmountBase>150</damageAmountBase>
+            <!-- Vanilla Bomb defaultArmorPenetration is 0.10; +100%. -->
+            <armorPenetrationBase>0.2</armorPenetrationBase>
+            <speed>30</speed>
+            <explosionRadius>5.8</explosionRadius>
+            <flyOverhead>true</flyOverhead>
+            <soundHitThickRoof>Artillery_HitThickRoof</soundHitThickRoof>
+            <soundExplode>MortarBomb_Explode</soundExplode>
+            <soundImpactAnticipate>MortarRound_PreImpact</soundImpactAnticipate>
+            <soundAmbient>MortarRound_Ambient</soundAmbient>
+            <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
+        </projectile>
+    </ThingDef>
+
+</Defs>

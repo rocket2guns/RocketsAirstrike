@@ -6,15 +6,13 @@ namespace AirstrikeMod
 {
     public class CompProperties_EngineFlame : VehicleCompProperties
     {
-        // for east/west and diagonal facings
-        public List<Vector2> enginePoints = new();
-
-        // north/south sprites are typically a different view, so allow an override list
-        public List<Vector2> enginePointsVertical;
+        public List<Vector2> exhaustOffsetsEast = new();
+        public List<Vector2> exhaustOffsetsNorth;
+        public List<Vector2> exhaustOffsetsSouth;
 
         public Vector2 flameSize = new(1f, 1f);
 
-        public string texturePath = "UI/ButtonTarget";
+        public string texturePath = "Things/Vehicles/ExhaustFlame";
 
         // per-frame random scale jitter, 0..1.
         public float flicker = 0.15f;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using RimWorld;
 using RimWorld.Planet;
 using SmashTools.Targeting;
@@ -21,12 +22,29 @@ namespace AirstrikeMod
             _emptySlotIcon ??= ContentFinder<Texture2D>.Get("UI/ButtonEmpty", reportFailure: false)
                                ?? BaseContent.BadTex;
 
+        private static readonly FieldInfo SubGraphicsField = typeof(Graphic_Collection)
+            .GetField("subGraphics", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly Dictionary<ThingDef, Texture2D> _singleVariantCache = new();
+        protected static Texture2D GetSingleVariantIcon(ThingDef def)
+        {
+            if (def == null) return null;
+            if (_singleVariantCache.TryGetValue(def, out var cached))
+                return cached ?? def.uiIcon;
+            Texture2D tex = null;
+            if (def.graphic is Graphic_Collection coll
+                && SubGraphicsField?.GetValue(coll) is Graphic[] { Length: > 0 } subs)
+            {
+                tex = subs[0].MatSingle?.mainTexture as Texture2D;
+            }
+            _singleVariantCache[def] = tex;
+            return tex ?? def.uiIcon;
+        }
+
         public static bool BombTargetingActive;
         public static Map BombTargetingMap;
         public static float BombTargetingRadius;
 
         private Action _showOrdinanceMenuDelegate;
-        private Func<LocalTargetInfo, bool> _isLandingValidDelegate;
 
         protected OrdinanceDef SelectedOrdinance
         {
@@ -64,7 +82,8 @@ namespace AirstrikeMod
                 yield break;
             if (IsPrimary)
                 yield return BuildOrdinanceGizmo();
-            yield return BuildStrikeGizmo();
+            if (SelectedOrdinance != null)
+                yield return BuildStrikeGizmo();
         }
 
         // Same-map: just the buzz overhead (one tile of fuel scaled by fuelScale).
@@ -105,7 +124,7 @@ namespace AirstrikeMod
         }
 
         protected Gizmo BuildLaunchGizmo(string label, string desc, Texture2D topIcon,
-            int requiredShells, Action onClick)
+            int requiredShells, Action onClick, bool useSingleVariantIcon = false)
         {
             var launcherComp = Vehicle.CompVehicleLauncher;
             var fuelComp = Vehicle.CompFueledTravel;
@@ -120,7 +139,9 @@ namespace AirstrikeMod
                 defaultLabel = label,
                 defaultDesc = desc,
                 icon = topIcon,
-                iconUnderlay = sel?.thingDef?.uiIcon,
+                iconUnderlay = useSingleVariantIcon
+                    ? GetSingleVariantIcon(sel?.thingDef)
+                    : sel?.thingDef?.uiIcon,
                 action = onClick,
             };
 
@@ -170,6 +191,7 @@ namespace AirstrikeMod
 
                 var count = CountInCargo(ord.thingDef);
                 var empty = count <= 0;
+                if (empty && AirstrikeMod.Settings.hideEmptyOrdinance) continue;
                 var captured = ord;
 
                 var baseLabel = "RocketsAirstrike_OrdinanceCount".Translate(
@@ -257,54 +279,17 @@ namespace AirstrikeMod
             return new FloatMenuOption(label, action);
         }
 
-        protected void StartLandingTargeting(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
+        protected void LaunchStrike(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
             Map originalMap)
         {
-            if (LandingTargeter.Instance.IsTargeting) return;
-
-            // VTOLs lack LandingProperties.restriction; skip the prompt and land back at takeoff.
-            if (!LandingNeedsTargeting())
-            {
-                OnTargetsChosen(destMap, bombCells, flightDir, Vehicle.Position, Vehicle.Rotation);
-                RestoreCurrentMap(originalMap);
-                return;
-            }
-
-            CursorLabel.Current = "RocketsAirstrike_SelectLandingLocation".Translate();
-
-            // Landing always happens on the vehicle's home map; jump there so the player
-            // can see runway clearance.
-            LandingTargeter.Instance.BeginTargetingAndFocusMap(
-                vehicle: Vehicle,
-                map: Vehicle.Map,
-                action: (landingTarget, landingRot)
-                    => OnTargetsChosen(destMap, bombCells, flightDir, landingTarget, landingRot),
-                targetValidator: _isLandingValidDelegate ??= IsLandingValid,
-                actionWhenFinished: () =>
-                {
-                    CursorLabel.Current = null;
-                    RestoreCurrentMap(originalMap);
-                },
-                mouseAttachment: null,
-                allowRotating: true,
-                forcedTargeting: true);
+            OnTargetsChosen(destMap, bombCells, flightDir, Vehicle.Position, Vehicle.Rotation.Opposite);
+            RestoreCurrentMap(originalMap);
         }
 
         protected static void RestoreCurrentMap(Map originalMap)
         {
             if (originalMap != null && Current.Game.CurrentMap != originalMap)
                 Current.Game.CurrentMap = originalMap;
-        }
-
-        private bool LandingNeedsTargeting()
-        {
-            return Vehicle.CompVehicleLauncher?.launchProtocol?.LandingProperties?.restriction != null;
-        }
-
-        private bool IsLandingValid(LocalTargetInfo target)
-        {
-            return target.Cell.InBounds(Vehicle.Map)
-                && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, target.Cell, Vehicle.Map);
         }
 
         private void OnTargetsChosen(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
@@ -333,8 +318,15 @@ namespace AirstrikeMod
 
             Vehicle.CompFueledTravel?.ConsumeFuel(ComputeFuelCost(destMap));
 
-            if (AirstrikeMod.Settings.fastTakeoffLanding)
-                BombingSpeedManager.MarkFast(Vehicle);
+            var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
+            for (var i = 0; i < pilots.Count; i++)
+            {
+                var records = pilots[i].records;
+                records.Increment(AirstrikeDefOf.RocketsAirstrike_SortiesFlown);
+                records.AddTo(AirstrikeDefOf.RocketsAirstrike_OrdinanceDropped, bombCells.Count);
+            }
+
+            BombingSpeedManager.MarkFast(Vehicle);
 
             var arrival = new ArrivalAction_BombMap(
                 Vehicle,

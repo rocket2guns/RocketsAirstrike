@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-	<Vehicles.VehicleDef ParentName="VehiclePawn_Mechanical">
+	<Vehicles.VehicleDef ParentName="BaseVehiclePawn">
 		<defName>ROCKET_Falcon</defName>
 		<label>Falcon</label>
 		<description>A modern fighter plane, the Falcon is an incredibly fast jet-powered and effective strike craft. With minimal cargo intended for holding ordinance and fuel, its primary purpose is to perform precision strike and bombing runs.\n\nBeing a flying vehicle, it is extremely obvious when on the move.\n\n&lt;color=#bb8f04&gt;Crew:&lt;/color&gt; Pilot x1\n&lt;color=#bb8f04&gt;Fuel type:&lt;/color&gt; Chemfuel</description>
@@ -342,19 +342,6 @@
 				<hitWeight>3</hitWeight>
 			</li>
 		</components>
-		<modExtensions>
-			<li Class="VanillaVehiclesExpanded.StatExtension">
-				<statToAdd>
-					<li>VVE_VehicleTier</li>
-				</statToAdd>
-				<statValues>
-					<li>VVE_Tier2</li>
-				</statValues>
-				<statDescriptions>
-					<li>VVE_Tier2Desc</li>
-				</statDescriptions>
-			</li>
-		</modExtensions>
 		<comps>
 			<li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
 				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
@@ -531,12 +518,15 @@
 				<flameSize>(9,3)</flameSize>
 				<rotationDeg>-90</rotationDeg>
 				<pivot>(1, 0.5)</pivot>
-				<enginePoints>
+				<exhaustOffsetsEast>
 					<li>(0, -5)</li>
-				</enginePoints>
-				<enginePointsVertical>
+				</exhaustOffsetsEast>
+				<exhaustOffsetsNorth>
+					<li>(0, -3.75)</li>
+				</exhaustOffsetsNorth>
+				<exhaustOffsetsSouth>
 					<li>(0, -3)</li>
-				</enginePointsVertical>
+				</exhaustOffsetsSouth>
 			</li>
 		</comps>
 	</Vehicles.VehicleDef>

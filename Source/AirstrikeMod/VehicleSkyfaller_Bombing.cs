@@ -36,6 +36,11 @@ namespace AirstrikeMod
         protected int ticksRunning;
         protected List<bool> bombsDropped;
 
+        // Resolved lazily on first DrawAt and reused — DrawAt fires every frame, and
+        // VehiclePawn.GetComp<T> iterates AllComps. Not serialized; rebuilt on load.
+        private CompEngineFlame _engineFlame;
+        private bool _engineFlameLookedUp;
+
         [Obsolete("Implemented for Xml Deserialization only. Use VehicleSkyfallerMaker instead.")]
         [UsedImplicitly]
         public VehicleSkyfaller_Bombing()
@@ -67,7 +72,12 @@ namespace AirstrikeMod
             var pos = DrawPos;
             vehicle.DrawAt(in pos, Rotation, 0f);
             DrawShadow();
-            CompEngineFlame.DrawFlamesFor(vehicle, pos, Rotation);
+            if (!_engineFlameLookedUp)
+            {
+                _engineFlame = vehicle?.GetComp<CompEngineFlame>();
+                _engineFlameLookedUp = true;
+            }
+            _engineFlame?.DrawFlames(pos, Rotation, 0f);
         }
 
         private void DrawShadow()

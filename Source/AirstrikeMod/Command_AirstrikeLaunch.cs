@@ -16,6 +16,7 @@ namespace AirstrikeMod
             {
                 var iconRect = rect;
                 iconRect.position += new Vector2(iconOffset.x * rect.size.x, iconOffset.y * rect.size.y);
+                iconRect.y -= rect.size.y * 0.15f;
 
                 if (!disabled || parms.lowLight)
                     GUI.color = IconDrawColor;
@@ -24,7 +25,7 @@ namespace AirstrikeMod
                 if (parms.lowLight)
                     GUI.color = GUI.color.ToTransparent(0.6f);
 
-                Widgets.DrawTextureFitted(iconRect, iconUnderlay, iconDrawScale * 0.85f,
+                Widgets.DrawTextureFitted(iconRect, iconUnderlay, iconDrawScale * 0.64f,
                     iconProportions, iconTexCoords, iconAngle, overrideMaterial ?? buttonMat);
                 GUI.color = Color.white;
             }

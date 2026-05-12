@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+    <RimWorld.RecordDef>
+        <defName>RocketsAirstrike_SortiesFlown</defName>
+        <label>sorties flown</label>
+        <type>Int</type>
+    </RimWorld.RecordDef>
+
+    <RimWorld.RecordDef>
+        <defName>RocketsAirstrike_OrdinanceDropped</defName>
+        <label>ordinance dropped</label>
+        <type>Int</type>
+    </RimWorld.RecordDef>
+
+    <RimWorld.RecordDef>
+        <defName>RocketsAirstrike_TimeFlown</defName>
+        <label>flight time</label>
+        <type>Time</type>
+        <workerClass>AirstrikeMod.RecordWorker_OnSortie</workerClass>
+    </RimWorld.RecordDef>
+
+</Defs>

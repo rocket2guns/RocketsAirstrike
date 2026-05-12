@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+	<ResearchProjectDef>
+		<defName>ROCKET_JetAircraft</defName>
+		<label>jet aircraft</label>
+		<description>Construct jet-powered fighter aircraft capable of precision strikes and bombing runs.</description>
+		<baseCost>2000</baseCost>
+		<techLevel>Industrial</techLevel>
+		<prerequisites>
+			<li>Fabrication</li>
+			<li>MicroelectronicsBasics</li>
+		</prerequisites>
+	</ResearchProjectDef>
+</Defs>

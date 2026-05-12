@@ -144,7 +144,7 @@ namespace AirstrikeMod
         }
 
         private static int Spacing(OrdinanceDef ord) =>
-            Mathf.Max(1, Mathf.RoundToInt(ord.radius * 2f));
+            Mathf.Max(1, Mathf.FloorToInt(ord.radius * 2f));
 
         private static List<IntVec3> ComputeDropCells(IntVec3 cursor, Rot4 dir, OrdinanceDef ord,
             int dropCount)

@@ -53,17 +53,14 @@ namespace AirstrikeMod
                 action: (cells, dir) =>
                 {
                     CursorLabel.Current = null;
-                    StartLandingTargeting(destMap, cells, dir, originalMap);
+                    LaunchStrike(destMap, cells, dir, originalMap);
                 },
                 targetValidator: t => t.Cell.InBounds(destMap)
                                       && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, destMap),
                 actionWhenFinished: () =>
                 {
-                    if (!LandingTargeter.Instance.IsTargeting)
-                    {
-                        CursorLabel.Current = null;
-                        RestoreCurrentMap(originalMap);
-                    }
+                    CursorLabel.Current = null;
+                    RestoreCurrentMap(originalMap);
                 },
                 mouseAttachment: cursorIcon);
         }

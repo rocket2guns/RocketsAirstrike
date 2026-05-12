@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using SmashTools;
 using UnityEngine;
 using Vehicles;
@@ -29,19 +30,21 @@ namespace AirstrikeMod
             comp?.DrawFlames(basePos, rot, extraRotation);
         }
 
-        private void DrawFlames(Vector3 basePos, Rot8 rot, float extraRotation)
+        public void DrawFlames(Vector3 basePos, Rot8 rot, float extraRotation)
         {
             var props = Props;
             if (props == null) return;
             var mat = GetFlameMaterial();
             if (mat == null) return;
 
-            var enginePoints = (rot == Rot8.North || rot == Rot8.South)
-                && props.enginePointsVertical != null
-                && props.enginePointsVertical.Count > 0
-                    ? props.enginePointsVertical
-                    : props.enginePoints;
-            if (enginePoints == null || enginePoints.Count == 0) return;
+            List<Vector2> offsets;
+            if (rot == Rot8.North && props.exhaustOffsetsNorth?.Count > 0)
+                offsets = props.exhaustOffsetsNorth;
+            else if (rot == Rot8.South && props.exhaustOffsetsSouth?.Count > 0)
+                offsets = props.exhaustOffsetsSouth;
+            else
+                offsets = props.exhaustOffsetsEast;
+            if (offsets == null || offsets.Count == 0) return;
             var tilt = extraRotation;
             if (rot == Rot8.West || rot == Rot8.NorthWest || rot == Rot8.SouthWest)
                 tilt = -tilt;
@@ -63,10 +66,10 @@ namespace AirstrikeMod
                 ? Mathf.Clamp01((float)(tick - _rampStartTick) / props.rampTicks)
                 : 1f;
 
-            var n = enginePoints.Count;
+            var n = offsets.Count;
             for (var i = 0; i < n; i++)
             {
-                var local = enginePoints[i];
+                var local = offsets[i];
                 var pos = basePos + rotPos * new Vector3(local.x, 0f, local.y);
                 pos.y = altitude;
                 var scale = jitterEnabled ? 1f + (Rand.Value - 0.5f) * 2f * flicker : 1f;

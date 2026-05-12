@@ -10,6 +10,8 @@ namespace AirstrikeMod
     {
         private static readonly HashSet<VehiclePawn> FastVehicles = new();
 
+        internal static HashSet<VehiclePawn> Active => FastVehicles;
+
         public static void MarkFast(VehiclePawn vehicle)
         {
             if (vehicle != null) FastVehicles.Add(vehicle);

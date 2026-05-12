@@ -32,9 +32,9 @@ namespace AirstrikeMod
             listing.GapLine();
 
             listing.CheckboxLabeled(
-                "RocketsAirstrike_FastAnimationLabel".Translate(),
-                ref Settings.fastTakeoffLanding,
-                "RocketsAirstrike_FastAnimationDesc".Translate());
+                "RocketsAirstrike_HideEmptyOrdinanceLabel".Translate(),
+                ref Settings.hideEmptyOrdinance,
+                "RocketsAirstrike_HideEmptyOrdinanceDesc".Translate());
 
             listing.End();
             base.DoSettingsWindowContents(inRect);
@@ -44,13 +44,13 @@ namespace AirstrikeMod
     public class AirstrikeModSettings : ModSettings
     {
         public float fuelScale = 1f;
-        public bool fastTakeoffLanding = true;
+        public bool hideEmptyOrdinance;
 
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Values.Look(ref fuelScale, nameof(fuelScale), 1f);
-            Scribe_Values.Look(ref fastTakeoffLanding, nameof(fastTakeoffLanding), true);
+            Scribe_Values.Look(ref hideEmptyOrdinance, nameof(hideEmptyOrdinance));
         }
     }
 }

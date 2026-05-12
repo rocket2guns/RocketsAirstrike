@@ -50,4 +50,9 @@
         <thingDef>Shell_AntigrainWarhead</thingDef>
     </AirstrikeMod.OrdinanceDef>
 
+    <AirstrikeMod.OrdinanceDef>
+        <defName>Ordinance_HighExplosiveBomb</defName>
+        <thingDef>RocketsAirstrike_Bomb_HighExplosive</thingDef>
+    </AirstrikeMod.OrdinanceDef>
+
 </Defs>
