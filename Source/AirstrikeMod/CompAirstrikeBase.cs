@@ -74,6 +74,13 @@ namespace AirstrikeMod
         protected abstract int RequiredShells { get; }
         protected abstract OrdinancePattern Pattern { get; }
 
+        /// <summary>
+        /// Strike modes that pick from the OrdinanceDef cargo list. Strafing runs
+        /// use a fixed XML-defined projectile + ammo, so they bypass the picker and
+        /// the per-cell shell consumption.
+        /// </summary>
+        protected virtual bool RequiresOrdinance => true;
+
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
             foreach (var g in base.CompGetGizmosExtra())
@@ -82,7 +89,7 @@ namespace AirstrikeMod
                 yield break;
             if (IsPrimary)
                 yield return BuildOrdinanceGizmo();
-            if (SelectedOrdinance != null)
+            if (!RequiresOrdinance || SelectedOrdinance != null)
                 yield return BuildStrikeGizmo();
         }
 
@@ -124,7 +131,9 @@ namespace AirstrikeMod
         }
 
         protected Gizmo BuildLaunchGizmo(string label, string desc, Texture2D topIcon,
-            int requiredShells, Action onClick, bool useSingleVariantIcon = false)
+            int requiredShells, Action onClick, bool useSingleVariantIcon = false,
+            ThingDef ammoOverrideDef = null, int ammoOverrideCount = 0,
+            Texture2D iconUnderlayOverride = null)
         {
             var launcherComp = Vehicle.CompVehicleLauncher;
             var fuelComp = Vehicle.CompFueledTravel;
@@ -132,16 +141,18 @@ namespace AirstrikeMod
             var cost = ResolvedFuelCost;
             var notEnoughFuel = fuelComp != null && fuel < cost;
             var sel = SelectedOrdinance;
-            var countInCargo = sel != null ? CountInCargo(sel.thingDef) : 0;
+            var ordnanceMode = RequiresOrdinance;
+            var countInCargo = ordnanceMode && sel != null ? CountInCargo(sel.thingDef) : 0;
+            var ammoInCargo = ammoOverrideDef != null ? CountInCargo(ammoOverrideDef) : 0;
 
             var cmd = new Command_AirstrikeLaunch
             {
                 defaultLabel = label,
                 defaultDesc = desc,
                 icon = topIcon,
-                iconUnderlay = useSingleVariantIcon
+                iconUnderlay = iconUnderlayOverride ?? (useSingleVariantIcon
                     ? GetSingleVariantIcon(sel?.thingDef)
-                    : sel?.thingDef?.uiIcon,
+                    : sel?.thingDef?.uiIcon),
                 action = onClick,
             };
 
@@ -162,18 +173,29 @@ namespace AirstrikeMod
             {
                 cmd.Disable(launchReason);
             }
-            else if (sel == null)
+            else switch (ordnanceMode)
             {
-                cmd.Disable("RocketsAirstrike_SelectOrdinanceFirst".Translate());
-            }
-            else if (countInCargo < requiredShells)
-            {
-                cmd.Disable("RocketsAirstrike_NeedShellsHave".Translate(
-                    requiredShells, sel.thingDef.label, countInCargo));
-            }
-            else if (notEnoughFuel)
-            {
-                cmd.Disable("RocketsAirstrike_NotEnoughFuel".Translate(cost.ToString("0")));
+                case true when sel == null:
+                    cmd.Disable("RocketsAirstrike_SelectOrdinanceFirst".Translate());
+                    break;
+                case true when countInCargo < requiredShells:
+                    cmd.Disable("RocketsAirstrike_NeedShellsHave".Translate(
+                        requiredShells, sel.thingDef.label, countInCargo));
+                    break;
+                default:
+                {
+                    if (ammoOverrideDef != null && ammoInCargo < ammoOverrideCount)
+                    {
+                        cmd.Disable("RocketsAirstrike_NeedShellsHave".Translate(
+                            ammoOverrideCount, ammoOverrideDef.label, ammoInCargo));
+                    }
+                    else if (notEnoughFuel)
+                    {
+                        cmd.Disable("RocketsAirstrike_NotEnoughFuel".Translate(cost.ToString("0")));
+                    }
+
+                    break;
+                }
             }
 
             return cmd;
@@ -280,9 +302,10 @@ namespace AirstrikeMod
         }
 
         protected void LaunchStrike(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
-            Map originalMap)
+            Map originalMap, StrafingPayload strafing = null)
         {
-            OnTargetsChosen(destMap, bombCells, flightDir, Vehicle.Position, Vehicle.Rotation.Opposite);
+            OnTargetsChosen(destMap, bombCells, flightDir, Vehicle.Position,
+                Vehicle.Rotation.Opposite, strafing);
             RestoreCurrentMap(originalMap);
         }
 
@@ -293,23 +316,36 @@ namespace AirstrikeMod
         }
 
         private void OnTargetsChosen(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
-            LocalTargetInfo landingTarget, Rot4 landingRot)
+            LocalTargetInfo landingTarget, Rot4 landingRot, StrafingPayload strafing)
         {
             var sel = SelectedOrdinance;
-            if (sel == null)
+            if (RequiresOrdinance)
             {
-                Messages.Message("RocketsAirstrike_NoOrdinanceSelected".Translate(),
-                    MessageTypeDefOf.RejectInput, false);
-                return;
-            }
+                if (sel == null)
+                {
+                    Messages.Message("RocketsAirstrike_NoOrdinanceSelected".Translate(),
+                        MessageTypeDefOf.RejectInput, false);
+                    return;
+                }
 
-            var needed = bombCells.Count;
-            if (!ConsumeFromCargo(sel.thingDef, needed))
+                var needed = bombCells.Count;
+                if (!ConsumeFromCargo(sel.thingDef, needed))
+                {
+                    Messages.Message(
+                        "RocketsAirstrike_NeedShells".Translate(needed, sel.thingDef.label),
+                        MessageTypeDefOf.RejectInput, false);
+                    return;
+                }
+            }
+            else if (strafing != null && strafing.ammoDef != null && strafing.ammoCount > 0)
             {
-                Messages.Message(
-                    "RocketsAirstrike_NeedShells".Translate(needed, sel.thingDef.label),
-                    MessageTypeDefOf.RejectInput, false);
-                return;
+                if (!ConsumeFromCargo(strafing.ammoDef, strafing.ammoCount))
+                {
+                    Messages.Message(
+                        "RocketsAirstrike_NeedShells".Translate(strafing.ammoCount, strafing.ammoDef.label),
+                        MessageTypeDefOf.RejectInput, false);
+                    return;
+                }
             }
 
             var crossMap = destMap != Vehicle.Map;
@@ -340,7 +376,16 @@ namespace AirstrikeMod
                                      ?? Vehicle.CompVehicleLauncher.Props.skyfallerStrafing,
                 ordinance: sel,
                 scatter: BaseProps.scatter,
-                originMapParent: crossMap ? originMapParent : null);
+                originMapParent: crossMap ? originMapParent : null,
+                flyAltitude: BaseProps.flyAltitude,
+                buzzSpeedMultiplier: BaseProps.buzzSpeedMultiplier,
+                buzzSpeedRampCells: BaseProps.buzzSpeedRampCells,
+                strafingProjectileDef: strafing?.projectileDef,
+                strafingLeadCells: strafing?.leadCells ?? 0,
+                strafingFireSound: strafing?.fireSound,
+                strafingBulletsPerRound: strafing?.bulletsPerRound ?? 1,
+                strafingSpreadCells: strafing?.spreadCells ?? 0,
+                strafingFireOriginOffset: strafing?.fireOriginOffset ?? 3);
 
             var targetData = new TargetData<GlobalTargetInfo>();
             targetData.targets.Add(new GlobalTargetInfo(destMap.Tile));
@@ -372,8 +417,7 @@ namespace AirstrikeMod
             if (container == null) return false;
 
             var remaining = count;
-            var n = container.Count;
-            for (var i = 0; i < n && remaining > 0; i++)
+            for (var i = container.Count - 1; i >= 0 && remaining > 0; i--)
             {
                 var t = container[i];
                 if (t.def != def || t.stackCount <= 0) continue;

@@ -352,6 +352,20 @@
 				<scatter>1</scatter>
 				<dropCount>5</dropCount>
 			</li>
+			<li Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun">
+				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+				<projectileDef>Bullet_AutocannonTurret</projectileDef>
+				<ammoDef>Steel</ammoDef>
+				<fireSound>Shot_Autocannon</fireSound>
+				<runWidth>3</runWidth>
+				<runLength>25</runLength>
+				<leadCells>8</leadCells>
+				<flyAltitude>2</flyAltitude>
+				<bulletsPerRound>4</bulletsPerRound>
+				<spreadCells>1</spreadCells>
+				<buzzSpeedMultiplier>0.3</buzzSpeedMultiplier>
+				<buzzSpeedRampCells>30</buzzSpeedRampCells>
+			</li>
 			<li Class="Vehicles.CompProperties_FueledTravel">
 				<fuelType>Chemfuel</fuelType>
 				<leakDef>Filth_Fuel</leakDef>

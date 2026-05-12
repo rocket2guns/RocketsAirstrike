@@ -5,5 +5,6 @@ namespace AirstrikeMod
         Single,
         Line,
         Cluster, // unimplemented
+        Strafing,
     }
 }

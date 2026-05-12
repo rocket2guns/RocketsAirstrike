@@ -26,6 +26,18 @@ namespace AirstrikeMod
         protected ThingDef bombingSkyfallerDef;
         protected OrdinanceDef ordinance;
         protected float scatter;
+        protected float flyAltitude = 6f;
+        protected float buzzSpeedMultiplier = 1f;
+        protected int buzzSpeedRampCells = 3;
+
+        // Strafing-only: when set, the skyfaller fires Projectile.Launch(...) from its
+        // DrawPos toward each bombCell, with firing leading the plane by strafingLeadCells.
+        protected ThingDef strafingProjectileDef;
+        protected int strafingLeadCells;
+        protected SoundDef strafingFireSound;
+        protected int strafingBulletsPerRound = 1;
+        protected int strafingSpreadCells;
+        protected int strafingFireOriginOffset = 3;
 
         // Null = same-map. Non-null = cross-map: the bombing skyfaller's ExitMap builds
         // a return AerialVehicleInFlight back to this MapParent.
@@ -48,7 +60,16 @@ namespace AirstrikeMod
             ThingDef bombingSkyfallerDef,
             OrdinanceDef ordinance,
             float scatter = 0f,
-            MapParent originMapParent = null)
+            MapParent originMapParent = null,
+            float flyAltitude = 6f,
+            float buzzSpeedMultiplier = 1f,
+            int buzzSpeedRampCells = 3,
+            ThingDef strafingProjectileDef = null,
+            int strafingLeadCells = 0,
+            SoundDef strafingFireSound = null,
+            int strafingBulletsPerRound = 1,
+            int strafingSpreadCells = 0,
+            int strafingFireOriginOffset = 3)
             : base(vehicle)
         {
             this.mapParent = mapParent;
@@ -61,6 +82,15 @@ namespace AirstrikeMod
             this.ordinance = ordinance;
             this.scatter = scatter;
             this.originMapParent = originMapParent;
+            this.flyAltitude = flyAltitude;
+            this.buzzSpeedMultiplier = buzzSpeedMultiplier;
+            this.buzzSpeedRampCells = buzzSpeedRampCells;
+            this.strafingProjectileDef = strafingProjectileDef;
+            this.strafingLeadCells = strafingLeadCells;
+            this.strafingFireSound = strafingFireSound;
+            this.strafingBulletsPerRound = strafingBulletsPerRound;
+            this.strafingSpreadCells = strafingSpreadCells;
+            this.strafingFireOriginOffset = strafingFireOriginOffset;
         }
 
         public override void Arrived(GlobalTargetInfo target)
@@ -113,6 +143,15 @@ namespace AirstrikeMod
             skyfaller.originMapParent = originMapParent;
             skyfaller.totalTicks = ComputeBuzzTicks(start, end, vehicle);
             skyfaller.scatter = scatter;
+            skyfaller.visualAltitude = flyAltitude;
+            skyfaller.buzzSpeedMultiplier = buzzSpeedMultiplier;
+            skyfaller.buzzSpeedRampCells = buzzSpeedRampCells;
+            skyfaller.strafingProjectileDef = strafingProjectileDef;
+            skyfaller.leadCells = strafingLeadCells;
+            skyfaller.strafingFireSound = strafingFireSound;
+            skyfaller.strafingBulletsPerRound = strafingBulletsPerRound;
+            skyfaller.strafingSpreadCells = strafingSpreadCells;
+            skyfaller.strafingFireOriginOffset = strafingFireOriginOffset;
 
             GenSpawn.Spawn(skyfaller, start, map, flightDir);
 
@@ -123,14 +162,14 @@ namespace AirstrikeMod
         /// Larger constant = slower buzz. Bounded so pathological FlightSpeed values
         /// don't produce a one-frame blur or a 60-second camera lock.
         /// </summary>
-        private const float BuzzTimeConstant = 30f;
+        private const float BUZZ_TIME_CONSTANT = 30f;
 
         private static int ComputeBuzzTicks(IntVec3 start, IntVec3 end, VehiclePawn vehicle)
         {
             var flightSpeed = vehicle.CompVehicleLauncher?.FlightSpeed ?? 10f;
             if (flightSpeed <= 0f) flightSpeed = 10f;
             var distanceInCells = (end - start).LengthHorizontal;
-            var ticks = Mathf.RoundToInt(distanceInCells * BuzzTimeConstant / flightSpeed);
+            var ticks = Mathf.RoundToInt(distanceInCells * BUZZ_TIME_CONSTANT / flightSpeed);
             return Mathf.Clamp(ticks, 60, 1800);
         }
 
@@ -182,6 +221,15 @@ namespace AirstrikeMod
             Scribe_Defs.Look(ref ordinance, nameof(ordinance));
             Scribe_Values.Look(ref scatter, nameof(scatter));
             Scribe_References.Look(ref originMapParent, nameof(originMapParent));
+            Scribe_Values.Look(ref flyAltitude, nameof(flyAltitude), 6f);
+            Scribe_Values.Look(ref buzzSpeedMultiplier, nameof(buzzSpeedMultiplier), 1f);
+            Scribe_Values.Look(ref buzzSpeedRampCells, nameof(buzzSpeedRampCells), 3);
+            Scribe_Defs.Look(ref strafingProjectileDef, nameof(strafingProjectileDef));
+            Scribe_Values.Look(ref strafingLeadCells, nameof(strafingLeadCells));
+            Scribe_Defs.Look(ref strafingFireSound, nameof(strafingFireSound));
+            Scribe_Values.Look(ref strafingBulletsPerRound, nameof(strafingBulletsPerRound), 1);
+            Scribe_Values.Look(ref strafingSpreadCells, nameof(strafingSpreadCells));
+            Scribe_Values.Look(ref strafingFireOriginOffset, nameof(strafingFireOriginOffset), 3);
         }
     }
 }

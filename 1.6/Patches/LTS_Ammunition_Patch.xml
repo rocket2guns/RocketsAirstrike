@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+    <!--
+        [LTS]Ammunition - Simple Ammo Pack compatibility.
+
+        If LTS Ammunition is loaded, the Falcon's strafing run consumes industrial
+        ammo (AmmoIndustrial) from cargo instead of Steel matches the convention
+        used by the VVE × LTS compat patch and avoids the "shooting unhewn steel"
+        problem the LTS author calls out.
+
+        Reference example: VVE × LTS compat patch mod (workshop 3019539086).
+        LTS Ammunition package ID: limetreesnake.ammo, workshop 2803605709.
+    -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>[LTS]Ammunition - Simple Ammo Pack</li>
+        </mods>
+        <match Class="PatchOperationReplace">
+            <xpath>Defs/Vehicles.VehicleDef[defName="ROCKET_Falcon"]/comps/li[@Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun"]/ammoDef</xpath>
+            <value>
+                <ammoDef>AmmoIndustrial</ammoDef>
+            </value>
+        </match>
+    </Operation>
+</Patch>
