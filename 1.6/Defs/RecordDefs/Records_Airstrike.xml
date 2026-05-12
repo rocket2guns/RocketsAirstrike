@@ -4,18 +4,21 @@
     <RimWorld.RecordDef>
         <defName>RocketsAirstrike_SortiesFlown</defName>
         <label>sorties flown</label>
+        <description>The number of airstrike sorties I have flown.</description>
         <type>Int</type>
     </RimWorld.RecordDef>
 
     <RimWorld.RecordDef>
         <defName>RocketsAirstrike_OrdinanceDropped</defName>
         <label>ordinance dropped</label>
+        <description>The number of ordnance rounds I have dropped on airstrike sorties.</description>
         <type>Int</type>
     </RimWorld.RecordDef>
 
     <RimWorld.RecordDef>
         <defName>RocketsAirstrike_TimeFlown</defName>
-        <label>flight time</label>
+        <label>time on sortie</label>
+        <description>The total time I have spent flying airstrike sorties.</description>
         <type>Time</type>
         <workerClass>AirstrikeMod.RecordWorker_OnSortie</workerClass>
     </RimWorld.RecordDef>

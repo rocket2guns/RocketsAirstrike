@@ -363,10 +363,11 @@ namespace AirstrikeMod
             {
                 var records = pilots[i].records;
                 records.Increment(AirstrikeDefOf.RocketsAirstrike_SortiesFlown);
-                records.AddTo(AirstrikeDefOf.RocketsAirstrike_OrdinanceDropped, bombCells.Count);
+                if (strafing == null)
+                    records.AddTo(AirstrikeDefOf.RocketsAirstrike_OrdinanceDropped, bombCells.Count);
             }
 
-            BombingSpeedManager.MarkFast(Vehicle);
+            BombingSpeedManager.MarkFast(Vehicle, Vehicle.Rotation);
 
             var arrival = new ArrivalAction_BombMap(
                 Vehicle,

@@ -28,14 +28,18 @@ namespace AirstrikeMod.Patches
     }
 
     /// <summary>
-    /// Clears the fast flag once landing finishes.
+    /// Restores the vehicle's pre-launch rotation and clears the fast flag once landing finishes.
     /// </summary>
     [HarmonyPatch(typeof(VehicleSkyfaller_Arriving), nameof(VehicleSkyfaller_Arriving.FinalizeLanding))]
     public static class VehicleSkyfaller_Arriving_FinalizeLanding_Patch
     {
         public static void Postfix(VehicleSkyfaller_Arriving __instance)
         {
-            BombingSpeedManager.UnmarkFast(__instance?.vehicle);
+            var vehicle = __instance?.vehicle;
+            if (vehicle == null) return;
+            if (BombingSpeedManager.TryGetOriginalRotation(vehicle, out var rot))
+                vehicle.Rotation = rot;
+            BombingSpeedManager.UnmarkFast(vehicle);
         }
     }
 }
