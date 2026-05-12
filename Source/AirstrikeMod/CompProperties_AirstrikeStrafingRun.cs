@@ -30,9 +30,14 @@ namespace AirstrikeMod
         public ThingDef projectileDef;
 
         /// <summary>
-        /// Cargo item consumed per fired bullet. {ammoCount = channels * runLength}.
+        /// Cargo item consumed to load rounds for the strafing run.
         /// </summary>
         public ThingDef ammoDef;
+
+        /// <summary>
+        /// Units of <c>ammoDef</c> consumed per round fired.
+        /// </summary>
+        public int ammoPerRound = 1;
 
         /// <summary>
         /// Bullets spawned per consumed round (per cell).

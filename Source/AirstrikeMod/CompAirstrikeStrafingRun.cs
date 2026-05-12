@@ -19,8 +19,8 @@ namespace AirstrikeMod
 
         protected override bool RequiresOrdinance => false;
 
-        // One round per cell along the long axis. Steel cost matches.
-        private int AmmoCount => Math.Max(0, Props.runLength);
+        private int RoundCount => Math.Max(0, Props.runLength);
+        private int AmmoCount => RoundCount * Math.Max(1, Props.ammoPerRound);
 
         protected override int RequiredShells => 0;
         protected override OrdinancePattern Pattern => OrdinancePattern.Strafing;
@@ -28,10 +28,10 @@ namespace AirstrikeMod
         protected override Gizmo BuildStrikeGizmo()
         {
             var ammoDef = Props.ammoDef;
+            var ammoLabel = ammoDef != null ? ammoDef.label : "ammo";
             return BuildLaunchGizmo(
                 label: "RocketsAirstrike_StrafingRun".Translate(),
-                desc: "RocketsAirstrike_StrafingRunDesc".Translate(AmmoCount,
-                    ammoDef != null ? ammoDef.label : "ammo"),
+                desc: "RocketsAirstrike_StrafingRunDesc".Translate(RoundCount, AmmoCount, ammoLabel),
                 topIcon: Icon,
                 requiredShells: 0,
                 onClick: _startDelegate ??= () => PickDestinationMap(StartTargeting),

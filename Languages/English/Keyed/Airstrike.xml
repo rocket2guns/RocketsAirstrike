@@ -21,10 +21,11 @@
     <RocketsAirstrike_BombingRun>Bombing Run</RocketsAirstrike_BombingRun>
     <RocketsAirstrike_BombingRunDesc>Make a bombing pass dropping {0} rounds along a chosen line.</RocketsAirstrike_BombingRunDesc>
     <RocketsAirstrike_StrafingRun>Strafing Run</RocketsAirstrike_StrafingRun>
-    <RocketsAirstrike_StrafingRunDesc>Strafe two parallel cannon channels along a chosen line, firing {0} {1} rounds total from cargo.</RocketsAirstrike_StrafingRunDesc>
+    <RocketsAirstrike_StrafingRunDesc>Strafe a chosen line. Fires {0} cannon rounds, consuming {1} {2} from cargo.</RocketsAirstrike_StrafingRunDesc>
 
     <!-- Gizmo disable reasons -->
     <RocketsAirstrike_NoLauncherComp>Vehicle has no launcher comp.</RocketsAirstrike_NoLauncherComp>
+    <RocketsAirstrike_VehicleNotStarted>Vehicle is not started.</RocketsAirstrike_VehicleNotStarted>
     <RocketsAirstrike_SelectOrdinanceFirst>Select an ordinance type first.</RocketsAirstrike_SelectOrdinanceFirst>
     <RocketsAirstrike_NeedShellsHave>Need {0} {1} in cargo (have {2}).</RocketsAirstrike_NeedShellsHave>
     <RocketsAirstrike_NotEnoughFuel>Not enough chemfuel (needs {0}).</RocketsAirstrike_NotEnoughFuel>

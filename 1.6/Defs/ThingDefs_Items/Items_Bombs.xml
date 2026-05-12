@@ -1,23 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
 
-    <!--
-        High-explosive bomb. Airstrike-only ordinance derived from vanilla
-        Shell_HighExplosive but deliberately distinct: it lives in the custom
-        RocketsAirstrike_Bombs thingCategory (so mortars' MortarShells filter
-        won't accept it), carries no MortarShell tradeTag, and has no
-        CompProperties_Explosive (so it does not cook off when damaged and
-        cannot be used as a placed trap). Projectile retains the doubled
-        explosion radius (2.9 -> 5.8). Mass is 5x vanilla (1.25 -> 6.25).
-        Recipe upgrades a vanilla HE shell with chemfuel and an advanced
-        component. Texture paths currently point at placeholders.
-    -->
-
     <ThingDef ParentName="MakeableShellBase">
         <defName>RocketsAirstrike_Bomb_HighExplosive</defName>
         <label>high-explosive bomb</label>
-        <description>A large aerial bomb filled with high explosives. Delivered onto targets by carrier aircraft during bombing runs; too bulky and aerodynamically shaped to be fired from a mortar.</description>
+        <description>A large aerial bomb filled with high explosives. Delivered onto targets by carrier aircraft during bombing runs; too bulky and aerodynamically shaped to be fired from a mortar. Explodes when damaged.</description>
         <possessionCount>1</possessionCount>
+        <stackLimit>10</stackLimit>
         <statBases>
             <Mass>7</Mass>
         </statBases>
@@ -29,6 +18,16 @@
             <texPath>Things/Item/Resource/Bomb</texPath>
             <graphicClass>Graphic_StackCount</graphicClass>
         </graphicData>
+        <comps>
+            <li Class="CompProperties_Explosive">
+                <explosiveRadius>5.8</explosiveRadius>
+                <explosiveDamageType>Bomb</explosiveDamageType>
+                <explosiveExpandPerStackcount>0.4</explosiveExpandPerStackcount>
+                <startWickHitPointsPercent>0.7</startWickHitPointsPercent>
+                <wickTicks>30~60</wickTicks>
+                <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
+            </li>
+        </comps>
         <projectileWhenLoaded>RocketsAirstrike_Bullet_Bomb_HighExplosive</projectileWhenLoaded>
         <costList>
             <Shell_HighExplosive>1</Shell_HighExplosive>

@@ -169,7 +169,11 @@ namespace AirstrikeMod
                     Vehicle, Vehicle.Map, Vehicle.Position, Vehicle.Rotation);
             }
 
-            if (!launcherComp.CanLaunchWithCargoCapacity(out var launchReason))
+            if (!Vehicle.Drafted)
+            {
+                cmd.Disable("RocketsAirstrike_VehicleNotStarted".Translate());
+            }
+            else if (!launcherComp.CanLaunchWithCargoCapacity(out var launchReason))
             {
                 cmd.Disable(launchReason);
             }
