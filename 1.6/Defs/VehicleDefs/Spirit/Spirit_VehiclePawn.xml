@@ -17,7 +17,7 @@
 		<buildDef>ROCKET_Spirit_Blueprint</buildDef>
 		<size>(17,9)</size>
 		<canCaravan LockSetting="True">false</canCaravan>
-		<vehicleCategory>Transport</vehicleCategory>
+		<vehicleCategory>Combat</vehicleCategory>
 		<techLevel>Industrial</techLevel>
 		<vehicleType>Air</vehicleType>
 		<statBases>
