@@ -67,17 +67,14 @@
         <projectileWhenLoaded>ROCKET_Bullet_Bomb_Explosive</projectileWhenLoaded>
         <costList>
             <Shell_HighExplosive>1</Shell_HighExplosive>
-            <Chemfuel>15</Chemfuel>
-            <ComponentIndustrial>1</ComponentIndustrial>
+            <Chemfuel>5</Chemfuel>
+            <Steel>15</Steel>
         </costList>
         <recipeMaker>
             <researchPrerequisite>Fabrication</researchPrerequisite>
         </recipeMaker>
     </ThingDef>
 
-    <!-- Bomb_Explosive's bigger sibling: identical chemistry and damage, just a
-         wider blast (+3 radius) and twice the weight. Single Strike only — too
-         heavy and too wide to scatter along a bombing run. -->
     <ThingDef ParentName="MakeableBombBase">
         <defName>ROCKET_Bomb_HighExplosive</defName>
         <label>high-explosive bomb</label>
@@ -104,7 +101,8 @@
         <projectileWhenLoaded>ROCKET_Bullet_Bomb_HighExplosive</projectileWhenLoaded>
         <costList>
             <Shell_HighExplosive>1</Shell_HighExplosive>
-            <Chemfuel>15</Chemfuel>
+            <Chemfuel>5</Chemfuel>
+            <Steel>15</Steel>
             <ComponentIndustrial>1</ComponentIndustrial>
         </costList>
         <recipeMaker>
@@ -138,7 +136,7 @@
         <costList>
             <Shell_Incendiary>1</Shell_Incendiary>
             <Chemfuel>20</Chemfuel>
-            <ComponentIndustrial>1</ComponentIndustrial>
+            <Steel>15</Steel>
         </costList>
         <recipeMaker>
             <researchPrerequisite>Fabrication</researchPrerequisite>
@@ -178,6 +176,7 @@
         <projectileWhenLoaded>ROCKET_Bullet_Bomb_Antigrain</projectileWhenLoaded>
         <costList>
             <Shell_AntigrainWarhead>1</Shell_AntigrainWarhead>
+            <Steel>50</Steel>
             <Chemfuel>30</Chemfuel>
             <ComponentSpacer>1</ComponentSpacer>
         </costList>

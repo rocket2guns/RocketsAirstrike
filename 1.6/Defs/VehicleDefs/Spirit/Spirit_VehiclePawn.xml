@@ -9,9 +9,9 @@
 			<graphicClass>Vehicles.Graphic_Vehicle</graphicClass>
 			<shaderType>CutoutComplexPattern</shaderType>
 			<drawSize>(20,10)</drawSize>
-			<color>(72, 77, 72)</color>
-			<colorTwo>(56, 55, 50)</colorTwo>
-			<colorThree>(100, 69, 59)</colorThree>
+			<color>(59, 59, 59)</color>
+			<colorTwo>(77, 77, 77)</colorTwo>
+			<colorThree>(36, 36, 36)</colorThree>
 		</graphicData>
 		<fillPercent>0.7</fillPercent>
 		<buildDef>ROCKET_Spirit_Blueprint</buildDef>

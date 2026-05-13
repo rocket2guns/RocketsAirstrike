@@ -40,6 +40,7 @@ namespace AirstrikeMod
         public static float BombTargetingRadius;
 
         private const float ABSOLUTE_MAX_SCATTER = 16f;
+        private const float XP_PER_MUNITION = 50f;
 
         private static readonly (float minAbility, string labelKey, string hex)[] RatingBuckets =
         {
@@ -453,10 +454,13 @@ namespace AirstrikeMod
             var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
             for (var i = 0; i < pilots.Count; i++)
             {
-                var records = pilots[i].records;
-                records.Increment(AirstrikeDefOf.RocketsAirstrike_SortiesFlown);
+                var pilot = pilots[i];
+                pilot.records.Increment(AirstrikeDefOf.RocketsAirstrike_SortiesFlown);
                 if (strafing == null)
-                    records.AddTo(AirstrikeDefOf.RocketsAirstrike_OrdinanceDropped, totalBombs);
+                {
+                    pilot.records.AddTo(AirstrikeDefOf.RocketsAirstrike_OrdinanceDropped, totalBombs);
+                    pilot.skills?.Learn(SkillDefOf.Intellectual, XP_PER_MUNITION * totalBombs);
+                }
             }
 
             BombingSpeedManager.MarkFast(Vehicle, Vehicle.Rotation);
