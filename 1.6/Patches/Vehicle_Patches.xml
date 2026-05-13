@@ -18,11 +18,8 @@
                         <li>Shell_EMP</li>
                         <li>Shell_Smoke</li>
                         <li>Shell_Firefoam</li>
-                        <li>Shell_AntigrainWarhead</li>
                         <li>ROCKET_Bomb_Explosive</li>
-                        <li>ROCKET_Bomb_HighExplosive</li>
                         <li>ROCKET_Bomb_Incendiary</li>
-                        <li>ROCKET_Bomb_Antigrain</li>
                     </ordinance>
                 </li>
                 <li Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun">
