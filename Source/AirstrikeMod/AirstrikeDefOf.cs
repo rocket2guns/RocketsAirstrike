@@ -10,6 +10,8 @@ namespace AirstrikeMod
         public static RecordDef RocketsAirstrike_OrdinanceDropped;
         public static RecordDef RocketsAirstrike_TimeFlown;
 
+        public static StatDef RocketsAirstrike_TargetingAbility;
+
         static AirstrikeDefOf()
         {
             DefOfHelper.EnsureInitializedInCtor(typeof(AirstrikeDefOf));

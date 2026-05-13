@@ -23,11 +23,37 @@ namespace AirstrikeMod
             return _flameMaterial;
         }
 
+        // Per-def cache so the per-frame draw patch doesn't walk AllComps
+        private static readonly Dictionary<VehicleDef, bool> _defHasFlameComp = new();
+
         public static void DrawFlamesFor(VehiclePawn vehicle, Vector3 basePos, Rot8 rot,
             float extraRotation = 0f)
         {
-            var comp = vehicle?.GetComp<CompEngineFlame>();
+            if (vehicle == null) return;
+            if (!DefHasFlameComp(vehicle.VehicleDef)) return;
+            var comp = vehicle.GetCachedComp<CompEngineFlame>();
             comp?.DrawFlames(basePos, rot, extraRotation);
+        }
+
+        private static bool DefHasFlameComp(VehicleDef def)
+        {
+            if (def == null) return false;
+            if (_defHasFlameComp.TryGetValue(def, out var has)) return has;
+            has = false;
+            var compProps = def.comps;
+            if (compProps != null)
+            {
+                for (var i = 0; i < compProps.Count; i++)
+                {
+                    if (compProps[i] is CompProperties_EngineFlame)
+                    {
+                        has = true;
+                        break;
+                    }
+                }
+            }
+            _defHasFlameComp[def] = has;
+            return has;
         }
 
         public void DrawFlames(Vector3 basePos, Rot8 rot, float extraRotation)

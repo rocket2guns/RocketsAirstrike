@@ -58,7 +58,7 @@ namespace AirstrikeMod
                 Current.Game.CurrentMap = destMap;
 
             var cursorIcon = Props.ammoDef?.uiIcon ?? Icon;
-            CursorLabel.Current = "RocketsAirstrike_SelectTargetStrafe".Translate();
+            SetTargetingCursor("RocketsAirstrike_SelectTargetStrafe".Translate());
 
             var payload = new StrafingPayload
             {
@@ -79,14 +79,14 @@ namespace AirstrikeMod
                 runLength: Props.runLength,
                 action: (cells, dir) =>
                 {
-                    CursorLabel.Current = null;
+                    CursorLabel.Clear();
                     LaunchStrike(destMap, cells, dir, originalMap, payload);
                 },
                 targetValidator: t => t.Cell.InBounds(destMap)
                                       && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, destMap),
                 actionWhenFinished: () =>
                 {
-                    CursorLabel.Current = null;
+                    CursorLabel.Clear();
                     RestoreCurrentMap(originalMap);
                 },
                 mouseAttachment: cursorIcon);

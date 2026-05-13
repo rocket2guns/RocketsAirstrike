@@ -29,6 +29,17 @@
     <RocketsAirstrike_SelectOrdinanceFirst>Select an ordinance type first.</RocketsAirstrike_SelectOrdinanceFirst>
     <RocketsAirstrike_NeedShellsHave>Need {0} {1} in cargo (have {2}).</RocketsAirstrike_NeedShellsHave>
     <RocketsAirstrike_NotEnoughFuel>Not enough chemfuel (needs {0}).</RocketsAirstrike_NotEnoughFuel>
+    <RocketsAirstrike_NoPilots>No pilot assigned.</RocketsAirstrike_NoPilots>
+    <RocketsAirstrike_PilotIncapableIntellectual>Pilot is incapable of intellectual work.</RocketsAirstrike_PilotIncapableIntellectual>
+    <RocketsAirstrike_PilotZeroManipulation>Pilot can't operate the controls.</RocketsAirstrike_PilotZeroManipulation>
+
+    <!-- Targeting accuracy -->
+    <RocketsAirstrike_TargetingAccuracy>Targeting accuracy</RocketsAirstrike_TargetingAccuracy>
+    <RocketsAirstrike_Rating_Excellent>Excellent</RocketsAirstrike_Rating_Excellent>
+    <RocketsAirstrike_Rating_Good>Good</RocketsAirstrike_Rating_Good>
+    <RocketsAirstrike_Rating_Average>Average</RocketsAirstrike_Rating_Average>
+    <RocketsAirstrike_Rating_Poor>Poor</RocketsAirstrike_Rating_Poor>
+    <RocketsAirstrike_Rating_VeryPoor>Very Poor</RocketsAirstrike_Rating_VeryPoor>
 
     <!-- Map-pick FloatMenu -->
     <RocketsAirstrike_ThisMap>this map</RocketsAirstrike_ThisMap>

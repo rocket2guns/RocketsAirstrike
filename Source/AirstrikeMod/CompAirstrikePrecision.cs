@@ -56,7 +56,7 @@ namespace AirstrikeMod
             BombTargetingActive = true;
             BombTargetingMap = destMap;
             BombTargetingRadius = sel?.radius ?? 3f;
-            CursorLabel.Current = "RocketsAirstrike_SelectTargetLocation".Translate();
+            SetTargetingCursor("RocketsAirstrike_SelectTargetLocation".Translate());
 
             var cursorIcon = sel?.thingDef?.uiIcon ?? Icon;
 
@@ -65,14 +65,14 @@ namespace AirstrikeMod
                 action: bombTarget =>
                 {
                     BombTargetingActive = false;
-                    CursorLabel.Current = null;
+                    CursorLabel.Clear();
                     var cells = new List<IntVec3>(1) { bombTarget.Cell };
                     LaunchStrike(destMap, cells, Rot4.East, originalMap);
                 },
                 actionWhenFinished: () =>
                 {
                     BombTargetingActive = false;
-                    CursorLabel.Current = null;
+                    CursorLabel.Clear();
                     RestoreCurrentMap(originalMap);
                 },
                 mouseAttachment: cursorIcon);

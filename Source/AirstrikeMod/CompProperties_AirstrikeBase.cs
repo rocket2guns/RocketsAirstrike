@@ -17,6 +17,11 @@ namespace AirstrikeMod
         public float scatter = 0f;
 
         /// <summary>
+        /// Additional scatter potential applied based on pilot targeting ability.
+        /// </summary>
+        public float skillScatter = 0f;
+
+        /// <summary>
         /// Skyfaller draw altitude during the buzz.
         /// </summary>
         public float flyAltitude = 6f;

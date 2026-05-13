@@ -43,7 +43,7 @@ namespace AirstrikeMod
                 Current.Game.CurrentMap = destMap;
 
             var cursorIcon = sel.thingDef?.uiIcon ?? Icon;
-            CursorLabel.Current = "RocketsAirstrike_SelectTargetRun".Translate();
+            SetTargetingCursor("RocketsAirstrike_SelectTargetRun".Translate());
 
             BombingRunTargeter.Instance.BeginTargeting(
                 vehicle: Vehicle,
@@ -52,14 +52,14 @@ namespace AirstrikeMod
                 dropCount: Props.dropCount,
                 action: (cells, dir) =>
                 {
-                    CursorLabel.Current = null;
+                    CursorLabel.Clear();
                     LaunchStrike(destMap, cells, dir, originalMap);
                 },
                 targetValidator: t => t.Cell.InBounds(destMap)
                                       && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, destMap),
                 actionWhenFinished: () =>
                 {
-                    CursorLabel.Current = null;
+                    CursorLabel.Clear();
                     RestoreCurrentMap(originalMap);
                 },
                 mouseAttachment: cursorIcon);

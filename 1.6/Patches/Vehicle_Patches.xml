@@ -11,6 +11,7 @@
                 <li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
                     <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
                     <scatter>2</scatter>
+                    <skillScatter>4</skillScatter>
                 </li>
                 <li Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun">
                     <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
@@ -25,6 +26,7 @@
                     <spreadCells>1</spreadCells>
                     <buzzSpeedMultiplier>0.7</buzzSpeedMultiplier>
                     <buzzSpeedRampCells>30</buzzSpeedRampCells>
+                    <skillScatter>3</skillScatter>
                 </li>
             </value>
         </match>

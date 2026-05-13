@@ -44,6 +44,120 @@ namespace AirstrikeMod
         public static Map BombTargetingMap;
         public static float BombTargetingRadius;
 
+        private const float ABSOLUTE_MAX_SCATTER = 16f;
+
+        private static readonly (float minAbility, string labelKey, string hex)[] RatingBuckets =
+        {
+            (1.00f, "RocketsAirstrike_Rating_Excellent", "#4CFF4C"),
+            (0.75f, "RocketsAirstrike_Rating_Good",      "#2E9E2E"),
+            (0.50f, "RocketsAirstrike_Rating_Average",   "#E0E040"),
+            (0.25f, "RocketsAirstrike_Rating_Poor",      "#E08040"),
+            (0.00f, "RocketsAirstrike_Rating_VeryPoor",  "#E04040"),
+        };
+
+        protected float BestTargetingAbility()
+        {
+            var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
+            var best = 0f;
+            for (var i = 0; i < pilots.Count; i++)
+            {
+                var v = pilots[i].GetStatValue(AirstrikeDefOf.RocketsAirstrike_TargetingAbility);
+                if (v > best) best = v;
+            }
+            return best;
+        }
+
+        private static float ResolveScatterFloat(float baseScatter, float skillScatter, float ability,
+            float flyAltitude)
+        {
+            var floor = Mathf.Max(0f, baseScatter);
+            var ceiling = Mathf.Min(flyAltitude, ABSOLUTE_MAX_SCATTER);
+            if (skillScatter <= 0f) return Mathf.Min(floor, ceiling);
+            var deficit = 1f - Mathf.Clamp01(ability);
+            return Mathf.Min(floor + skillScatter * deficit, ceiling);
+        }
+
+        protected float ResolveBombScatter()
+        {
+            return ResolveScatterFloat(
+                BaseProps.scatter, BaseProps.skillScatter,
+                BestTargetingAbility(), BaseProps.flyAltitude);
+        }
+
+        protected int ResolveStrafingSpread(int baseSpread)
+        {
+            return Mathf.RoundToInt(ResolveScatterFloat(
+                baseSpread, BaseProps.skillScatter,
+                BestTargetingAbility(), BaseProps.flyAltitude));
+        }
+
+        protected void SetTargetingCursor(string firstLine)
+        {
+            CursorLabel.Current = firstLine;
+            var (rating, color) = TargetingRating();
+            CursorLabel.SecondLine =
+                $"{"RocketsAirstrike_TargetingAccuracy".Translate()}: {rating}";
+            CursorLabel.SecondLineColor = color;
+        }
+
+        protected string BuildTargetingAccuracyDescLine()
+        {
+            var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
+            if (pilots == null || pilots.Count == 0) return string.Empty;
+            var (rating, color) = TargetingRating();
+            var hex = ColorUtility.ToHtmlStringRGB(color);
+            return $"\n\n{"RocketsAirstrike_TargetingAccuracy".Translate()}: <color=#{hex}>{rating}</color>";
+        }
+
+        protected (string label, Color color) TargetingRating()
+        {
+            var ability = BestTargetingAbility();
+            for (var i = 0; i < RatingBuckets.Length; i++)
+            {
+                if (ability >= RatingBuckets[i].minAbility)
+                {
+                    var b = RatingBuckets[i];
+                    ColorUtility.TryParseHtmlString(b.hex, out var col);
+                    return (b.labelKey.Translate(), col);
+                }
+            }
+            return (RatingBuckets[RatingBuckets.Length - 1].labelKey.Translate(), Color.red);
+        }
+
+        // All-or-nothing per the "best pilot wins" rule: as long as one Movement
+        // pilot can fly, the run is allowed.
+        protected bool PilotsBlockLaunch(out string reason)
+        {
+            reason = null;
+            var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
+            if (pilots == null || pilots.Count == 0)
+            {
+                reason = "RocketsAirstrike_NoPilots".Translate();
+                return true;
+            }
+            var allIntelDisabled = true;
+            var allZeroManip = true;
+            for (var i = 0; i < pilots.Count; i++)
+            {
+                var p = pilots[i];
+                var intelDisabled = p.skills?.GetSkill(SkillDefOf.Intellectual)?.TotallyDisabled ?? true;
+                if (!intelDisabled) allIntelDisabled = false;
+                var manip = p.health?.capacities?.GetLevel(PawnCapacityDefOf.Manipulation) ?? 0f;
+                if (manip > 0f) allZeroManip = false;
+            }
+            if (allIntelDisabled)
+            {
+                reason = "RocketsAirstrike_PilotIncapableIntellectual".Translate();
+                return true;
+            }
+            if (allZeroManip)
+            {
+                reason = "RocketsAirstrike_PilotZeroManipulation".Translate();
+                return true;
+            }
+            return false;
+        }
+
         private Action _showOrdinanceMenuDelegate;
 
         protected OrdinanceDef SelectedOrdinance
@@ -148,7 +262,7 @@ namespace AirstrikeMod
             var cmd = new Command_AirstrikeLaunch
             {
                 defaultLabel = label,
-                defaultDesc = desc,
+                defaultDesc = desc + BuildTargetingAccuracyDescLine(),
                 icon = topIcon,
                 iconUnderlay = iconUnderlayOverride ?? (useSingleVariantIcon
                     ? GetSingleVariantIcon(sel?.thingDef)
@@ -172,6 +286,10 @@ namespace AirstrikeMod
             if (!Vehicle.Drafted)
             {
                 cmd.Disable("RocketsAirstrike_VehicleNotStarted".Translate());
+            }
+            else if (PilotsBlockLaunch(out var pilotReason))
+            {
+                cmd.Disable(pilotReason);
             }
             else if (!launcherComp.CanLaunchWithCargoCapacity(out var launchReason))
             {
@@ -369,6 +487,11 @@ namespace AirstrikeMod
 
             BombingSpeedManager.MarkFast(Vehicle, Vehicle.Rotation);
 
+            var resolvedScatter = ResolveBombScatter();
+            var resolvedStrafingSpread = strafing != null
+                ? ResolveStrafingSpread(strafing.spreadCells)
+                : 0;
+
             var arrival = new ArrivalAction_BombMap(
                 Vehicle,
                 destMapParent,
@@ -380,7 +503,7 @@ namespace AirstrikeMod
                 bombingSkyfallerDef: BaseProps.skyfallerBombing
                                      ?? Vehicle.CompVehicleLauncher.Props.skyfallerStrafing,
                 ordinance: sel,
-                scatter: BaseProps.scatter,
+                scatter: resolvedScatter,
                 originMapParent: crossMap ? originMapParent : null,
                 flyAltitude: BaseProps.flyAltitude,
                 buzzSpeedMultiplier: BaseProps.buzzSpeedMultiplier,
@@ -389,7 +512,7 @@ namespace AirstrikeMod
                 strafingLeadCells: strafing?.leadCells ?? 0,
                 strafingFireSound: strafing?.fireSound,
                 strafingBulletsPerRound: strafing?.bulletsPerRound ?? 1,
-                strafingSpreadCells: strafing?.spreadCells ?? 0,
+                strafingSpreadCells: resolvedStrafingSpread,
                 strafingFireOriginOffset: strafing?.fireOriginOffset ?? 3);
 
             var targetData = new TargetData<GlobalTargetInfo>();

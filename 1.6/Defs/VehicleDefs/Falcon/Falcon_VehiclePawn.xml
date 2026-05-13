@@ -346,11 +346,13 @@
 			<li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
 				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
 				<scatter>0</scatter>
+				<skillScatter>5</skillScatter>
 			</li>
 			<li Class="AirstrikeMod.CompProperties_AirstrikeBombingRun">
 				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
 				<scatter>1</scatter>
 				<dropCount>5</dropCount>
+				<skillScatter>5</skillScatter>
 			</li>
 			<li Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun">
 				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
@@ -365,6 +367,7 @@
 				<spreadCells>1</spreadCells>
 				<buzzSpeedMultiplier>0.3</buzzSpeedMultiplier>
 				<buzzSpeedRampCells>30</buzzSpeedRampCells>
+				<skillScatter>2</skillScatter>
 			</li>
 			<li Class="Vehicles.CompProperties_FueledTravel">
 				<fuelType>Chemfuel</fuelType>
