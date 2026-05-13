@@ -236,16 +236,15 @@ namespace AirstrikeMod
                 yield return BuildStrikeGizmo();
         }
 
-        // Same-map: just the buzz overhead (one tile of fuel scaled by fuelScale).
-        // Cross-map: round-trip world flight + buzz overhead.
-        protected float ComputeFuelCost(Map destMap)
+        protected float ComputeFuelCost(Map destMap, int passCount = 1)
         {
             var launcher = Vehicle.CompVehicleLauncher;
             if (launcher == null || Vehicle.CompFueledTravel == null) return 0f;
+            var n = Mathf.Max(1, passCount);
             var buzzCost = launcher.FuelNeededToLaunchAtDist(Find.WorldGrid.AverageTileSize)
                            * AirstrikeMod.Settings.fuelScale;
-            if (destMap == null || destMap == Vehicle.Map) return buzzCost;
-            return launcher.FuelNeededToLaunchAtDist(destMap.Tile) * 2f + buzzCost;
+            if (destMap == null || destMap == Vehicle.Map) return buzzCost * n;
+            return launcher.FuelNeededToLaunchAtDist(destMap.Tile) * 2f + buzzCost * n;
         }
 
         protected Gizmo BuildLaunchGizmo(string label, string desc, Texture2D topIcon,
@@ -382,12 +381,20 @@ namespace AirstrikeMod
             return new FloatMenuOption(label, action);
         }
 
+        protected void LaunchStrike(Map destMap, List<BombingSegment> segments,
+            Map originalMap, StrafingPayload strafing = null)
+        {
+            OnTargetsChosen(destMap, segments, Vehicle.Position,
+                Vehicle.Rotation.Opposite, strafing);
+            RestoreCurrentMap(originalMap);
+        }
+
+        // single segment convenience overload used by the strafing path
         protected void LaunchStrike(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
             Map originalMap, StrafingPayload strafing = null)
         {
-            OnTargetsChosen(destMap, bombCells, flightDir, Vehicle.Position,
-                Vehicle.Rotation.Opposite, strafing);
-            RestoreCurrentMap(originalMap);
+            var seg = new BombingSegment(bombCells, flightDir);
+            LaunchStrike(destMap, new List<BombingSegment> { seg }, originalMap, strafing);
         }
 
         protected static void RestoreCurrentMap(Map originalMap)
@@ -396,9 +403,16 @@ namespace AirstrikeMod
                 Current.Game.CurrentMap = originalMap;
         }
 
-        private void OnTargetsChosen(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
+        private void OnTargetsChosen(Map destMap, List<BombingSegment> segments,
             LocalTargetInfo landingTarget, Rot4 landingRot, StrafingPayload strafing)
         {
+            if (segments == null || segments.Count == 0) return;
+
+            var totalBombs = 0;
+            for (var i = 0; i < segments.Count; i++)
+                totalBombs += segments[i].bombCells?.Count ?? 0;
+            if (totalBombs == 0) return;
+
             var sel = SelectedOrdinance;
             if (RequiresOrdinance)
             {
@@ -409,11 +423,10 @@ namespace AirstrikeMod
                     return;
                 }
 
-                var needed = bombCells.Count;
-                if (!ConsumeFromCargo(sel, needed))
+                if (!ConsumeFromCargo(sel, totalBombs))
                 {
                     Messages.Message(
-                        "ROCKET_NeedShells".Translate(needed, sel.label),
+                        "ROCKET_NeedShells".Translate(totalBombs, sel.label),
                         MessageTypeDefOf.RejectInput, false);
                     return;
                 }
@@ -433,7 +446,7 @@ namespace AirstrikeMod
             var originMapParent = Vehicle.Map.Parent;
             var destMapParent = destMap.Parent;
 
-            Vehicle.CompFueledTravel?.ConsumeFuel(ComputeFuelCost(destMap));
+            Vehicle.CompFueledTravel?.ConsumeFuel(ComputeFuelCost(destMap, segments.Count));
 
             var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
             for (var i = 0; i < pilots.Count; i++)
@@ -441,7 +454,7 @@ namespace AirstrikeMod
                 var records = pilots[i].records;
                 records.Increment(AirstrikeDefOf.RocketsAirstrike_SortiesFlown);
                 if (strafing == null)
-                    records.AddTo(AirstrikeDefOf.RocketsAirstrike_OrdinanceDropped, bombCells.Count);
+                    records.AddTo(AirstrikeDefOf.RocketsAirstrike_OrdinanceDropped, totalBombs);
             }
 
             BombingSpeedManager.MarkFast(Vehicle, Vehicle.Rotation);
@@ -454,8 +467,7 @@ namespace AirstrikeMod
             var arrival = new ArrivalAction_BombMap(
                 Vehicle,
                 destMapParent,
-                bombCells: bombCells,
-                flightDir: flightDir,
+                segments: segments,
                 pattern: Pattern,
                 returnCell: landingTarget.Cell,
                 returnRot: landingRot,

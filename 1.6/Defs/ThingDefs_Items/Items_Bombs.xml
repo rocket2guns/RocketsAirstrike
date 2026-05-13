@@ -45,6 +45,11 @@
         <defName>ROCKET_Bomb_Explosive</defName>
         <label>explosive bomb</label>
         <description>A large aerial bomb filled with high explosives. Delivered onto targets by carrier aircraft during bombing runs; too bulky and aerodynamically shaped to be fired from a mortar. Explodes when damaged.</description>
+        <stackLimit>25</stackLimit>
+        <statBases>
+            <MarketValue>110</MarketValue>
+            <Mass>5</Mass>
+        </statBases>
         <graphicData>
             <texPath>Things/Item/Resource/Bomb/Explosive</texPath>
             <graphicClass>Graphic_StackCount</graphicClass>
@@ -77,7 +82,9 @@
         <defName>ROCKET_Bomb_HighExplosive</defName>
         <label>high-explosive bomb</label>
         <description>An oversized explosive bomb with the same chemistry as the standard explosive but a much larger blast radius. Heavy enough that the carrier aircraft can only drop a single one on a precision strike rather than scatter several along a line.</description>
+        <stackLimit>10</stackLimit>
         <statBases>
+            <MarketValue>210</MarketValue>
             <Mass>14</Mass>
         </statBases>
         <graphicData>
@@ -109,6 +116,11 @@
         <defName>ROCKET_Bomb_Incendiary</defName>
         <label>incendiary bomb</label>
         <description>A large aerial bomb filled with flammable gel. Spatters fuel across a wide area as it bursts, starting widespread fires. Delivered onto targets by carrier aircraft during bombing runs; too bulky and aerodynamically shaped to be fired from a mortar. Explodes when damaged.</description>
+        <stackLimit>25</stackLimit>
+        <statBases>
+            <MarketValue>120</MarketValue>
+            <Mass>5</Mass>
+        </statBases>
         <graphicData>
             <texPath>Things/Item/Resource/Bomb/Incendiary</texPath>
             <graphicClass>Graphic_StackCount</graphicClass>
@@ -141,6 +153,7 @@
         <label>antigrain bomb</label>
         <description>An ultra-tech aerial bomb tipped with an antimatter warhead. Detonation produces an enormous blast that levels structures and starts widespread fires. Can only be delivered by a precision strike.</description>
         <statBases>
+            <MarketValue>900</MarketValue>
             <Mass>25</Mass>
         </statBases>
         <stackLimit>5</stackLimit>

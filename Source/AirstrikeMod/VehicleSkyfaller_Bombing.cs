@@ -14,15 +14,24 @@ namespace AirstrikeMod
 {
     // In-map bombing skyfaller. Lerps the vehicle from startCell to endCell over
     // totalTicks, drops ordnance at each bombCells entry as the moving position crosses
-    // it, then routes through ExitMap (same-map: spawn arriving skyfaller; cross-map:
-    // build a return AerialVehicleInFlight back to originMapParent).
+    // it, then either advances to the next chained segment (with a brief off-map gap)
+    // or routes through ExitMap (same-map: spawn arriving skyfaller; cross-map: build a
+    // return AerialVehicleInFlight back to originMapParent).
     public class VehicleSkyfaller_Bombing : VehicleSkyfaller
     {
+        // Ticks the vehicle is invisible between chained passes (suppress DrawAt +
+        // shadow). Reads as "the plane circled around" without needing turn animation.
+        private const int GAP_TICKS_BETWEEN_PASSES = 60;
+
         public IntVec3 startCell;
         public IntVec3 endCell;
         public List<IntVec3> bombCells;
         public OrdinancePattern pattern = OrdinancePattern.Single;
         public ThingDef ordinance;
+
+        public List<BombingSegment> segments;
+        public int segmentIdx;
+        public int gapTicksRemaining;
 
         public IntVec3 returnCell;
         public Rot4 returnRot;
@@ -89,6 +98,8 @@ namespace AirstrikeMod
 
         protected override void DrawAt(Vector3 drawLoc, bool flip = false)
         {
+            if (gapTicksRemaining > 0) return;
+
             var pos = DrawPos;
             vehicle.DrawAt(in pos, Rotation, 0f);
             DrawShadow();
@@ -120,6 +131,17 @@ namespace AirstrikeMod
         protected override void Tick()
         {
             base.Tick();
+
+            // Between-passes gap: pause motion + drops until the timer expires, then
+            // swap in the next segment's flight line and drop list.
+            if (gapTicksRemaining > 0)
+            {
+                gapTicksRemaining--;
+                if (gapTicksRemaining == 0)
+                    BeginNextSegment();
+                return;
+            }
+
             EnsureSlowZone();
             ticksRunning++;
 
@@ -143,7 +165,42 @@ namespace AirstrikeMod
                 }
             }
             if (progress >= 1f)
-                ExitMap();
+            {
+                // If more chained passes remain, start the gap; otherwise leave the map.
+                if (segments != null && segmentIdx + 1 < segments.Count)
+                    gapTicksRemaining = GAP_TICKS_BETWEEN_PASSES;
+                else
+                    ExitMap();
+            }
+        }
+
+        private void BeginNextSegment()
+        {
+            segmentIdx++;
+            if (segments == null || segmentIdx >= segments.Count) return;
+
+            var next = segments[segmentIdx];
+            if (next?.bombCells == null || next.bombCells.Count == 0)
+            {
+                // Defensive: empty segment, skip past it (or exit if it was the last).
+                if (segmentIdx + 1 < segments.Count) gapTicksRemaining = 1;
+                else ExitMap();
+                return;
+            }
+
+            ArrivalAction_BombMap.ChooseFlightLine(Map, next.bombCells[0], next.flightDir,
+                out var newStart, out var newEnd);
+            startCell = newStart;
+            endCell = newEnd;
+            bombCells = next.bombCells;
+            Rotation = next.flightDir;
+            progress = 0f;
+            ticksRunning = 0;
+            bombsDropped = null;
+            _slowZoneComputed = false;
+            totalTicks = ArrivalAction_BombMap.ComputeBuzzTicks(newStart, newEnd, vehicle);
+            // Position on the map doesn't move — DrawPos / GroundPos derive from
+            // startCell/endCell, so updating those is enough for visuals and shadow.
         }
 
         private void EnsureSlowZone()
@@ -440,6 +497,9 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref startCell, nameof(startCell));
             Scribe_Values.Look(ref endCell, nameof(endCell));
             Scribe_Collections.Look(ref bombCells, nameof(bombCells), LookMode.Value);
+            Scribe_Collections.Look(ref segments, nameof(segments), LookMode.Deep);
+            Scribe_Values.Look(ref segmentIdx, nameof(segmentIdx));
+            Scribe_Values.Look(ref gapTicksRemaining, nameof(gapTicksRemaining));
             Scribe_Values.Look(ref pattern, nameof(pattern), OrdinancePattern.Single);
             Scribe_Defs.Look(ref ordinance, nameof(ordinance));
             Scribe_Values.Look(ref returnCell, nameof(returnCell));

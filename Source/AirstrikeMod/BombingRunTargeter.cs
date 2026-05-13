@@ -20,10 +20,12 @@ namespace AirstrikeMod
         private Map map;
         private ThingDef ordinance;
         private int dropCount = 5;
-        private Action<List<IntVec3>, Rot4> action;
+        private int maxChain = 1;
+        private Action<List<BombingSegment>> action;
         private Func<LocalTargetInfo, bool> targetValidator;
         private Rot4 rotation = Rot4.East;
 
+        private readonly List<BombingSegment> lockedSegments = new();
         // Reused across frames; sized for the largest reasonable footprint.
         private readonly List<IntVec3> footprintBuffer = new(256);
 
@@ -33,7 +35,8 @@ namespace AirstrikeMod
 
         public void BeginTargeting(VehiclePawn vehicle, Map map, ThingDef ordinance,
             int dropCount,
-            Action<List<IntVec3>, Rot4> action,
+            int maxChain,
+            Action<List<BombingSegment>> action,
             Func<LocalTargetInfo, bool> targetValidator = null,
             Action actionWhenFinished = null,
             Texture2D mouseAttachment = null)
@@ -42,11 +45,13 @@ namespace AirstrikeMod
             this.map = map;
             this.ordinance = ordinance;
             this.dropCount = Mathf.Max(1, dropCount);
+            this.maxChain = Mathf.Max(1, maxChain);
             this.action = action;
             this.targetValidator = targetValidator;
             this.actionWhenFinished = actionWhenFinished;
             this.mouseAttachment = mouseAttachment;
             this.rotation = Rot4.East;
+            this.lockedSegments.Clear();
 
             OnStart();
         }
@@ -59,6 +64,7 @@ namespace AirstrikeMod
             action = null;
             ordinance = null;
             targetValidator = null;
+            lockedSegments.Clear();
         }
 
         public override void ProcessInputEvents()
@@ -72,10 +78,22 @@ namespace AirstrikeMod
                 {
                     SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
                     var drops = ComputeDropCells(cursorCell, rotation, ordinance, dropCount);
-                    var callback = action;
-                    var rot = rotation;
-                    StopTargeting();
-                    callback(drops, rot);
+                    var dir = rotation;
+                    // total committed
+                    var roomForMore = lockedSegments.Count + 1 < maxChain;
+                    if (Event.current.shift && roomForMore)
+                    {
+                        lockedSegments.Add(new BombingSegment(drops, dir));
+                    }
+                    else
+                    {
+                        // final segment
+                        lockedSegments.Add(new BombingSegment(drops, dir));
+                        var chain = new List<BombingSegment>(lockedSegments);
+                        var callback = action;
+                        StopTargeting();
+                        callback(chain);
+                    }
                 }
                 else
                 {
@@ -131,18 +149,66 @@ namespace AirstrikeMod
 
         public override void TargeterUpdate()
         {
+            // locked targets: faded rectangles + connecting lines
+            for (var i = 0; i < lockedSegments.Count; i++)
+            {
+                var seg = lockedSegments[i];
+                if (seg.bombCells == null || seg.bombCells.Count == 0) continue;
+                footprintBuffer.Clear();
+                FillFootprint(seg.bombCells[seg.bombCells.Count / 2], seg.flightDir,
+                    ordinance, dropCount, footprintBuffer);
+                GenDraw.DrawFieldEdges(footprintBuffer, LockedColor);
+            }
+            DrawChainLines();
+
+            // live cursor footprint.
             var cursorCell = UI.MouseCell();
             if (!cursorCell.InBounds(map) || ordinance == null)
                 return;
 
             footprintBuffer.Clear();
             FillFootprint(cursorCell, rotation, ordinance, dropCount, footprintBuffer);
-            var color = IsValidPlacement(cursorCell)
-                ? Color.white
-                : new Color(1f, 0.3f, 0.2f);
+            var atCapacity = lockedSegments.Count + 1 >= maxChain;
+            var color = !IsValidPlacement(cursorCell)
+                ? new Color(1f, 0.3f, 0.2f)
+                : (Event.current.shift && !atCapacity ? ChainHintColor : Color.white);
             GenDraw.DrawFieldEdges(footprintBuffer, color);
         }
 
+        private static readonly Color LockedColor = new(1f, 1f, 1f, 0.45f);
+        private static readonly Color ChainHintColor = new(0.6f, 1f, 0.6f);
+        private static readonly Color ChainLineColor = new(1f, 1f, 1f, 0.6f);
+
+        private void DrawChainLines()
+        {
+            if (lockedSegments.Count == 0) return;
+            var prev = SegmentAnchor(lockedSegments[0]);
+            for (var i = 1; i < lockedSegments.Count; i++)
+            {
+                var next = SegmentAnchor(lockedSegments[i]);
+                DrawLine(prev, next, ChainLineColor);
+                prev = next;
+            }
+            // Last locked → live cursor.
+            DrawLine(prev, UI.MouseCell().ToVector3Shifted(), ChainLineColor);
+        }
+
+        private static Vector3 SegmentAnchor(BombingSegment seg)
+        {
+            if (seg.bombCells == null || seg.bombCells.Count == 0) return Vector3.zero;
+            return seg.bombCells[seg.bombCells.Count / 2].ToVector3Shifted();
+        }
+
+        private static void DrawLine(Vector3 a, Vector3 b, Color color)
+        {
+            a.y = AltitudeLayer.MetaOverlays.AltitudeFor();
+            b.y = AltitudeLayer.MetaOverlays.AltitudeFor();
+            GenDraw.DrawLineBetween(a, b, SimpleColor.White, 0.2f);
+        }
+
+        // Spacing follows the projectile's explosion radius so adjacent bombs don't
+        // overlap. Falls back to 1 if the ThingDef has no projectile (defensive — XML
+        // for a useful airstrike entry should always resolve a projectile).
         private static int Spacing(ThingDef ord)
         {
             var radius = ord?.projectileWhenLoaded?.projectile?.explosionRadius ?? 0f;

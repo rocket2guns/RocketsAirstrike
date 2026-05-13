@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using RimWorld;
-using SmashTools.Targeting;
 using UnityEngine;
 using Vehicles;
 using Verse;
@@ -34,44 +31,35 @@ namespace AirstrikeMod
         protected override void StartTargeting(Map destMap)
         {
             if (Find.Targeter.IsTargeting || LandingTargeter.Instance.IsTargeting
-                || BombingRunTargeter.Instance.IsTargeting)
+                || BombingRunTargeter.Instance.IsTargeting
+                || SingleStrikeTargeter.Instance.IsTargeting)
                 return;
+            var sel = SelectedOrdinance;
+            if (sel == null) return;
 
             var originalMap = Current.Game.CurrentMap;
             if (Current.Game.CurrentMap != destMap)
                 Current.Game.CurrentMap = destMap;
 
-            var sel = SelectedOrdinance;
-            var targetingParameters = new TargetingParameters
-            {
-                canTargetLocations = true,
-                canTargetSelf = false,
-                canTargetPawns = false,
-                canTargetItems = false,
-                canTargetBuildings = false,
-                validator = t => t.Cell.InBounds(destMap)
-                                 && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, destMap),
-            };
-
-            BombTargetingActive = true;
-            BombTargetingMap = destMap;
-            BombTargetingRadius = sel?.projectileWhenLoaded?.projectile?.explosionRadius ?? 3f;
+            var cursorIcon = sel.uiIcon ?? Icon;
             SetTargetingCursor("ROCKET_SelectTargetLocation".Translate());
 
-            var cursorIcon = sel?.uiIcon ?? Icon;
+            var maxChain = Mathf.Max(1, CountInCargo(sel));
 
-            Find.Targeter.BeginTargeting(
-                targetParams: targetingParameters,
-                action: bombTarget =>
+            SingleStrikeTargeter.Instance.BeginTargeting(
+                vehicle: Vehicle,
+                map: destMap,
+                ordinance: sel,
+                maxChain: maxChain,
+                action: segments =>
                 {
-                    BombTargetingActive = false;
                     CursorLabel.Clear();
-                    var cells = new List<IntVec3>(1) { bombTarget.Cell };
-                    LaunchStrike(destMap, cells, Rot4.East, originalMap);
+                    LaunchStrike(destMap, segments, originalMap);
                 },
+                targetValidator: t => t.Cell.InBounds(destMap)
+                                      && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, destMap),
                 actionWhenFinished: () =>
                 {
-                    BombTargetingActive = false;
                     CursorLabel.Clear();
                     RestoreCurrentMap(originalMap);
                 },

@@ -45,15 +45,18 @@ namespace AirstrikeMod
             var cursorIcon = sel.uiIcon ?? Icon;
             SetTargetingCursor("ROCKET_SelectTargetRun".Translate());
 
+            var maxChain = Mathf.Max(1, CountInCargo(sel) / Mathf.Max(1, Props.dropCount));
+
             BombingRunTargeter.Instance.BeginTargeting(
                 vehicle: Vehicle,
                 map: destMap,
                 ordinance: sel,
                 dropCount: Props.dropCount,
-                action: (cells, dir) =>
+                maxChain: maxChain,
+                action: segments =>
                 {
                     CursorLabel.Clear();
-                    LaunchStrike(destMap, cells, dir, originalMap);
+                    LaunchStrike(destMap, segments, originalMap);
                 },
                 targetValidator: t => t.Cell.InBounds(destMap)
                                       && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, destMap),

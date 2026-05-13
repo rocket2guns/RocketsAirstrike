@@ -16,8 +16,7 @@ namespace AirstrikeMod
     public class ArrivalAction_BombMap : VehicleArrivalAction
     {
         protected MapParent mapParent;
-        protected List<IntVec3> bombCells;
-        protected Rot4 flightDir;
+        protected List<BombingSegment> segments;
         protected OrdinancePattern pattern;
 
         protected IntVec3 returnCell;
@@ -52,8 +51,7 @@ namespace AirstrikeMod
         public ArrivalAction_BombMap(
             VehiclePawn vehicle,
             MapParent mapParent,
-            List<IntVec3> bombCells,
-            Rot4 flightDir,
+            List<BombingSegment> segments,
             OrdinancePattern pattern,
             IntVec3 returnCell,
             Rot4 returnRot,
@@ -73,8 +71,7 @@ namespace AirstrikeMod
             : base(vehicle)
         {
             this.mapParent = mapParent;
-            this.bombCells = bombCells;
-            this.flightDir = flightDir;
+            this.segments = segments;
             this.pattern = pattern;
             this.returnCell = returnCell;
             this.returnRot = returnRot;
@@ -113,14 +110,17 @@ namespace AirstrikeMod
                 return;
             }
 
-            if (bombCells == null || bombCells.Count == 0)
+            if (segments == null || segments.Count == 0
+                || segments[0].bombCells == null || segments[0].bombCells.Count == 0)
             {
-                Log.Error("[Rockets.Airstrike] BombMap arrival: no bomb cells.");
+                Log.Error("[Rockets.Airstrike] BombMap arrival: no segments / bomb cells.");
                 aerialVehicle?.SwitchToCaravan();
                 return;
             }
 
-            ChooseFlightLine(map, bombCells[0], flightDir, out var start, out var end);
+            // use the first segments bomb anchor to pick its flight line
+            ChooseFlightLine(map, segments[0].bombCells[0], segments[0].flightDir,
+                out var start, out var end);
 
             var skyfaller = (VehicleSkyfaller_Bombing)
                 VehicleSkyfallerMaker.MakeSkyfaller(bombingSkyfallerDef, vehicle);
@@ -133,9 +133,11 @@ namespace AirstrikeMod
                 return;
             }
 
+            skyfaller.segments = segments;
+            skyfaller.segmentIdx = 0;
             skyfaller.startCell = start;
             skyfaller.endCell = end;
-            skyfaller.bombCells = bombCells;
+            skyfaller.bombCells = segments[0].bombCells;
             skyfaller.pattern = pattern;
             skyfaller.ordinance = ordinance;
             skyfaller.returnCell = returnCell;
@@ -153,7 +155,7 @@ namespace AirstrikeMod
             skyfaller.strafingSpreadCells = strafingSpreadCells;
             skyfaller.strafingFireOriginOffset = strafingFireOriginOffset;
 
-            GenSpawn.Spawn(skyfaller, start, map, flightDir);
+            GenSpawn.Spawn(skyfaller, start, map, segments[0].flightDir);
 
             aerialVehicle?.ClearAndDestroy();
         }
@@ -164,7 +166,7 @@ namespace AirstrikeMod
         /// </summary>
         private const float BUZZ_TIME_CONSTANT = 30f;
 
-        private static int ComputeBuzzTicks(IntVec3 start, IntVec3 end, VehiclePawn vehicle)
+        public static int ComputeBuzzTicks(IntVec3 start, IntVec3 end, VehiclePawn vehicle)
         {
             var flightSpeed = vehicle.CompVehicleLauncher?.FlightSpeed ?? 10f;
             if (flightSpeed <= 0f) flightSpeed = 10f;
@@ -177,7 +179,7 @@ namespace AirstrikeMod
         /// Full-map edge-to-edge in flightDir. The buzz always enters and exits off-map
         /// for visual consistency regardless of where the target is.
         /// </summary>
-        private static void ChooseFlightLine(Map map, IntVec3 anchor, Rot4 dir,
+        public static void ChooseFlightLine(Map map, IntVec3 anchor, Rot4 dir,
             out IntVec3 start, out IntVec3 end)
         {
             var sx = map.Size.x;
@@ -212,8 +214,7 @@ namespace AirstrikeMod
         {
             base.ExposeData();
             Scribe_References.Look(ref mapParent, nameof(mapParent));
-            Scribe_Collections.Look(ref bombCells, nameof(bombCells), LookMode.Value);
-            Scribe_Values.Look(ref flightDir, nameof(flightDir));
+            Scribe_Collections.Look(ref segments, nameof(segments), LookMode.Deep);
             Scribe_Values.Look(ref pattern, nameof(pattern));
             Scribe_Values.Look(ref returnCell, nameof(returnCell));
             Scribe_Values.Look(ref returnRot, nameof(returnRot));
