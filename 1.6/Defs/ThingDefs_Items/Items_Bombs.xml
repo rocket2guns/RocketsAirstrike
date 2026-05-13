@@ -1,26 +1,57 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
 
-    <ThingDef ParentName="MakeableShellBase">
-        <defName>RocketsAirstrike_Bomb_HighExplosive</defName>
-        <label>high-explosive bomb</label>
-        <description>A large aerial bomb filled with high explosives. Delivered onto targets by carrier aircraft during bombing runs; too bulky and aerodynamically shaped to be fired from a mortar. Explodes when damaged.</description>
-        <possessionCount>1</possessionCount>
+    <!-- Bomb item base. Modelled on vanilla ShellBase. -->
+    <ThingDef Name="BombBase" ParentName="ResourceBase" Abstract="True">
+        <soundInteract>Metal_Drop</soundInteract>
+        <soundDrop>Standard_Drop</soundDrop>
+        <tickerType>Normal</tickerType>
         <stackLimit>10</stackLimit>
+        <possessionCount>1</possessionCount>
+        <techLevel>Industrial</techLevel>
         <statBases>
+            <MaxHitPoints>60</MaxHitPoints>
+            <MarketValue>110</MarketValue>
             <Mass>7</Mass>
+            <Flammability>1.0</Flammability>
+            <DeteriorationRate>1.5</DeteriorationRate>
         </statBases>
         <thingCategories>
-            <li>RocketsAirstrike_Bombs</li>
+            <li>ROCKET_Bombs</li>
         </thingCategories>
-        <tradeTags />
+    </ThingDef>
+
+    <ThingDef Name="MakeableBombBase" ParentName="BombBase" Abstract="True">
+        <recipeMaker>
+            <workSpeedStat>GeneralLaborSpeed</workSpeedStat>
+            <effectWorking>Cook</effectWorking>
+            <soundWorking>Recipe_Machining</soundWorking>
+            <workAmount>1200</workAmount>
+            <targetCountAdjustment>5</targetCountAdjustment>
+            <workSkill>Crafting</workSkill>
+            <recipeUsers>
+                <li>TableMachining</li>
+            </recipeUsers>
+            <skillRequirements>
+                <Crafting>4</Crafting>
+            </skillRequirements>
+            <displayPriority>90</displayPriority>
+        </recipeMaker>
+    </ThingDef>
+
+    <!-- Slightly beefier than the vanilla HE shell, packaged as an air-dropped bomb.
+         Deployable on both single strikes and bombing runs. -->
+    <ThingDef ParentName="MakeableBombBase">
+        <defName>ROCKET_Bomb_Explosive</defName>
+        <label>explosive bomb</label>
+        <description>A large aerial bomb filled with high explosives. Delivered onto targets by carrier aircraft during bombing runs; too bulky and aerodynamically shaped to be fired from a mortar. Explodes when damaged.</description>
         <graphicData>
-            <texPath>Things/Item/Resource/Bomb</texPath>
+            <texPath>Things/Item/Resource/Bomb/Explosive</texPath>
             <graphicClass>Graphic_StackCount</graphicClass>
         </graphicData>
         <comps>
             <li Class="CompProperties_Explosive">
-                <explosiveRadius>5.8</explosiveRadius>
+                <explosiveRadius>4.8</explosiveRadius>
                 <explosiveDamageType>Bomb</explosiveDamageType>
                 <explosiveExpandPerStackcount>0.4</explosiveExpandPerStackcount>
                 <startWickHitPointsPercent>0.7</startWickHitPointsPercent>
@@ -28,10 +59,113 @@
                 <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
             </li>
         </comps>
-        <projectileWhenLoaded>RocketsAirstrike_Bullet_Bomb_HighExplosive</projectileWhenLoaded>
+        <projectileWhenLoaded>ROCKET_Bullet_Bomb_Explosive</projectileWhenLoaded>
         <costList>
             <Shell_HighExplosive>1</Shell_HighExplosive>
             <Chemfuel>15</Chemfuel>
+            <ComponentIndustrial>1</ComponentIndustrial>
+        </costList>
+        <recipeMaker>
+            <researchPrerequisite>Mortars</researchPrerequisite>
+        </recipeMaker>
+    </ThingDef>
+
+    <!-- Bomb_Explosive's bigger sibling: identical chemistry and damage, just a
+         wider blast (+3 radius) and twice the weight. Single Strike only — too
+         heavy and too wide to scatter along a bombing run. -->
+    <ThingDef ParentName="MakeableBombBase">
+        <defName>ROCKET_Bomb_HighExplosive</defName>
+        <label>high-explosive bomb</label>
+        <description>An oversized explosive bomb with the same chemistry as the standard explosive but a much larger blast radius. Heavy enough that the carrier aircraft can only drop a single one on a precision strike rather than scatter several along a line.</description>
+        <statBases>
+            <Mass>14</Mass>
+        </statBases>
+        <graphicData>
+            <texPath>Things/Item/Resource/Bomb/HighExplosive</texPath>
+            <graphicClass>Graphic_StackCount</graphicClass>
+        </graphicData>
+        <comps>
+            <li Class="CompProperties_Explosive">
+                <explosiveRadius>7.8</explosiveRadius>
+                <explosiveDamageType>Bomb</explosiveDamageType>
+                <explosiveExpandPerStackcount>0.4</explosiveExpandPerStackcount>
+                <startWickHitPointsPercent>0.7</startWickHitPointsPercent>
+                <wickTicks>30~60</wickTicks>
+                <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
+            </li>
+        </comps>
+        <projectileWhenLoaded>ROCKET_Bullet_Bomb_HighExplosive</projectileWhenLoaded>
+        <costList>
+            <Shell_HighExplosive>1</Shell_HighExplosive>
+            <Chemfuel>15</Chemfuel>
+            <ComponentIndustrial>1</ComponentIndustrial>
+        </costList>
+        <recipeMaker>
+            <researchPrerequisite>Mortars</researchPrerequisite>
+        </recipeMaker>
+    </ThingDef>
+
+    <ThingDef ParentName="MakeableBombBase">
+        <defName>ROCKET_Bomb_Incendiary</defName>
+        <label>incendiary bomb</label>
+        <description>A large aerial bomb filled with flammable gel. Spatters fuel across a wide area as it bursts, starting widespread fires. Delivered onto targets by carrier aircraft during bombing runs; too bulky and aerodynamically shaped to be fired from a mortar. Explodes when damaged.</description>
+        <graphicData>
+            <texPath>Things/Item/Resource/Bomb/Incendiary</texPath>
+            <graphicClass>Graphic_StackCount</graphicClass>
+        </graphicData>
+        <comps>
+            <li Class="CompProperties_Explosive">
+                <explosiveRadius>5.8</explosiveRadius>
+                <explosiveDamageType>Flame</explosiveDamageType>
+                <explosiveExpandPerStackcount>0.4</explosiveExpandPerStackcount>
+                <startWickHitPointsPercent>0.7</startWickHitPointsPercent>
+                <wickTicks>30~60</wickTicks>
+            </li>
+        </comps>
+        <projectileWhenLoaded>ROCKET_Bullet_Bomb_Incendiary</projectileWhenLoaded>
+        <costList>
+            <Shell_Incendiary>1</Shell_Incendiary>
+            <Chemfuel>20</Chemfuel>
+            <ComponentIndustrial>1</ComponentIndustrial>
+        </costList>
+        <recipeMaker>
+            <researchPrerequisite>Mortars</researchPrerequisite>
+        </recipeMaker>
+    </ThingDef>
+
+    <!-- Antimatter-warhead bomb. Models vanilla Shell_AntigrainWarhead with +3 radius
+         and the GiantExplosion effecter. Heavy (25kg), stacks only to 5, and
+         restricted to Single Strike via the Falcon's BombingRun list omitting it. -->
+    <ThingDef ParentName="MakeableBombBase">
+        <defName>ROCKET_Bomb_Antigrain</defName>
+        <label>antigrain bomb</label>
+        <description>An ultra-tech aerial bomb tipped with an antimatter warhead. Detonation produces an enormous blast that levels structures and starts widespread fires. Can only be delivered by a precision strike.</description>
+        <statBases>
+            <Mass>25</Mass>
+        </statBases>
+        <stackLimit>5</stackLimit>
+        <graphicData>
+            <texPath>Things/Item/Resource/Bomb/Antigrain</texPath>
+            <graphicClass>Graphic_StackCount</graphicClass>
+        </graphicData>
+        <comps>
+            <li Class="CompProperties_Explosive">
+                <explosiveRadius>17.9</explosiveRadius>
+                <explosiveDamageType>BombSuper</explosiveDamageType>
+                <explosiveExpandPerStackcount>0.4</explosiveExpandPerStackcount>
+                <startWickHitPointsPercent>0.7</startWickHitPointsPercent>
+                <chanceToStartFire>0.3</chanceToStartFire>
+                <damageFalloff>true</damageFalloff>
+                <explosionEffect>GiantExplosion</explosionEffect>
+                <explosionSound>Explosion_GiantBomb</explosionSound>
+                <wickTicks>60~120</wickTicks>
+                <preExplosionSpawnSingleThingDef>CraterMedium</preExplosionSpawnSingleThingDef>
+            </li>
+        </comps>
+        <projectileWhenLoaded>ROCKET_Bullet_Bomb_Antigrain</projectileWhenLoaded>
+        <costList>
+            <Shell_AntigrainWarhead>1</Shell_AntigrainWarhead>
+            <Chemfuel>30</Chemfuel>
             <ComponentSpacer>1</ComponentSpacer>
         </costList>
         <recipeMaker>
@@ -40,10 +174,35 @@
     </ThingDef>
 
     <ThingDef ParentName="BaseBullet">
-        <defName>RocketsAirstrike_Bullet_Bomb_HighExplosive</defName>
+        <defName>ROCKET_Bullet_Bomb_Explosive</defName>
+        <label>explosive bomb</label>
+        <graphicData>
+            <texPath>Things/Projectile/ShellHighExplosive</texPath>
+            <graphicClass>Graphic_Single</graphicClass>
+            <shaderType>TransparentPostLight</shaderType>
+        </graphicData>
+        <thingClass>Projectile_Explosive</thingClass>
+        <projectile>
+            <damageDef>Bomb</damageDef>
+            <!-- Vanilla HE shell uses Bomb default (~50); bumped for the bigger bomb. -->
+            <damageAmountBase>150</damageAmountBase>
+            <!-- Vanilla Bomb defaultArmorPenetration is 0.10; +100%. -->
+            <armorPenetrationBase>0.2</armorPenetrationBase>
+            <speed>30</speed>
+            <explosionRadius>4.8</explosionRadius>
+            <flyOverhead>true</flyOverhead>
+            <soundHitThickRoof>Artillery_HitThickRoof</soundHitThickRoof>
+            <soundExplode>MortarBomb_Explode</soundExplode>
+            <soundImpactAnticipate>MortarRound_PreImpact</soundImpactAnticipate>
+            <soundAmbient>MortarRound_Ambient</soundAmbient>
+            <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
+        </projectile>
+    </ThingDef>
+
+    <ThingDef ParentName="BaseBullet">
+        <defName>ROCKET_Bullet_Bomb_HighExplosive</defName>
         <label>high-explosive bomb</label>
         <graphicData>
-            <!-- TODO: replace with custom texture. -->
             <texPath>Things/Projectile/ShellHighExplosive</texPath>
             <graphicClass>Graphic_Single</graphicClass>
             <shaderType>TransparentPostLight</shaderType>
@@ -52,16 +211,69 @@
         <projectile>
             <damageDef>Bomb</damageDef>
             <damageAmountBase>150</damageAmountBase>
-            <!-- Vanilla Bomb defaultArmorPenetration is 0.10; +100%. -->
             <armorPenetrationBase>0.2</armorPenetrationBase>
             <speed>30</speed>
-            <explosionRadius>5.8</explosionRadius>
+            <explosionRadius>7.8</explosionRadius>
             <flyOverhead>true</flyOverhead>
             <soundHitThickRoof>Artillery_HitThickRoof</soundHitThickRoof>
             <soundExplode>MortarBomb_Explode</soundExplode>
             <soundImpactAnticipate>MortarRound_PreImpact</soundImpactAnticipate>
             <soundAmbient>MortarRound_Ambient</soundAmbient>
             <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
+        </projectile>
+    </ThingDef>
+
+    <ThingDef ParentName="BaseBullet">
+        <defName>ROCKET_Bullet_Bomb_Incendiary</defName>
+        <label>incendiary bomb</label>
+        <graphicData>
+            <texPath>Things/Projectile/ShellIncendiary</texPath>
+            <graphicClass>Graphic_Single</graphicClass>
+            <shaderType>TransparentPostLight</shaderType>
+        </graphicData>
+        <thingClass>Projectile_Explosive</thingClass>
+        <projectile>
+            <damageDef>Flame</damageDef>
+            <!-- Vanilla Flame default is 10; bumped for the larger bomb. -->
+            <damageAmountBase>20</damageAmountBase>
+            <speed>30</speed>
+            <explosionRadius>5.8</explosionRadius>
+            <flyOverhead>true</flyOverhead>
+            <!-- Heavy chemfuel splatter is the main "incendiary effect" -->
+            <preExplosionSpawnThingDef>Filth_Fuel</preExplosionSpawnThingDef>
+            <preExplosionSpawnChance>0.85</preExplosionSpawnChance>
+            <soundHitThickRoof>Artillery_HitThickRoof</soundHitThickRoof>
+            <soundExplode>MortarIncendiary_Explode</soundExplode>
+            <soundImpactAnticipate>MortarRound_PreImpact</soundImpactAnticipate>
+            <soundAmbient>MortarRound_Ambient</soundAmbient>
+            <ai_IsIncendiary>true</ai_IsIncendiary>
+        </projectile>
+    </ThingDef>
+
+    <ThingDef ParentName="BaseBullet">
+        <defName>ROCKET_Bullet_Bomb_Antigrain</defName>
+        <label>antigrain bomb</label>
+        <graphicData>
+            <texPath>Things/Projectile/ShellAntigrainWarhead</texPath>
+            <graphicClass>Graphic_Single</graphicClass>
+            <shaderType>TransparentPostLight</shaderType>
+        </graphicData>
+        <thingClass>Projectile_Explosive</thingClass>
+        <projectile>
+            <damageDef>BombSuper</damageDef>
+            <speed>30</speed>
+            <!-- Antigrain's 14.9 + 3. -->
+            <explosionRadius>17.9</explosionRadius>
+            <explosionChanceToStartFire>0.3</explosionChanceToStartFire>
+            <explosionDamageFalloff>true</explosionDamageFalloff>
+            <flyOverhead>true</flyOverhead>
+            <soundHitThickRoof>Artillery_HitThickRoof</soundHitThickRoof>
+            <soundExplode>Explosion_GiantBomb</soundExplode>
+            <soundImpactAnticipate>MortarRound_PreImpact</soundImpactAnticipate>
+            <soundAmbient>MortarRound_Ambient</soundAmbient>
+            <preExplosionSpawnSingleThingDef>CraterLarge</preExplosionSpawnSingleThingDef>
+            <explosionEffect>GiantExplosion</explosionEffect>
+            <screenShakeFactor>0.2</screenShakeFactor>
         </projectile>
     </ThingDef>
 

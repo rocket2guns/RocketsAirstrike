@@ -24,7 +24,7 @@ namespace AirstrikeMod
         protected Rot4 returnRot;
 
         protected ThingDef bombingSkyfallerDef;
-        protected OrdinanceDef ordinance;
+        protected ThingDef ordinance;
         protected float scatter;
         protected float flyAltitude = 6f;
         protected float buzzSpeedMultiplier = 1f;
@@ -58,7 +58,7 @@ namespace AirstrikeMod
             IntVec3 returnCell,
             Rot4 returnRot,
             ThingDef bombingSkyfallerDef,
-            OrdinanceDef ordinance,
+            ThingDef ordinance,
             float scatter = 0f,
             MapParent originMapParent = null,
             float flyAltitude = 6f,

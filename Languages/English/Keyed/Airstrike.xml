@@ -2,60 +2,63 @@
 <LanguageData>
 
     <!-- Settings window -->
-    <RocketsAirstrike_SettingsCategory>Rocket's Airstrike</RocketsAirstrike_SettingsCategory>
-    <RocketsAirstrike_FuelScaleLabel>Airstrike fuel cost (% of one world-tile flight)</RocketsAirstrike_FuelScaleLabel>
-    <RocketsAirstrike_FuelScaleCurrent>  current: {0}%</RocketsAirstrike_FuelScaleCurrent>
-    <RocketsAirstrike_HideEmptyOrdinanceLabel>Hide unavailable ordinance</RocketsAirstrike_HideEmptyOrdinanceLabel>
-    <RocketsAirstrike_HideEmptyOrdinanceDesc>When picking ordinance for an airstrike, hide types that have zero in cargo instead of showing them greyed out.</RocketsAirstrike_HideEmptyOrdinanceDesc>
+    <ROCKET_SettingsCategory>Rocket's Airstrike</ROCKET_SettingsCategory>
+    <ROCKET_FuelScaleLabel>Airstrike fuel cost (% of one world-tile flight)</ROCKET_FuelScaleLabel>
+    <ROCKET_FuelScaleCurrent>  current: {0}%</ROCKET_FuelScaleCurrent>
+    <ROCKET_HideEmptyOrdinanceLabel>Hide unavailable ordinance</ROCKET_HideEmptyOrdinanceLabel>
+    <ROCKET_HideEmptyOrdinanceDesc>When picking ordinance for an airstrike, hide types that have zero in cargo instead of showing them greyed out.</ROCKET_HideEmptyOrdinanceDesc>
 
-    <!-- Ordinance picker gizmo -->
-    <RocketsAirstrike_SelectOrdinance>Select ordinance</RocketsAirstrike_SelectOrdinance>
-    <RocketsAirstrike_OrdinanceGizmoDesc>Pick which loaded shell type the airstrike will drop. Shells are consumed from cargo.</RocketsAirstrike_OrdinanceGizmoDesc>
-    <RocketsAirstrike_OrdinanceCount>{0} (×{1})</RocketsAirstrike_OrdinanceCount>
-    <RocketsAirstrike_NoOrdinanceLoaded>(no ordinance defs loaded)</RocketsAirstrike_NoOrdinanceLoaded>
-    <RocketsAirstrike_ClearSelection>Clear selection</RocketsAirstrike_ClearSelection>
+    <!-- Ordinance picker tab -->
+    <ROCKET_TabOrdinance>Payload</ROCKET_TabOrdinance>
+    <ROCKET_TabOrdinance_Header>Selected Ordinance</ROCKET_TabOrdinance_Header>
+    <ROCKET_TabOrdinance_HideUnavailable>Show only contained</ROCKET_TabOrdinance_HideUnavailable>
+    <ROCKET_OrdinanceNone>None</ROCKET_OrdinanceNone>
+    <ROCKET_OrdinanceCount>{0} (×{1})</ROCKET_OrdinanceCount>
+
+    <!-- Tab section fallback header when a ThingDef has no thingCategories -->
+    <ROCKET_Category_Uncategorized>Uncategorized</ROCKET_Category_Uncategorized>
 
     <!-- Strike gizmos -->
-    <RocketsAirstrike_PrecisionStrike>Precision Strike</RocketsAirstrike_PrecisionStrike>
-    <RocketsAirstrike_PrecisionStrikeDesc>Make a single bombing pass over a chosen cell, dropping one round.</RocketsAirstrike_PrecisionStrikeDesc>
-    <RocketsAirstrike_BombingRun>Bombing Run</RocketsAirstrike_BombingRun>
-    <RocketsAirstrike_BombingRunDesc>Make a bombing pass dropping {0} rounds along a chosen line.</RocketsAirstrike_BombingRunDesc>
-    <RocketsAirstrike_StrafingRun>Strafing Run</RocketsAirstrike_StrafingRun>
-    <RocketsAirstrike_StrafingRunDesc>Strafe a chosen line. Fires {0} cannon rounds, consuming {1} {2} from cargo.</RocketsAirstrike_StrafingRunDesc>
+    <ROCKET_SingleStrike>Airstrike</ROCKET_SingleStrike>
+    <ROCKET_SingleStrikeDesc>Make a single bombing pass over a chosen cell, dropping one round.</ROCKET_SingleStrikeDesc>
+    <ROCKET_BombingRun>Bombing Run</ROCKET_BombingRun>
+    <ROCKET_BombingRunDesc>Make a bombing pass dropping {0} rounds along a chosen line.</ROCKET_BombingRunDesc>
+    <ROCKET_StrafingRun>Strafing Run</ROCKET_StrafingRun>
+    <ROCKET_StrafingRunDesc>Strafe a chosen line. Fires {0} cannon rounds, consuming {1} {2} from cargo.</ROCKET_StrafingRunDesc>
 
     <!-- Gizmo disable reasons -->
-    <RocketsAirstrike_NoLauncherComp>Vehicle has no launcher comp.</RocketsAirstrike_NoLauncherComp>
-    <RocketsAirstrike_VehicleNotStarted>Vehicle is not started.</RocketsAirstrike_VehicleNotStarted>
-    <RocketsAirstrike_SelectOrdinanceFirst>Select an ordinance type first.</RocketsAirstrike_SelectOrdinanceFirst>
-    <RocketsAirstrike_NeedShellsHave>Need {0} {1} in cargo (have {2}).</RocketsAirstrike_NeedShellsHave>
-    <RocketsAirstrike_NotEnoughFuel>Not enough chemfuel (needs {0}).</RocketsAirstrike_NotEnoughFuel>
-    <RocketsAirstrike_NoPilots>No pilot assigned.</RocketsAirstrike_NoPilots>
-    <RocketsAirstrike_PilotIncapableIntellectual>Pilot is incapable of intellectual work.</RocketsAirstrike_PilotIncapableIntellectual>
-    <RocketsAirstrike_PilotZeroManipulation>Pilot can't operate the controls.</RocketsAirstrike_PilotZeroManipulation>
+    <ROCKET_NoLauncherComp>Vehicle has no launcher comp.</ROCKET_NoLauncherComp>
+    <ROCKET_VehicleNotStarted>Vehicle is not started.</ROCKET_VehicleNotStarted>
+    <ROCKET_SelectOrdinanceFirst>Select an ordinance type first.</ROCKET_SelectOrdinanceFirst>
+    <ROCKET_NeedShellsHave>Need {0} {1} in cargo (have {2}).</ROCKET_NeedShellsHave>
+    <ROCKET_NotEnoughFuel>Not enough chemfuel (needs {0}).</ROCKET_NotEnoughFuel>
+    <ROCKET_NoPilots>No pilot assigned.</ROCKET_NoPilots>
+    <ROCKET_PilotIncapableIntellectual>Pilot is incapable of intellectual work.</ROCKET_PilotIncapableIntellectual>
+    <ROCKET_PilotZeroManipulation>Pilot can't operate the controls.</ROCKET_PilotZeroManipulation>
 
     <!-- Targeting accuracy -->
-    <RocketsAirstrike_TargetingAccuracy>Targeting accuracy</RocketsAirstrike_TargetingAccuracy>
-    <RocketsAirstrike_Rating_Excellent>Excellent</RocketsAirstrike_Rating_Excellent>
-    <RocketsAirstrike_Rating_Good>Good</RocketsAirstrike_Rating_Good>
-    <RocketsAirstrike_Rating_Average>Average</RocketsAirstrike_Rating_Average>
-    <RocketsAirstrike_Rating_Poor>Poor</RocketsAirstrike_Rating_Poor>
-    <RocketsAirstrike_Rating_VeryPoor>Very Poor</RocketsAirstrike_Rating_VeryPoor>
+    <ROCKET_TargetingAccuracy>Targeting accuracy</ROCKET_TargetingAccuracy>
+    <ROCKET_Rating_Excellent>Excellent</ROCKET_Rating_Excellent>
+    <ROCKET_Rating_Good>Good</ROCKET_Rating_Good>
+    <ROCKET_Rating_Average>Average</ROCKET_Rating_Average>
+    <ROCKET_Rating_Poor>Poor</ROCKET_Rating_Poor>
+    <ROCKET_Rating_VeryPoor>Very Poor</ROCKET_Rating_VeryPoor>
 
     <!-- Map-pick FloatMenu -->
-    <RocketsAirstrike_ThisMap>this map</RocketsAirstrike_ThisMap>
-    <RocketsAirstrike_MapDistanceFuel>{0} tiles, {1} fuel</RocketsAirstrike_MapDistanceFuel>
-    <RocketsAirstrike_MapOptionLabel>{0} ({1})</RocketsAirstrike_MapOptionLabel>
-    <RocketsAirstrike_MapOptionDisabled>{0} — {1}</RocketsAirstrike_MapOptionDisabled>
-    <RocketsAirstrike_OutOfRange>out of range</RocketsAirstrike_OutOfRange>
-    <RocketsAirstrike_NeedsFuel>needs {0} fuel</RocketsAirstrike_NeedsFuel>
+    <ROCKET_ThisMap>this map</ROCKET_ThisMap>
+    <ROCKET_MapDistanceFuel>{0} tiles, {1} fuel</ROCKET_MapDistanceFuel>
+    <ROCKET_MapOptionLabel>{0} ({1})</ROCKET_MapOptionLabel>
+    <ROCKET_MapOptionDisabled>{0} — {1}</ROCKET_MapOptionDisabled>
+    <ROCKET_OutOfRange>out of range</ROCKET_OutOfRange>
+    <ROCKET_NeedsFuel>needs {0} fuel</ROCKET_NeedsFuel>
 
     <!-- Targeting cursor labels -->
-    <RocketsAirstrike_SelectTargetLocation>Select Target Location</RocketsAirstrike_SelectTargetLocation>
-    <RocketsAirstrike_SelectTargetRun>Select Target Run</RocketsAirstrike_SelectTargetRun>
-    <RocketsAirstrike_SelectTargetStrafe>Select Strafing Run</RocketsAirstrike_SelectTargetStrafe>
+    <ROCKET_SelectTargetLocation>Select Target Location</ROCKET_SelectTargetLocation>
+    <ROCKET_SelectTargetRun>Select Target Run</ROCKET_SelectTargetRun>
+    <ROCKET_SelectTargetStrafe>Select Strafing Run</ROCKET_SelectTargetStrafe>
 
     <!-- Reject messages -->
-    <RocketsAirstrike_NoOrdinanceSelected>No ordinance selected.</RocketsAirstrike_NoOrdinanceSelected>
-    <RocketsAirstrike_NeedShells>Need {0} {1} in cargo.</RocketsAirstrike_NeedShells>
+    <ROCKET_NoOrdinanceSelected>No ordinance selected.</ROCKET_NoOrdinanceSelected>
+    <ROCKET_NeedShells>Need {0} {1} in cargo.</ROCKET_NeedShells>
 
 </LanguageData>

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Vehicles;
 using Verse;
 
@@ -10,6 +11,11 @@ namespace AirstrikeMod
     public abstract class CompProperties_AirstrikeBase : VehicleCompProperties
     {
         public ThingDef skyfallerBombing;
+
+        /// <summary>
+        /// ThingDefs this comp can drop as ordinance.
+        /// </summary>
+        public List<ThingDef> ordinance;
 
         /// <summary>
         /// Per-bomb random offset radius in cells. 0 = perfectly accurate.

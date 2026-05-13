@@ -15,12 +15,7 @@ namespace AirstrikeMod
     {
         public CompProperties_AirstrikeBase BaseProps => (CompProperties_AirstrikeBase)props;
 
-        private OrdinanceDef selectedOrdinance;
-
-        private static Texture2D _emptySlotIcon;
-        protected static Texture2D EmptySlotIcon =>
-            _emptySlotIcon ??= ContentFinder<Texture2D>.Get("UI/ButtonEmpty", reportFailure: false)
-                               ?? BaseContent.BadTex;
+        private ThingDef selectedOrdinance;
 
         private static readonly FieldInfo SubGraphicsField = typeof(Graphic_Collection)
             .GetField("subGraphics", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -48,11 +43,11 @@ namespace AirstrikeMod
 
         private static readonly (float minAbility, string labelKey, string hex)[] RatingBuckets =
         {
-            (1.00f, "RocketsAirstrike_Rating_Excellent", "#4CFF4C"),
-            (0.75f, "RocketsAirstrike_Rating_Good",      "#2E9E2E"),
-            (0.50f, "RocketsAirstrike_Rating_Average",   "#E0E040"),
-            (0.25f, "RocketsAirstrike_Rating_Poor",      "#E08040"),
-            (0.00f, "RocketsAirstrike_Rating_VeryPoor",  "#E04040"),
+            (1.00f, "ROCKET_Rating_Excellent", "#4CFF4C"),
+            (0.75f, "ROCKET_Rating_Good",      "#2E9E2E"),
+            (0.50f, "ROCKET_Rating_Average",   "#E0E040"),
+            (0.25f, "ROCKET_Rating_Poor",      "#E08040"),
+            (0.00f, "ROCKET_Rating_VeryPoor",  "#E04040"),
         };
 
         protected float BestTargetingAbility()
@@ -61,7 +56,7 @@ namespace AirstrikeMod
             var best = 0f;
             for (var i = 0; i < pilots.Count; i++)
             {
-                var v = pilots[i].GetStatValue(AirstrikeDefOf.RocketsAirstrike_TargetingAbility);
+                var v = pilots[i].GetStatValue(AirstrikeDefOf.ROCKET_TargetingAbility);
                 if (v > best) best = v;
             }
             return best;
@@ -95,9 +90,9 @@ namespace AirstrikeMod
         {
             CursorLabel.Current = firstLine;
             var (rating, color) = TargetingRating();
+            var hex = ColorUtility.ToHtmlStringRGB(color);
             CursorLabel.SecondLine =
-                $"{"RocketsAirstrike_TargetingAccuracy".Translate()}: {rating}";
-            CursorLabel.SecondLineColor = color;
+                $"{"ROCKET_TargetingAccuracy".Translate()}: <color=#{hex}>{rating}</color>";
         }
 
         protected string BuildTargetingAccuracyDescLine()
@@ -106,7 +101,7 @@ namespace AirstrikeMod
             if (pilots == null || pilots.Count == 0) return string.Empty;
             var (rating, color) = TargetingRating();
             var hex = ColorUtility.ToHtmlStringRGB(color);
-            return $"\n\n{"RocketsAirstrike_TargetingAccuracy".Translate()}: <color=#{hex}>{rating}</color>";
+            return $"\n\n{"ROCKET_TargetingAccuracy".Translate()}: <color=#{hex}>{rating}</color>";
         }
 
         protected (string label, Color color) TargetingRating()
@@ -132,7 +127,7 @@ namespace AirstrikeMod
             var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
             if (pilots == null || pilots.Count == 0)
             {
-                reason = "RocketsAirstrike_NoPilots".Translate();
+                reason = "ROCKET_NoPilots".Translate();
                 return true;
             }
             var allIntelDisabled = true;
@@ -147,23 +142,55 @@ namespace AirstrikeMod
             }
             if (allIntelDisabled)
             {
-                reason = "RocketsAirstrike_PilotIncapableIntellectual".Translate();
+                reason = "ROCKET_PilotIncapableIntellectual".Translate();
                 return true;
             }
             if (allZeroManip)
             {
-                reason = "RocketsAirstrike_PilotZeroManipulation".Translate();
+                reason = "ROCKET_PilotZeroManipulation".Translate();
                 return true;
             }
             return false;
         }
 
-        private Action _showOrdinanceMenuDelegate;
-
-        protected OrdinanceDef SelectedOrdinance
+        public ThingDef SelectedOrdinance
         {
             get => Primary.selectedOrdinance;
             set => Primary.selectedOrdinance = value;
+        }
+
+        /// <summary>
+        /// Effective ordinance list for the whole vehicle
+        /// </summary>
+        public IEnumerable<ThingDef> AvailableOrdinance()
+        {
+            var comps = Vehicle.AllComps;
+            HashSet<ThingDef> seen = null;
+            for (var i = 0; i < comps.Count; i++)
+            {
+                if (comps[i] is not CompAirstrikeBase b) continue;
+                var list = b.BaseProps.ordinance;
+                if (list == null) continue;
+                for (var j = 0; j < list.Count; j++)
+                {
+                    var def = list[j];
+                    if (def == null) continue;
+                    seen ??= new HashSet<ThingDef>();
+                    if (seen.Add(def)) yield return def;
+                }
+            }
+        }
+
+        public bool HasAvailableOrdinance()
+        {
+            var comps = Vehicle.AllComps;
+            for (var i = 0; i < comps.Count; i++)
+            {
+                if (comps[i] is CompAirstrikeBase b
+                    && b.BaseProps.ordinance is { Count: > 0 })
+                    return true;
+            }
+            return false;
         }
 
         private CompAirstrikeBase Primary
@@ -179,8 +206,6 @@ namespace AirstrikeMod
             }
         }
 
-        private bool IsPrimary => Primary == this;
-
         protected float ResolvedFuelCost => ComputeFuelCost(Vehicle.Map);
 
         protected abstract Gizmo BuildStrikeGizmo();
@@ -189,11 +214,9 @@ namespace AirstrikeMod
         protected abstract OrdinancePattern Pattern { get; }
 
         /// <summary>
-        /// Strike modes that pick from the OrdinanceDef cargo list. Strafing runs
-        /// use a fixed XML-defined projectile + ammo, so they bypass the picker and
-        /// the per-cell shell consumption.
+        /// Strike modes that pick from the OrdinanceDef cargo list.
         /// </summary>
-        protected virtual bool RequiresOrdinance => true;
+        public virtual bool RequiresOrdinance => true;
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
@@ -201,9 +224,15 @@ namespace AirstrikeMod
                 yield return g;
             if (Vehicle.Faction != Faction.OfPlayer)
                 yield break;
-            if (IsPrimary)
-                yield return BuildOrdinanceGizmo();
-            if (!RequiresOrdinance || SelectedOrdinance != null)
+            if (!RequiresOrdinance)
+            {
+                yield return BuildStrikeGizmo();
+                yield break;
+            }
+            var sel = SelectedOrdinance;
+            if (sel == null) yield break;
+            var allowed = BaseProps.ordinance;
+            if (allowed != null && allowed.Contains(sel))
                 yield return BuildStrikeGizmo();
         }
 
@@ -219,31 +248,6 @@ namespace AirstrikeMod
             return launcher.FuelNeededToLaunchAtDist(destMap.Tile) * 2f + buzzCost;
         }
 
-        private Gizmo BuildOrdinanceGizmo()
-        {
-            string label;
-            Texture2D icon;
-            var sel = SelectedOrdinance;
-            if (sel?.thingDef != null)
-            {
-                label = sel.thingDef.LabelCap;
-                icon = sel.thingDef.uiIcon ?? EmptySlotIcon;
-            }
-            else
-            {
-                label = "RocketsAirstrike_SelectOrdinance".Translate();
-                icon = EmptySlotIcon;
-            }
-
-            return new Command_Action
-            {
-                defaultLabel = label,
-                defaultDesc = "RocketsAirstrike_OrdinanceGizmoDesc".Translate(),
-                icon = icon,
-                action = _showOrdinanceMenuDelegate ??= ShowOrdinanceMenu,
-            };
-        }
-
         protected Gizmo BuildLaunchGizmo(string label, string desc, Texture2D topIcon,
             int requiredShells, Action onClick, bool useSingleVariantIcon = false,
             ThingDef ammoOverrideDef = null, int ammoOverrideCount = 0,
@@ -256,7 +260,7 @@ namespace AirstrikeMod
             var notEnoughFuel = fuelComp != null && fuel < cost;
             var sel = SelectedOrdinance;
             var ordnanceMode = RequiresOrdinance;
-            var countInCargo = ordnanceMode && sel != null ? CountInCargo(sel.thingDef) : 0;
+            var countInCargo = ordnanceMode && sel != null ? CountInCargo(sel) : 0;
             var ammoInCargo = ammoOverrideDef != null ? CountInCargo(ammoOverrideDef) : 0;
 
             var cmd = new Command_AirstrikeLaunch
@@ -265,14 +269,14 @@ namespace AirstrikeMod
                 defaultDesc = desc + BuildTargetingAccuracyDescLine(),
                 icon = topIcon,
                 iconUnderlay = iconUnderlayOverride ?? (useSingleVariantIcon
-                    ? GetSingleVariantIcon(sel?.thingDef)
-                    : sel?.thingDef?.uiIcon),
+                    ? GetSingleVariantIcon(sel)
+                    : sel?.uiIcon),
                 action = onClick,
             };
 
             if (launcherComp == null)
             {
-                cmd.Disable("RocketsAirstrike_NoLauncherComp".Translate());
+                cmd.Disable("ROCKET_NoLauncherComp".Translate());
                 return cmd;
             }
 
@@ -285,7 +289,7 @@ namespace AirstrikeMod
 
             if (!Vehicle.Drafted)
             {
-                cmd.Disable("RocketsAirstrike_VehicleNotStarted".Translate());
+                cmd.Disable("ROCKET_VehicleNotStarted".Translate());
             }
             else if (PilotsBlockLaunch(out var pilotReason))
             {
@@ -298,22 +302,22 @@ namespace AirstrikeMod
             else switch (ordnanceMode)
             {
                 case true when sel == null:
-                    cmd.Disable("RocketsAirstrike_SelectOrdinanceFirst".Translate());
+                    cmd.Disable("ROCKET_SelectOrdinanceFirst".Translate());
                     break;
                 case true when countInCargo < requiredShells:
-                    cmd.Disable("RocketsAirstrike_NeedShellsHave".Translate(
-                        requiredShells, sel.thingDef.label, countInCargo));
+                    cmd.Disable("ROCKET_NeedShellsHave".Translate(
+                        requiredShells, sel.label, countInCargo));
                     break;
                 default:
                 {
                     if (ammoOverrideDef != null && ammoInCargo < ammoOverrideCount)
                     {
-                        cmd.Disable("RocketsAirstrike_NeedShellsHave".Translate(
+                        cmd.Disable("ROCKET_NeedShellsHave".Translate(
                             ammoOverrideCount, ammoOverrideDef.label, ammoInCargo));
                     }
                     else if (notEnoughFuel)
                     {
-                        cmd.Disable("RocketsAirstrike_NotEnoughFuel".Translate(cost.ToString("0")));
+                        cmd.Disable("ROCKET_NotEnoughFuel".Translate(cost.ToString("0")));
                     }
 
                     break;
@@ -323,51 +327,6 @@ namespace AirstrikeMod
             return cmd;
         }
 
-        private void ShowOrdinanceMenu()
-        {
-            var defs = DefDatabase<OrdinanceDef>.AllDefsListForReading;
-            var options = new List<FloatMenuOption>(defs.Count + 1);
-
-            for (var i = 0; i < defs.Count; i++)
-            {
-                var ord = defs[i];
-                if (ord.thingDef == null) continue;
-
-                var count = CountInCargo(ord.thingDef);
-                var empty = count <= 0;
-                if (empty && AirstrikeMod.Settings.hideEmptyOrdinance) continue;
-                var captured = ord;
-
-                var baseLabel = "RocketsAirstrike_OrdinanceCount".Translate(
-                    ord.thingDef.LabelCap, count).Resolve();
-                var label = empty ? $"<color=#888888>{baseLabel}</color>" : baseLabel;
-                var iconColor = empty ? new Color(1f, 1f, 1f, 0.5f) : Color.white;
-                var iconTex = ord.thingDef.uiIcon ?? EmptySlotIcon;
-
-                options.Add(new FloatMenuOption(
-                    label: label,
-                    action: () => SelectedOrdinance = captured,
-                    iconTex: iconTex,
-                    iconColor: iconColor));
-            }
-
-            if (options.Count == 0)
-            {
-                options.Add(new FloatMenuOption(
-                    "RocketsAirstrike_NoOrdinanceLoaded".Translate(), null));
-            }
-            else if (SelectedOrdinance != null)
-            {
-                options.Add(new FloatMenuOption(
-                    "RocketsAirstrike_ClearSelection".Translate(),
-                    () => SelectedOrdinance = null));
-            }
-
-            Find.WindowStack.Add(new FloatMenu(options));
-        }
-
-        // Single-map: skip the menu and target the vehicle's map directly. Multi-map:
-        // present every loaded map, greyed-with-reason when unreachable.
         protected void PickDestinationMap(Action<Map> onPicked)
         {
             var maps = Find.Maps;
@@ -406,18 +365,18 @@ namespace AirstrikeMod
             }
 
             var detail = sameMap
-                ? "RocketsAirstrike_ThisMap".Translate().Resolve()
-                : "RocketsAirstrike_MapDistanceFuel".Translate(
+                ? "ROCKET_ThisMap".Translate().Resolve()
+                : "ROCKET_MapDistanceFuel".Translate(
                     tileDist, fuelCost.ToString("0")).Resolve();
-            var label = "RocketsAirstrike_MapOptionLabel".Translate(
+            var label = "ROCKET_MapOptionLabel".Translate(
                 destMap.Parent.LabelCap, detail).Resolve();
             string disableReason = null;
             if (outOfRange)
-                disableReason = "RocketsAirstrike_OutOfRange".Translate();
+                disableReason = "ROCKET_OutOfRange".Translate();
             else if (notEnoughFuel)
-                disableReason = "RocketsAirstrike_NeedsFuel".Translate(fuelCost.ToString("0"));
+                disableReason = "ROCKET_NeedsFuel".Translate(fuelCost.ToString("0"));
             if (disableReason != null)
-                label = "RocketsAirstrike_MapOptionDisabled".Translate(label, disableReason).Resolve();
+                label = "ROCKET_MapOptionDisabled".Translate(label, disableReason).Resolve();
 
             Action action = disableReason == null ? (() => onPicked(destMap)) : null;
             return new FloatMenuOption(label, action);
@@ -445,16 +404,16 @@ namespace AirstrikeMod
             {
                 if (sel == null)
                 {
-                    Messages.Message("RocketsAirstrike_NoOrdinanceSelected".Translate(),
+                    Messages.Message("ROCKET_NoOrdinanceSelected".Translate(),
                         MessageTypeDefOf.RejectInput, false);
                     return;
                 }
 
                 var needed = bombCells.Count;
-                if (!ConsumeFromCargo(sel.thingDef, needed))
+                if (!ConsumeFromCargo(sel, needed))
                 {
                     Messages.Message(
-                        "RocketsAirstrike_NeedShells".Translate(needed, sel.thingDef.label),
+                        "ROCKET_NeedShells".Translate(needed, sel.label),
                         MessageTypeDefOf.RejectInput, false);
                     return;
                 }
@@ -464,7 +423,7 @@ namespace AirstrikeMod
                 if (!ConsumeFromCargo(strafing.ammoDef, strafing.ammoCount))
                 {
                     Messages.Message(
-                        "RocketsAirstrike_NeedShells".Translate(strafing.ammoCount, strafing.ammoDef.label),
+                        "ROCKET_NeedShells".Translate(strafing.ammoCount, strafing.ammoDef.label),
                         MessageTypeDefOf.RejectInput, false);
                     return;
                 }
@@ -521,7 +480,7 @@ namespace AirstrikeMod
             Vehicle.CompVehicleLauncher.Launch(targetData, arrival);
         }
 
-        private int CountInCargo(ThingDef def)
+        public int CountInCargo(ThingDef def)
         {
             if (def == null) return 0;
             var container = Vehicle.inventory?.innerContainer;

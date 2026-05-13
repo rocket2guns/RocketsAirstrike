@@ -22,7 +22,7 @@ namespace AirstrikeMod
         public IntVec3 endCell;
         public List<IntVec3> bombCells;
         public OrdinancePattern pattern = OrdinancePattern.Single;
-        public OrdinanceDef ordinance;
+        public ThingDef ordinance;
 
         public IntVec3 returnCell;
         public Rot4 returnRot;
@@ -239,7 +239,7 @@ namespace AirstrikeMod
 
         private static ThingDef _fallingBombDef;
         private static ThingDef FallingBombDef =>
-            _fallingBombDef ??= DefDatabase<ThingDef>.GetNamedSilentFail("RocketsAirstrike_FallingBomb");
+            _fallingBombDef ??= DefDatabase<ThingDef>.GetNamedSilentFail("ROCKET_FallingBomb");
 
         private void FireAtCell(IntVec3 cell)
         {
@@ -257,7 +257,7 @@ namespace AirstrikeMod
             var impactCell = ApplyScatter(cell);
 
             var def = FallingBombDef;
-            var projectileDef = ordinance.projectileDef;
+            var projectileDef = ordinance.projectileWhenLoaded;
             if (def == null || projectileDef == null)
             {
                 DetonateInline(impactCell);
@@ -357,25 +357,9 @@ namespace AirstrikeMod
         /// </summary>
         private void DetonateInline(IntVec3 cell)
         {
-            var damDef = ordinance.damageDef ?? DamageDefOf.Bomb;
-            GenExplosion.DoExplosion(
-                center: cell,
-                map: Map,
-                radius: ordinance.radius,
-                damType: damDef,
-                instigator: vehicle,
-                damAmount: Mathf.RoundToInt(ordinance.damage),
-                armorPenetration: -1f,
-                explosionSound: null,
-                weapon: null,
-                projectile: null,
-                intendedTarget: null,
-                postExplosionSpawnThingDef: ordinance.postExplosionSpawnThingDef,
-                postExplosionSpawnChance: ordinance.postExplosionSpawnChance,
-                postExplosionSpawnThingCount: ordinance.postExplosionSpawnThingCount,
-                preExplosionSpawnThingDef: ordinance.preExplosionSpawnThingDef,
-                preExplosionSpawnChance: ordinance.preExplosionSpawnChance,
-                preExplosionSpawnThingCount: ordinance.preExplosionSpawnThingCount);
+            ExplosionFx.Trigger(ordinance?.projectileWhenLoaded,
+                ordinance?.projectileWhenLoaded?.projectile,
+                cell, Map, vehicle);
         }
 
         /// <summary>

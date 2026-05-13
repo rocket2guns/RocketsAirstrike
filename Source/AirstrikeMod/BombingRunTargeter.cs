@@ -18,7 +18,7 @@ namespace AirstrikeMod
         private static float middleMouseDownTime;
 
         private Map map;
-        private OrdinanceDef ordinance;
+        private ThingDef ordinance;
         private int dropCount = 5;
         private Action<List<IntVec3>, Rot4> action;
         private Func<LocalTargetInfo, bool> targetValidator;
@@ -31,7 +31,7 @@ namespace AirstrikeMod
 
         public override void PostInit() => Instance = this;
 
-        public void BeginTargeting(VehiclePawn vehicle, Map map, OrdinanceDef ordinance,
+        public void BeginTargeting(VehiclePawn vehicle, Map map, ThingDef ordinance,
             int dropCount,
             Action<List<IntVec3>, Rot4> action,
             Func<LocalTargetInfo, bool> targetValidator = null,
@@ -143,10 +143,13 @@ namespace AirstrikeMod
             GenDraw.DrawFieldEdges(footprintBuffer, color);
         }
 
-        private static int Spacing(OrdinanceDef ord) =>
-            Mathf.Max(1, Mathf.FloorToInt(ord.radius * 2f));
+        private static int Spacing(ThingDef ord)
+        {
+            var radius = ord?.projectileWhenLoaded?.projectile?.explosionRadius ?? 0f;
+            return Mathf.Max(1, Mathf.FloorToInt(radius * 2f));
+        }
 
-        private static List<IntVec3> ComputeDropCells(IntVec3 cursor, Rot4 dir, OrdinanceDef ord,
+        private static List<IntVec3> ComputeDropCells(IntVec3 cursor, Rot4 dir, ThingDef ord,
             int dropCount)
         {
             var spacing = Spacing(ord);
@@ -168,7 +171,7 @@ namespace AirstrikeMod
             return cells;
         }
 
-        private static void GetBoxBounds(IntVec3 cursor, Rot4 dir, OrdinanceDef ord,
+        private static void GetBoxBounds(IntVec3 cursor, Rot4 dir, ThingDef ord,
             int dropCount, out int xMin, out int xMax, out int zMin, out int zMax)
         {
             var spacing = Spacing(ord);
@@ -194,7 +197,7 @@ namespace AirstrikeMod
             }
         }
 
-        private static void FillFootprint(IntVec3 cursor, Rot4 dir, OrdinanceDef ord,
+        private static void FillFootprint(IntVec3 cursor, Rot4 dir, ThingDef ord,
             int dropCount, List<IntVec3> buffer)
         {
             GetBoxBounds(cursor, dir, ord, dropCount,

@@ -344,18 +344,39 @@
 		</components>
 		<comps>
 			<li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
-				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+				<skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
 				<scatter>0</scatter>
 				<skillScatter>5</skillScatter>
+				<ordinance>
+					<li>Shell_HighExplosive</li>
+					<li>Shell_Incendiary</li>
+					<li>Shell_EMP</li>
+					<li>Shell_Smoke</li>
+					<li>Shell_Firefoam</li>
+					<li>Shell_AntigrainWarhead</li>
+					<li>ROCKET_Bomb_Explosive</li>
+					<li>ROCKET_Bomb_HighExplosive</li>
+					<li>ROCKET_Bomb_Incendiary</li>
+					<li>ROCKET_Bomb_Antigrain</li>
+				</ordinance>
 			</li>
 			<li Class="AirstrikeMod.CompProperties_AirstrikeBombingRun">
-				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+				<skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
 				<scatter>1</scatter>
 				<dropCount>5</dropCount>
 				<skillScatter>5</skillScatter>
+				<ordinance>
+					<li>Shell_HighExplosive</li>
+					<li>Shell_Incendiary</li>
+					<li>Shell_EMP</li>
+					<li>Shell_Smoke</li>
+					<li>Shell_Firefoam</li>
+					<li>ROCKET_Bomb_Incendiary</li>
+					<li>ROCKET_Bomb_Explosive</li>
+				</ordinance>
 			</li>
 			<li Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun">
-				<skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+				<skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
 				<projectileDef>Bullet_AutocannonTurret</projectileDef>
 				<ammoDef>Steel</ammoDef>
 				<fireSound>Shot_Autocannon</fireSound>

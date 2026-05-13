@@ -7,13 +7,11 @@ namespace AirstrikeMod
     {
         public static string Current;
         public static string SecondLine;
-        public static Color SecondLineColor = Color.white;
 
         public static void Clear()
         {
             Current = null;
             SecondLine = null;
-            SecondLineColor = Color.white;
         }
 
         public static void Draw()
@@ -35,7 +33,6 @@ namespace AirstrikeMod
             if (!string.IsNullOrEmpty(SecondLine))
             {
                 var rect2 = new Rect(rect.x, rect.y + 16f, rect.width, 22f);
-                GUI.color = SecondLineColor;
                 Widgets.Label(rect2, SecondLine);
             }
 

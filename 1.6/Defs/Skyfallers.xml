@@ -11,7 +11,7 @@
         broken and we don't go through it.
     -->
     <ThingDef ParentName="VehicleSkyfallerBase">
-        <defName>RocketsAirstrike_BombingPass</defName>
+        <defName>ROCKET_BombingPass</defName>
         <thingClass>AirstrikeMod.VehicleSkyfaller_Bombing</thingClass>
         <!--
             shadowSize intentionally not set here — VehicleSkyfaller_Bombing.DrawShadow
@@ -28,7 +28,7 @@
         but with our subclass as thingClass.
     -->
     <ThingDef>
-        <defName>RocketsAirstrike_FallingBomb</defName>
+        <defName>ROCKET_FallingBomb</defName>
         <label>falling bomb</label>
         <thingClass>AirstrikeMod.ProjectileSkyfaller_AirstrikeBomb</thingClass>
         <category>Projectile</category>

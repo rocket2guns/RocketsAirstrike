@@ -23,8 +23,8 @@ namespace AirstrikeMod
         protected override Gizmo BuildStrikeGizmo()
         {
             return BuildLaunchGizmo(
-                label: "RocketsAirstrike_PrecisionStrike".Translate(),
-                desc: "RocketsAirstrike_PrecisionStrikeDesc".Translate(),
+                label: "ROCKET_SingleStrike".Translate(),
+                desc: "ROCKET_SingleStrikeDesc".Translate(),
                 topIcon: Icon,
                 requiredShells: RequiredShells,
                 onClick: _startDelegate ??= () => PickDestinationMap(StartTargeting),
@@ -55,10 +55,10 @@ namespace AirstrikeMod
 
             BombTargetingActive = true;
             BombTargetingMap = destMap;
-            BombTargetingRadius = sel?.radius ?? 3f;
-            SetTargetingCursor("RocketsAirstrike_SelectTargetLocation".Translate());
+            BombTargetingRadius = sel?.projectileWhenLoaded?.projectile?.explosionRadius ?? 3f;
+            SetTargetingCursor("ROCKET_SelectTargetLocation".Translate());
 
-            var cursorIcon = sel?.thingDef?.uiIcon ?? Icon;
+            var cursorIcon = sel?.uiIcon ?? Icon;
 
             Find.Targeter.BeginTargeting(
                 targetParams: targetingParameters,

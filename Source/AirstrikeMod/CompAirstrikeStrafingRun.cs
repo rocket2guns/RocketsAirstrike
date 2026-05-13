@@ -17,7 +17,7 @@ namespace AirstrikeMod
 
         private Action _startDelegate;
 
-        protected override bool RequiresOrdinance => false;
+        public override bool RequiresOrdinance => false;
 
         private int RoundCount => Math.Max(0, Props.runLength);
         private int AmmoCount => RoundCount * Math.Max(1, Props.ammoPerRound);
@@ -30,8 +30,8 @@ namespace AirstrikeMod
             var ammoDef = Props.ammoDef;
             var ammoLabel = ammoDef != null ? ammoDef.label : "ammo";
             return BuildLaunchGizmo(
-                label: "RocketsAirstrike_StrafingRun".Translate(),
-                desc: "RocketsAirstrike_StrafingRunDesc".Translate(RoundCount, AmmoCount, ammoLabel),
+                label: "ROCKET_StrafingRun".Translate(),
+                desc: "ROCKET_StrafingRunDesc".Translate(RoundCount, AmmoCount, ammoLabel),
                 topIcon: Icon,
                 requiredShells: 0,
                 onClick: _startDelegate ??= () => PickDestinationMap(StartTargeting),
@@ -58,7 +58,7 @@ namespace AirstrikeMod
                 Current.Game.CurrentMap = destMap;
 
             var cursorIcon = Props.ammoDef?.uiIcon ?? Icon;
-            SetTargetingCursor("RocketsAirstrike_SelectTargetStrafe".Translate());
+            SetTargetingCursor("ROCKET_SelectTargetStrafe".Translate());
 
             var payload = new StrafingPayload
             {

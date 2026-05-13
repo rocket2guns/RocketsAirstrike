@@ -2,7 +2,7 @@
 <Defs>
 
     <ThingCategoryDef>
-        <defName>RocketsAirstrike_Bombs</defName>
+        <defName>ROCKET_Bombs</defName>
         <label>bombs</label>
         <parent>Manufactured</parent>
     </ThingCategoryDef>

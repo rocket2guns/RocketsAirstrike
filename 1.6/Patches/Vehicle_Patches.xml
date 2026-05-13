@@ -9,12 +9,24 @@
             <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Warbird"]/comps</xpath>
             <value>
                 <li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
-                    <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+                    <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
                     <scatter>2</scatter>
                     <skillScatter>4</skillScatter>
+                    <ordinance>
+                        <li>Shell_HighExplosive</li>
+                        <li>Shell_Incendiary</li>
+                        <li>Shell_EMP</li>
+                        <li>Shell_Smoke</li>
+                        <li>Shell_Firefoam</li>
+                        <li>Shell_AntigrainWarhead</li>
+                        <li>ROCKET_Bomb_Explosive</li>
+                        <li>ROCKET_Bomb_HighExplosive</li>
+                        <li>ROCKET_Bomb_Incendiary</li>
+                        <li>ROCKET_Bomb_Antigrain</li>
+                    </ordinance>
                 </li>
                 <li Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun">
-                    <skyfallerBombing>RocketsAirstrike_BombingPass</skyfallerBombing>
+                    <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
                     <projectileDef>Bullet_AutocannonTurret</projectileDef>
                     <ammoDef>Steel</ammoDef>
                     <fireSound>Shot_Autocannon</fireSound>

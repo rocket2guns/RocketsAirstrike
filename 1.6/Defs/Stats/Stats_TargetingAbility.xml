@@ -2,7 +2,7 @@
 <Defs>
 
     <StatDef>
-        <defName>RocketsAirstrike_TargetingAbility</defName>
+        <defName>ROCKET_TargetingAbility</defName>
         <label>targeting ability</label>
         <description>How precisely this colonist can put airstrike ordnance on target. Based on Intellectual skill; reduced by impaired Sight, Manipulation, or Consciousness.</description>
         <category>PawnSocial</category>

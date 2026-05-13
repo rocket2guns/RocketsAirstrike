@@ -23,8 +23,8 @@ namespace AirstrikeMod
         protected override Gizmo BuildStrikeGizmo()
         {
             return BuildLaunchGizmo(
-                label: "RocketsAirstrike_BombingRun".Translate(),
-                desc: "RocketsAirstrike_BombingRunDesc".Translate(Props.dropCount),
+                label: "ROCKET_BombingRun".Translate(),
+                desc: "ROCKET_BombingRunDesc".Translate(Props.dropCount),
                 topIcon: Icon,
                 requiredShells: RequiredShells,
                 onClick: _startDelegate ??= () => PickDestinationMap(StartTargeting));
@@ -42,8 +42,8 @@ namespace AirstrikeMod
             if (Current.Game.CurrentMap != destMap)
                 Current.Game.CurrentMap = destMap;
 
-            var cursorIcon = sel.thingDef?.uiIcon ?? Icon;
-            SetTargetingCursor("RocketsAirstrike_SelectTargetRun".Translate());
+            var cursorIcon = sel.uiIcon ?? Icon;
+            SetTargetingCursor("ROCKET_SelectTargetRun".Translate());
 
             BombingRunTargeter.Instance.BeginTargeting(
                 vehicle: Vehicle,
