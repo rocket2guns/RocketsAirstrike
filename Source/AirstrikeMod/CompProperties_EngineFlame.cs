@@ -9,6 +9,7 @@ namespace AirstrikeMod
         public List<Vector2> exhaustOffsetsEast = new();
         public List<Vector2> exhaustOffsetsNorth;
         public List<Vector2> exhaustOffsetsSouth;
+        public List<Vector2> exhaustOffsetsWest;
 
         public Vector2 flameSize = new(1f, 1f);
 

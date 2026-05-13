@@ -43,6 +43,7 @@ namespace AirstrikeMod
 
             var cursorIcon = sel.uiIcon ?? Icon;
             SetTargetingCursor("ROCKET_SelectTargetLocation".Translate());
+            CursorLabel.ThirdLine = "ROCKET_HoldShiftMultiTarget".Translate();
 
             var maxChain = Mathf.Max(1, CountInCargo(sel));
 

@@ -53,10 +53,12 @@ namespace AirstrikeMod
         protected float BestTargetingAbility()
         {
             var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
+            var stat = AirstrikeDefOf.ROCKET_TargetingAbility;
             var best = 0f;
             for (var i = 0; i < pilots.Count; i++)
             {
-                var v = pilots[i].GetStatValue(AirstrikeDefOf.ROCKET_TargetingAbility);
+                if (stat.Worker.IsDisabledFor(pilots[i])) continue;
+                var v = pilots[i].GetStatValue(stat);
                 if (v > best) best = v;
             }
             return best;

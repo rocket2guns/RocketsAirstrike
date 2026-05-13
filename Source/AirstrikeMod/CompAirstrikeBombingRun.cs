@@ -44,6 +44,7 @@ namespace AirstrikeMod
 
             var cursorIcon = sel.uiIcon ?? Icon;
             SetTargetingCursor("ROCKET_SelectTargetRun".Translate());
+            CursorLabel.ThirdLine = "ROCKET_HoldShiftMultiTarget".Translate();
 
             var maxChain = Mathf.Max(1, CountInCargo(sel) / Mathf.Max(1, Props.dropCount));
 
@@ -65,7 +66,8 @@ namespace AirstrikeMod
                     CursorLabel.Clear();
                     RestoreCurrentMap(originalMap);
                 },
-                mouseAttachment: cursorIcon);
+                mouseAttachment: cursorIcon,
+                spacingMultiplier: Props.spacingMultiplier);
         }
     }
 }

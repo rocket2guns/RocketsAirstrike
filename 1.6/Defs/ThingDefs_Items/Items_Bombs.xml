@@ -71,7 +71,7 @@
             <ComponentIndustrial>1</ComponentIndustrial>
         </costList>
         <recipeMaker>
-            <researchPrerequisite>Mortars</researchPrerequisite>
+            <researchPrerequisite>Fabrication</researchPrerequisite>
         </recipeMaker>
     </ThingDef>
 
@@ -108,7 +108,7 @@
             <ComponentIndustrial>1</ComponentIndustrial>
         </costList>
         <recipeMaker>
-            <researchPrerequisite>Mortars</researchPrerequisite>
+            <researchPrerequisite>Fabrication</researchPrerequisite>
         </recipeMaker>
     </ThingDef>
 
@@ -141,7 +141,7 @@
             <ComponentIndustrial>1</ComponentIndustrial>
         </costList>
         <recipeMaker>
-            <researchPrerequisite>Mortars</researchPrerequisite>
+            <researchPrerequisite>Fabrication</researchPrerequisite>
         </recipeMaker>
     </ThingDef>
 
@@ -182,7 +182,7 @@
             <ComponentSpacer>1</ComponentSpacer>
         </costList>
         <recipeMaker>
-            <researchPrerequisite>Mortars</researchPrerequisite>
+            <researchPrerequisite>AdvancedFabrication</researchPrerequisite>
         </recipeMaker>
     </ThingDef>
 
@@ -250,7 +250,7 @@
             <!-- Vanilla Flame default is 10; bumped for the larger bomb. -->
             <damageAmountBase>20</damageAmountBase>
             <speed>30</speed>
-            <explosionRadius>5.8</explosionRadius>
+            <explosionRadius>4.8</explosionRadius>
             <flyOverhead>true</flyOverhead>
             <!-- Heavy chemfuel splatter is the main "incendiary effect" -->
             <preExplosionSpawnThingDef>Filth_Fuel</preExplosionSpawnThingDef>

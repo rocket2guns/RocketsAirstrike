@@ -25,6 +25,9 @@
     <ROCKET_BombingRunDesc>Make a bombing pass dropping {0} rounds along a chosen line.</ROCKET_BombingRunDesc>
     <ROCKET_StrafingRun>Strafing Run</ROCKET_StrafingRun>
     <ROCKET_StrafingRunDesc>Strafe a chosen line. Fires {0} cannon rounds, consuming {1} {2} from cargo.</ROCKET_StrafingRunDesc>
+    <ROCKET_HoldShiftMultiTarget>Hold SHIFT to select multiple targets</ROCKET_HoldShiftMultiTarget>
+    <ROCKET_RightClickCancel>Right click to cancel action</ROCKET_RightClickCancel>
+    <ROCKET_RightClickBegin>Right click to begin sortie</ROCKET_RightClickBegin>
 
     <!-- Gizmo disable reasons -->
     <ROCKET_NoLauncherComp>Vehicle has no launcher comp.</ROCKET_NoLauncherComp>

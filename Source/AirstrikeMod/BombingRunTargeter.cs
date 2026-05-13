@@ -21,6 +21,7 @@ namespace AirstrikeMod
         private ThingDef ordinance;
         private int dropCount = 5;
         private int maxChain = 1;
+        private float spacingMultiplier = CompProperties_AirstrikeBombingRun.DEFAULT_SPACING_MULTIPLIER;
         private Action<List<BombingSegment>> action;
         private Func<LocalTargetInfo, bool> targetValidator;
         private Rot4 rotation = Rot4.East;
@@ -39,13 +40,15 @@ namespace AirstrikeMod
             Action<List<BombingSegment>> action,
             Func<LocalTargetInfo, bool> targetValidator = null,
             Action actionWhenFinished = null,
-            Texture2D mouseAttachment = null)
+            Texture2D mouseAttachment = null,
+            float spacingMultiplier = CompProperties_AirstrikeBombingRun.DEFAULT_SPACING_MULTIPLIER)
         {
             this.vehicle = vehicle;
             this.map = map;
             this.ordinance = ordinance;
             this.dropCount = Mathf.Max(1, dropCount);
             this.maxChain = Mathf.Max(1, maxChain);
+            this.spacingMultiplier = Mathf.Max(0f, spacingMultiplier);
             this.action = action;
             this.targetValidator = targetValidator;
             this.actionWhenFinished = actionWhenFinished;
@@ -102,8 +105,26 @@ namespace AirstrikeMod
                 Event.current.Use();
             }
 
-            if ((Event.current.type == EventType.MouseDown && Event.current.button == 1) ||
-                KeyBindingDefOf.Cancel.KeyDownEvent)
+            // Right-click commits the locked chain if any targets have been placed
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1)
+            {
+                if (lockedSegments.Count > 0)
+                {
+                    SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
+                    var chain = new List<BombingSegment>(lockedSegments);
+                    var callback = action;
+                    StopTargeting();
+                    callback(chain);
+                }
+                else
+                {
+                    SoundDefOf.CancelMode.PlayOneShotOnCamera(null);
+                    StopTargeting();
+                }
+                Event.current.Use();
+            }
+
+            if (KeyBindingDefOf.Cancel.KeyDownEvent)
             {
                 SoundDefOf.CancelMode.PlayOneShotOnCamera(null);
                 StopTargeting();
@@ -144,6 +165,9 @@ namespace AirstrikeMod
         public override void TargeterOnGUI()
         {
             GenUI.DrawMouseAttachment(mouseAttachment);
+            CursorLabel.FourthLine = (lockedSegments.Count > 0
+                ? "ROCKET_RightClickBegin"
+                : "ROCKET_RightClickCancel").Translate();
             CursorLabel.Draw();
         }
 
@@ -206,16 +230,13 @@ namespace AirstrikeMod
             GenDraw.DrawLineBetween(a, b, SimpleColor.White, 0.2f);
         }
 
-        // Spacing follows the projectile's explosion radius so adjacent bombs don't
-        // overlap. Falls back to 1 if the ThingDef has no projectile (defensive — XML
-        // for a useful airstrike entry should always resolve a projectile).
-        private static int Spacing(ThingDef ord)
+        private int Spacing(ThingDef ord)
         {
             var radius = ord?.projectileWhenLoaded?.projectile?.explosionRadius ?? 0f;
-            return Mathf.Max(1, Mathf.FloorToInt(radius * 2f));
+            return Mathf.Max(1, Mathf.FloorToInt(radius * spacingMultiplier));
         }
 
-        private static List<IntVec3> ComputeDropCells(IntVec3 cursor, Rot4 dir, ThingDef ord,
+        private List<IntVec3> ComputeDropCells(IntVec3 cursor, Rot4 dir, ThingDef ord,
             int dropCount)
         {
             var spacing = Spacing(ord);
@@ -237,7 +258,7 @@ namespace AirstrikeMod
             return cells;
         }
 
-        private static void GetBoxBounds(IntVec3 cursor, Rot4 dir, ThingDef ord,
+        private void GetBoxBounds(IntVec3 cursor, Rot4 dir, ThingDef ord,
             int dropCount, out int xMin, out int xMax, out int zMin, out int zMax)
         {
             var spacing = Spacing(ord);
@@ -263,7 +284,7 @@ namespace AirstrikeMod
             }
         }
 
-        private static void FillFootprint(IntVec3 cursor, Rot4 dir, ThingDef ord,
+        private void FillFootprint(IntVec3 cursor, Rot4 dir, ThingDef ord,
             int dropCount, List<IntVec3> buffer)
         {
             GetBoxBounds(cursor, dir, ord, dropCount,

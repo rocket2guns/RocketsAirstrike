@@ -68,6 +68,8 @@ namespace AirstrikeMod
                 offsets = props.exhaustOffsetsNorth;
             else if (rot == Rot8.South && props.exhaustOffsetsSouth?.Count > 0)
                 offsets = props.exhaustOffsetsSouth;
+            else if (rot == Rot8.West && props.exhaustOffsetsWest?.Count > 0)
+                offsets = props.exhaustOffsetsWest;
             else
                 offsets = props.exhaustOffsetsEast;
             if (offsets == null || offsets.Count == 0) return;

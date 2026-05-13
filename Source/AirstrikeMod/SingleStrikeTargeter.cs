@@ -88,8 +88,28 @@ namespace AirstrikeMod
                 Event.current.Use();
             }
 
-            if ((Event.current.type == EventType.MouseDown && Event.current.button == 1) ||
-                KeyBindingDefOf.Cancel.KeyDownEvent)
+            // Right-click commits the locked chain if any targets have been placed,
+            // otherwise cancels the targeter (matches ESC). Locked targets are never
+            // discarded by right-click.
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1)
+            {
+                if (lockedTargets.Count > 0)
+                {
+                    SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
+                    var chain = BuildChain();
+                    var callback = action;
+                    StopTargeting();
+                    callback(chain);
+                }
+                else
+                {
+                    SoundDefOf.CancelMode.PlayOneShotOnCamera(null);
+                    StopTargeting();
+                }
+                Event.current.Use();
+            }
+
+            if (KeyBindingDefOf.Cancel.KeyDownEvent)
             {
                 SoundDefOf.CancelMode.PlayOneShotOnCamera(null);
                 StopTargeting();
@@ -110,6 +130,9 @@ namespace AirstrikeMod
         public override void TargeterOnGUI()
         {
             GenUI.DrawMouseAttachment(mouseAttachment);
+            CursorLabel.FourthLine = (lockedTargets.Count > 0
+                ? "ROCKET_RightClickBegin"
+                : "ROCKET_RightClickCancel").Translate();
             CursorLabel.Draw();
         }
 
