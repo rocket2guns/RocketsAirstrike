@@ -15,7 +15,7 @@
 		</graphicData>
 		<fillPercent>0.7</fillPercent>
 		<buildDef>ROCKET_Falcon_Blueprint</buildDef>
-		<size>(9, 9)</size>
+		<size>(7, 9)</size>
 		<canCaravan LockSetting="True">false</canCaravan>
 		<vehicleCategory>Transport</vehicleCategory>
 		<techLevel>Industrial</techLevel>
@@ -405,7 +405,7 @@
 							<flipHorizontal>West</flipHorizontal>
 							<lockShadowZ>true</lockShadowZ>
 							<restriction Class="Vehicles.LaunchRestriction_Runway">
-								<width>(-2, 40)</width>
+								<width>(-4, 36)</width>
 								<height>(-3, 3)</height>
 								<fillPercent>0.21</fillPercent>
 							</restriction>
@@ -451,7 +451,7 @@
 							<flipVertical>South</flipVertical>
 							<restriction Class="Vehicles.LaunchRestriction_Runway">
 								<width>(-3, 3)</width>
-								<height>(-2, 30)</height>
+								<height>(-3, 37)</height>
 								<fillPercent>0.21</fillPercent>
 							</restriction>
 							<zPositionCurve Class="SmashTools.BezierCurve">
@@ -481,7 +481,7 @@
 							<flipHorizontal>West</flipHorizontal>
 							<lockShadowZ>true</lockShadowZ>
 							<restriction Class="Vehicles.LaunchRestriction_Runway">
-								<width>(-30, 2)</width>
+								<width>(36,-4)</width>
 								<height>(-3, 3)</height>
 								<fillPercent>0.21</fillPercent>
 							</restriction>
@@ -526,7 +526,7 @@
 							<flipVertical>South</flipVertical>
 							<restriction Class="Vehicles.LaunchRestriction_Runway">
 								<width>(-3, 3)</width>
-								<height>(-30, 2)</height>
+								<height>(-36,4)</height>
 								<fillPercent>0.21</fillPercent>
 							</restriction>
 							<zPositionCurve Class="SmashTools.BezierCurve">

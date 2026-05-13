@@ -100,9 +100,17 @@ namespace AirstrikeMod
 
         protected string BuildTargetingAccuracyDescLine()
         {
-            var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
-            if (pilots == null || pilots.Count == 0) return string.Empty;
-            var (rating, color) = TargetingRating();
+            string rating;
+            Color color;
+            if (PilotsBlockLaunch(out _))
+            {
+                rating = "ROCKET_Rating_None".Translate();
+                color = Color.red;
+            }
+            else
+            {
+                (rating, color) = TargetingRating();
+            }
             var hex = ColorUtility.ToHtmlStringRGB(color);
             return $"\n\n{"ROCKET_TargetingAccuracy".Translate()}: <color=#{hex}>{rating}</color>";
         }
@@ -122,8 +130,6 @@ namespace AirstrikeMod
             return (RatingBuckets[RatingBuckets.Length - 1].labelKey.Translate(), Color.red);
         }
 
-        // All-or-nothing per the "best pilot wins" rule: as long as one Movement
-        // pilot can fly, the run is allowed.
         protected bool PilotsBlockLaunch(out string reason)
         {
             reason = null;
@@ -133,20 +139,18 @@ namespace AirstrikeMod
                 reason = "ROCKET_NoPilots".Translate();
                 return true;
             }
-            var allIntelDisabled = true;
             var allZeroManip = true;
             for (var i = 0; i < pilots.Count; i++)
             {
                 var p = pilots[i];
                 var intelDisabled = p.skills?.GetSkill(SkillDefOf.Intellectual)?.TotallyDisabled ?? true;
-                if (!intelDisabled) allIntelDisabled = false;
+                if (intelDisabled)
+                {
+                    reason = "ROCKET_PilotIncapableIntellectual".Translate(p.LabelShort);
+                    return true;
+                }
                 var manip = p.health?.capacities?.GetLevel(PawnCapacityDefOf.Manipulation) ?? 0f;
                 if (manip > 0f) allZeroManip = false;
-            }
-            if (allIntelDisabled)
-            {
-                reason = "ROCKET_PilotIncapableIntellectual".Translate();
-                return true;
             }
             if (allZeroManip)
             {

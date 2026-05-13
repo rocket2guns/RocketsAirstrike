@@ -36,7 +36,7 @@
     <ROCKET_NeedShellsHave>Need {0} {1} in cargo (have {2}).</ROCKET_NeedShellsHave>
     <ROCKET_NotEnoughFuel>Not enough chemfuel (needs {0}).</ROCKET_NotEnoughFuel>
     <ROCKET_NoPilots>No pilot assigned.</ROCKET_NoPilots>
-    <ROCKET_PilotIncapableIntellectual>Pilot is incapable of intellectual work.</ROCKET_PilotIncapableIntellectual>
+    <ROCKET_PilotIncapableIntellectual>{0} is incapable of intellectual work and cannot plot targets.</ROCKET_PilotIncapableIntellectual>
     <ROCKET_PilotZeroManipulation>Pilot can't operate the controls.</ROCKET_PilotZeroManipulation>
 
     <!-- Targeting accuracy -->
@@ -46,6 +46,7 @@
     <ROCKET_Rating_Average>Average</ROCKET_Rating_Average>
     <ROCKET_Rating_Poor>Poor</ROCKET_Rating_Poor>
     <ROCKET_Rating_VeryPoor>Very Poor</ROCKET_Rating_VeryPoor>
+    <ROCKET_Rating_None>None</ROCKET_Rating_None>
 
     <!-- Map-pick FloatMenu -->
     <ROCKET_ThisMap>this map</ROCKET_ThisMap>
