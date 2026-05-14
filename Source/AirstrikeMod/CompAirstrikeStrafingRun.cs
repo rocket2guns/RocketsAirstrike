@@ -59,6 +59,7 @@ namespace AirstrikeMod
 
             var cursorIcon = Props.ammoDef?.uiIcon ?? Icon;
             SetTargetingCursor("ROCKET_SelectTargetStrafe".Translate());
+            CursorLabel.ThirdLine = "ROCKET_HoldShiftMultiTarget".Translate();
 
             var payload = new StrafingPayload
             {
@@ -70,17 +71,23 @@ namespace AirstrikeMod
                 bulletsPerRound = Math.Max(1, Props.bulletsPerRound),
                 spreadCells = Math.Max(0, Props.spreadCells),
                 fireOriginOffset = Math.Max(1, Props.fireOriginOffset),
+                runWidth = Math.Max(1, Props.runWidth),
             };
+
+            var maxChain = Props.ammoDef == null
+                ? int.MaxValue
+                : Mathf.Max(1, CountInCargo(Props.ammoDef) / Mathf.Max(1, AmmoCount));
 
             StrafingRunTargeter.Instance.BeginTargeting(
                 vehicle: Vehicle,
                 map: destMap,
                 runWidth: Props.runWidth,
                 runLength: Props.runLength,
-                action: (cells, dir) =>
+                maxChain: maxChain,
+                action: segments =>
                 {
                     CursorLabel.Clear();
-                    LaunchStrike(destMap, cells, dir, originalMap, payload);
+                    LaunchStrike(destMap, segments, originalMap, payload);
                 },
                 targetValidator: t => t.Cell.InBounds(destMap)
                                       && !Ext_Vehicles.IsRoofRestricted(Vehicle.VehicleDef, t.Cell, destMap),

@@ -67,6 +67,7 @@ namespace AirstrikeMod
         public int strafingBulletsPerRound = 1;
         public int strafingSpreadCells;
         public int strafingFireOriginOffset = 3;
+        public int strafingRunWidth = 1;
 
         public float sortieSpeedMultiplier = 1f;
         public SoundDef bombFireSound;
@@ -275,11 +276,12 @@ namespace AirstrikeMod
 
             if (Spawned && Map != null && _dropCells != null && bombFired != null)
             {
+                var lead = pattern is OrdinancePattern.Strafing ? leadCells : 0;
                 var n = Math.Min(_dropCells.Count, bombFired.Count);
                 for (var i = 0; i < n; i++)
                 {
                     if (bombFired[i]) continue;
-                    if (traveled < _dropArcLengths[i]) continue;
+                    if (traveled < _dropArcLengths[i] - lead) continue;
                     FireAtCell(_dropCells[i]);
                     bombFired[i] = true;
                 }
@@ -565,11 +567,15 @@ namespace AirstrikeMod
             if (!cell.InBounds(Map)) return;
 
             GrantStrafingSortieXP();
+            // Run-width perp randomization is per-round (per fire cell), not per bullet:
+            // the rectangle's cells were generated axis-only so this is what gives the
+            // cell its perpendicular scatter across the width.
+            var roundCell = ApplyRunWidthPerp(cell);
             var bullets = Math.Max(1, strafingBulletsPerRound);
             for (var i = 0; i < bullets; i++)
             {
-                var spreadCell = ApplySpread(cell);
-                var intendedTarget = PickIntendedTarget(cell, spreadCell);
+                var spreadCell = ApplySpread(roundCell);
+                var intendedTarget = PickIntendedTarget(roundCell, spreadCell);
                 var landCell = intendedTarget.Cell;
                 var originCell = ComputeFireOrigin(landCell);
                 if (!originCell.InBounds(Map)) originCell = landCell;
@@ -624,10 +630,46 @@ namespace AirstrikeMod
 
         private IntVec3 ComputeFireOrigin(IntVec3 target)
         {
-            var dx = Math.Sign(endCell.x - startCell.x);
-            var dz = Math.Sign(endCell.z - startCell.z);
+            var flight = ComputeFlightTangent();
+            var dx = Math.Sign(flight.x);
+            var dz = Math.Sign(flight.z);
+            if (dx == 0 && dz == 0) dx = 1;
             var offset = Math.Max(1, strafingFireOriginOffset);
             return new IntVec3(target.x - dx * offset, target.y, target.z - dz * offset);
+        }
+
+        // Spline mode: local tangent at the plane's current arc length. Legacy mode:
+        // start->end vector. Used by ComputeFireOrigin and ApplyRunWidthPerp so that in
+        // chained spline strafing, bullet origin and width-spread orient to the current
+        // segment's heading rather than the overall polyline's start->end.
+        private Vector3 ComputeFlightTangent()
+        {
+            if (waypoints != null && _splinePositions != null && _splinePositions.Count >= 2)
+            {
+                SampleSplineAtDistance(Mathf.Clamp(traveled, 0f, _totalLength),
+                    out _, out var tan);
+                if (tan.sqrMagnitude > 0.0001f) return tan.normalized;
+            }
+            var dx = endCell.x - startCell.x;
+            var dz = endCell.z - startCell.z;
+            if (dx == 0 && dz == 0) return new Vector3(1f, 0f, 0f);
+            return new Vector3(dx, 0f, dz).normalized;
+        }
+
+        private IntVec3 ApplyRunWidthPerp(IntVec3 cell)
+        {
+            if (strafingRunWidth <= 1) return cell;
+            var flight = ComputeFlightTangent();
+            // 90deg CCW rotation in (x,z) plane.
+            var perpX = -flight.z;
+            var perpZ = flight.x;
+            var halfW_low = strafingRunWidth / 2;
+            var halfW_high = (strafingRunWidth - 1) / 2;
+            var t = Rand.RangeInclusive(-halfW_low, halfW_high);
+            var dx = Mathf.RoundToInt(perpX * t);
+            var dz = Mathf.RoundToInt(perpZ * t);
+            var offset = new IntVec3(cell.x + dx, cell.y, cell.z + dz);
+            return offset.InBounds(Map) ? offset : cell;
         }
 
         private IntVec3 ApplySpread(IntVec3 cell)
@@ -746,6 +788,7 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref strafingBulletsPerRound, nameof(strafingBulletsPerRound), 1);
             Scribe_Values.Look(ref strafingSpreadCells, nameof(strafingSpreadCells));
             Scribe_Values.Look(ref strafingFireOriginOffset, nameof(strafingFireOriginOffset), 3);
+            Scribe_Values.Look(ref strafingRunWidth, nameof(strafingRunWidth), 1);
             Scribe_Values.Look(ref sortieSpeedMultiplier, nameof(sortieSpeedMultiplier), 1f);
             Scribe_Defs.Look(ref bombFireSound, nameof(bombFireSound));
             Scribe_References.Look(ref chosenPilot, nameof(chosenPilot));

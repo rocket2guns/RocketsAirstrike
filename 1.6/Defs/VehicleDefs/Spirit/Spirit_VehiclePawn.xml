@@ -348,7 +348,7 @@
 				<sortieSpeedMultiplier>0.33</sortieSpeedMultiplier>
 				<bombFireSound>ROCKET_HardpointLatchRelease</bombFireSound>
 				<requiredSkill>Intellectual</requiredSkill>
-				<requiredSkillLevel>4</requiredSkillLevel>
+				<requiredSkillLevel>7</requiredSkillLevel>
 				<scatter>0</scatter>
 				<skillScatter>5</skillScatter>
 				<ordinance>
@@ -363,7 +363,7 @@
 				<sortieSpeedMultiplier>0.33</sortieSpeedMultiplier>
 				<bombFireSound>ROCKET_HardpointLatchRelease</bombFireSound>
 				<requiredSkill>Intellectual</requiredSkill>
-				<requiredSkillLevel>4</requiredSkillLevel>
+				<requiredSkillLevel>7</requiredSkillLevel>
 				<scatter>1</scatter>
 				<dropCount>5</dropCount>
 				<skillScatter>5</skillScatter>

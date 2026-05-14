@@ -18,5 +18,6 @@ namespace AirstrikeMod
         public int bulletsPerRound = 1;
         public int spreadCells;
         public int fireOriginOffset = 3;
+        public int runWidth = 1;
     }
 }

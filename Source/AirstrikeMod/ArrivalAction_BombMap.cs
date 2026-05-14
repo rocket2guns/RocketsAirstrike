@@ -39,6 +39,7 @@ namespace AirstrikeMod
         protected int strafingBulletsPerRound = 1;
         protected int strafingSpreadCells;
         protected int strafingFireOriginOffset = 3;
+        protected int strafingRunWidth = 1;
 
         // Null = same-map. Non-null = cross-map: the bombing skyfaller's ExitMap builds
         // a return AerialVehicleInFlight back to this MapParent.
@@ -71,7 +72,8 @@ namespace AirstrikeMod
             SoundDef strafingFireSound = null,
             int strafingBulletsPerRound = 1,
             int strafingSpreadCells = 0,
-            int strafingFireOriginOffset = 3)
+            int strafingFireOriginOffset = 3,
+            int strafingRunWidth = 1)
             : base(vehicle)
         {
             this.mapParent = mapParent;
@@ -94,6 +96,7 @@ namespace AirstrikeMod
             this.strafingBulletsPerRound = strafingBulletsPerRound;
             this.strafingSpreadCells = strafingSpreadCells;
             this.strafingFireOriginOffset = strafingFireOriginOffset;
+            this.strafingRunWidth = strafingRunWidth;
         }
 
         public override void Arrived(GlobalTargetInfo target)
@@ -154,11 +157,14 @@ namespace AirstrikeMod
             skyfaller.strafingBulletsPerRound = strafingBulletsPerRound;
             skyfaller.strafingSpreadCells = strafingSpreadCells;
             skyfaller.strafingFireOriginOffset = strafingFireOriginOffset;
+            skyfaller.strafingRunWidth = strafingRunWidth;
 
             IntVec3 spawnCell;
             Rot4 spawnRot;
             var splineEligible = segments.Count > 1
-                && (pattern == OrdinancePattern.Single || pattern == OrdinancePattern.Line);
+                && (pattern == OrdinancePattern.Single
+                    || pattern == OrdinancePattern.Line
+                    || pattern == OrdinancePattern.Strafing);
             if (splineEligible)
             {
                 BuildPolyline(map, segments, out var waypoints, out var waypointIsDrop);
@@ -397,6 +403,7 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref strafingBulletsPerRound, nameof(strafingBulletsPerRound), 1);
             Scribe_Values.Look(ref strafingSpreadCells, nameof(strafingSpreadCells));
             Scribe_Values.Look(ref strafingFireOriginOffset, nameof(strafingFireOriginOffset), 3);
+            Scribe_Values.Look(ref strafingRunWidth, nameof(strafingRunWidth), 1);
         }
     }
 }

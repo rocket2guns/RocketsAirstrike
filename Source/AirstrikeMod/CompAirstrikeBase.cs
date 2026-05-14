@@ -117,10 +117,9 @@ namespace AirstrikeMod
         protected string BuildRequiredSkillDescLine()
         {
             var skill = BaseProps.requiredSkill;
-            var level = BaseProps.requiredSkillLevel;
-            if (skill == null || level <= 0) return "";
+            if (skill == null) return "";
             var coloredSkill = $"<color={SKILL_HIGHLIGHT_HEX}>{skill.LabelCap}</color>";
-            return $"\n\n{"ROCKET_RequiredSkillLine".Translate(level, coloredSkill)}";
+            return $"\n\n{"ROCKET_RequiredSkillLine".Translate(coloredSkill)}";
         }
 
         protected string BuildTargetingAccuracyDescLine()
@@ -439,14 +438,6 @@ namespace AirstrikeMod
             RestoreCurrentMap(originalMap);
         }
 
-        // single segment convenience overload used by the strafing path
-        protected void LaunchStrike(Map destMap, List<IntVec3> bombCells, Rot4 flightDir,
-            Map originalMap, StrafingPayload strafing = null)
-        {
-            var seg = new BombingSegment(bombCells, flightDir);
-            LaunchStrike(destMap, new List<BombingSegment> { seg }, originalMap, strafing);
-        }
-
         protected static void RestoreCurrentMap(Map originalMap)
         {
             if (originalMap != null && Current.Game.CurrentMap != originalMap)
@@ -483,10 +474,11 @@ namespace AirstrikeMod
             }
             else if (strafing != null && strafing.ammoDef != null && strafing.ammoCount > 0)
             {
-                if (!ConsumeFromCargo(strafing.ammoDef, strafing.ammoCount))
+                var totalAmmo = strafing.ammoCount * segments.Count;
+                if (!ConsumeFromCargo(strafing.ammoDef, totalAmmo))
                 {
                     Messages.Message(
-                        "ROCKET_NeedShells".Translate(strafing.ammoCount, strafing.ammoDef.label),
+                        "ROCKET_NeedShells".Translate(totalAmmo, strafing.ammoDef.label),
                         MessageTypeDefOf.RejectInput, false);
                     return;
                 }
@@ -532,7 +524,8 @@ namespace AirstrikeMod
                 strafingFireSound: strafing?.fireSound,
                 strafingBulletsPerRound: strafing?.bulletsPerRound ?? 1,
                 strafingSpreadCells: resolvedStrafingSpread,
-                strafingFireOriginOffset: strafing?.fireOriginOffset ?? 3);
+                strafingFireOriginOffset: strafing?.fireOriginOffset ?? 3,
+                strafingRunWidth: strafing?.runWidth ?? 1);
 
             var targetData = new TargetData<GlobalTargetInfo>();
             targetData.targets.Add(new GlobalTargetInfo(destMap.Tile));

@@ -29,14 +29,14 @@
                     <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
                     <projectileDef>Bullet_AutocannonTurret</projectileDef>
                     <requiredSkill>Shooting</requiredSkill>
-                    <requiredSkillLevel>4</requiredSkillLevel>
+                    <requiredSkillLevel>2</requiredSkillLevel>
                     <ammoDef>Steel</ammoDef>
                     <fireSound>Shot_Autocannon</fireSound>
                     <runWidth>3</runWidth>
-                    <runLength>15</runLength>
+                    <runLength>8</runLength>
                     <leadCells>8</leadCells>
                     <flyAltitude>2</flyAltitude>
-                    <bulletsPerRound>4</bulletsPerRound>
+                    <bulletsPerRound>1</bulletsPerRound>
                     <spreadCells>1</spreadCells>
                     <skillScatter>3</skillScatter>
                 </li>

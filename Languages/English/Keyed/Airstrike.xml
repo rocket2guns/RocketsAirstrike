@@ -39,7 +39,7 @@
     <ROCKET_NotEnoughFuel>Not enough chemfuel (needs {0}).</ROCKET_NotEnoughFuel>
     <ROCKET_NoPilots>No pilot assigned.</ROCKET_NoPilots>
     <ROCKET_PilotSkillRequired>{0} {1} required, best pilot has {2}.</ROCKET_PilotSkillRequired>
-    <ROCKET_RequiredSkillLine>Requires level {0} {1}</ROCKET_RequiredSkillLine>
+    <ROCKET_RequiredSkillLine>Uses {0} skill</ROCKET_RequiredSkillLine>
     <ROCKET_PilotZeroManipulation>Pilot can't operate the controls.</ROCKET_PilotZeroManipulation>
 
     <!-- Targeting accuracy -->
