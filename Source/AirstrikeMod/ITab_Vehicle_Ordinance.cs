@@ -66,7 +66,7 @@ namespace AirstrikeMod
             Widgets.BeginGroup(outer);
 
             var curY = 0f;
-            DrawToggles(ref curY, outer.width);
+            DrawToggles(ref curY, outer.width, comp);
 
             var outRect = new Rect(0f, curY, outer.width, outer.height - curY);
             var viewRect = new Rect(0f, 0f, outer.width - 16f, scrollViewHeight);
@@ -83,19 +83,14 @@ namespace AirstrikeMod
             Widgets.EndGroup();
         }
 
-        private static void DrawToggles(ref float curY, float width)
+        private static void DrawToggles(ref float curY, float width, CompAirstrikeBase comp)
         {
             var rect = new Rect(0f, curY, width, TOGGLE_HEIGHT);
-            var hide = AirstrikeMod.Settings.hideEmptyOrdinance;
-            var before = hide;
+            var showAll = comp.ShowAllOrdinance;
             Widgets.CheckboxLabeled(rect,
-                "ROCKET_TabOrdinance_HideUnavailable".Translate(),
-                ref hide);
-            if (hide != before)
-            {
-                AirstrikeMod.Settings.hideEmptyOrdinance = hide;
-                AirstrikeMod.Settings.Write();
-            }
+                "ROCKET_TabOrdinance_ShowAll".Translate(),
+                ref showAll);
+            comp.ShowAllOrdinance = showAll;
             curY += TOGGLE_HEIGHT + TOGGLE_GAP;
             Widgets.ListSeparator(ref curY, width,
                 "ROCKET_TabOrdinance_Header".Translate());
@@ -103,7 +98,7 @@ namespace AirstrikeMod
 
         private void DrawCategorySections(ref float y, float width, CompAirstrikeBase comp)
         {
-            var hideEmpty = AirstrikeMod.Settings.hideEmptyOrdinance;
+            var hideEmpty = !comp.ShowAllOrdinance;
             BuildGroups(comp);
 
             foreach (var category in orderBuf)

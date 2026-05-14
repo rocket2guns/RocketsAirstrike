@@ -3,15 +3,17 @@
 
     <!-- Settings window -->
     <ROCKET_SettingsCategory>Rocket's Airstrike</ROCKET_SettingsCategory>
-    <ROCKET_FuelScaleLabel>Airstrike fuel cost (% of one world-tile flight)</ROCKET_FuelScaleLabel>
-    <ROCKET_FuelScaleCurrent>  current: {0}%</ROCKET_FuelScaleCurrent>
-    <ROCKET_HideEmptyOrdinanceLabel>Hide unavailable ordinance</ROCKET_HideEmptyOrdinanceLabel>
-    <ROCKET_HideEmptyOrdinanceDesc>When picking ordinance for an airstrike, hide types that have zero in cargo instead of showing them greyed out.</ROCKET_HideEmptyOrdinanceDesc>
+    <ROCKET_TabGeneral>General</ROCKET_TabGeneral>
+    <ROCKET_TabDebug>Debug</ROCKET_TabDebug>
+    <ROCKET_FuelScaleLabel>Airstrike fuel cost: {0}% of one world-tile flight</ROCKET_FuelScaleLabel>
+    <ROCKET_DebugTabBlurb>Diagnostic overlays for tuning flight paths and waypoint placement. Most players can leave these off.</ROCKET_DebugTabBlurb>
+    <ROCKET_DebugDrawFlightPathLabel>Draw flight path</ROCKET_DebugDrawFlightPathLabel>
+    <ROCKET_DebugDrawFlightPathDesc>While a multi-target sortie is in the air, draw the spline path it follows as a polyline on the map. Useful for tuning curve tension and waypoint placement.</ROCKET_DebugDrawFlightPathDesc>
 
     <!-- Ordinance picker tab -->
     <ROCKET_TabOrdinance>Payload</ROCKET_TabOrdinance>
     <ROCKET_TabOrdinance_Header>Selected Ordinance</ROCKET_TabOrdinance_Header>
-    <ROCKET_TabOrdinance_HideUnavailable>Show only contained</ROCKET_TabOrdinance_HideUnavailable>
+    <ROCKET_TabOrdinance_ShowAll>Show all</ROCKET_TabOrdinance_ShowAll>
     <ROCKET_OrdinanceNone>None</ROCKET_OrdinanceNone>
     <ROCKET_OrdinanceCount>{0} (×{1})</ROCKET_OrdinanceCount>
 

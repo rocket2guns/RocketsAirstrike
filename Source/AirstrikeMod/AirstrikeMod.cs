@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
@@ -19,38 +20,73 @@ namespace AirstrikeMod
 
         public override string SettingsCategory() => "ROCKET_SettingsCategory".Translate();
 
+        private enum SettingsTab { General, Debug }
+        private static SettingsTab currentTab = SettingsTab.General;
+        private static readonly List<TabRecord> tabBuf = new();
+
         public override void DoSettingsWindowContents(Rect inRect)
         {
+            const float tabBarHeight = 32f;
+            var contentRect = new Rect(inRect.x, inRect.y + tabBarHeight, inRect.width, inRect.height - tabBarHeight);
+
+            tabBuf.Clear();
+            tabBuf.Add(new TabRecord("ROCKET_TabGeneral".Translate(), () => currentTab = SettingsTab.General, currentTab == SettingsTab.General));
+            tabBuf.Add(new TabRecord("ROCKET_TabDebug".Translate(), () => currentTab = SettingsTab.Debug, currentTab == SettingsTab.Debug));
+
+            Widgets.DrawMenuSection(contentRect);
+            TabDrawer.DrawTabs(contentRect, tabBuf);
+
+            var inner = contentRect.ContractedBy(12f);
+            switch (currentTab)
+            {
+                case SettingsTab.General: DrawGeneralTab(inner); break;
+                case SettingsTab.Debug:   DrawDebugTab(inner); break;
+            }
+        }
+
+        private static void DrawGeneralTab(Rect rect)
+        {
             var listing = new Listing_Standard();
-            listing.Begin(inRect);
+            listing.Begin(rect);
+            Text.Font = GameFont.Small;
 
-            listing.Label("ROCKET_FuelScaleLabel".Translate());
-            Settings.fuelScale = listing.Slider(Settings.fuelScale, 0f, 1f);
-            listing.Label("ROCKET_FuelScaleCurrent".Translate(
+            listing.Label("ROCKET_FuelScaleLabel".Translate(
                 (Settings.fuelScale * 100f).ToString("0")));
-
-            listing.GapLine();
-
-            listing.CheckboxLabeled(
-                "ROCKET_HideEmptyOrdinanceLabel".Translate(),
-                ref Settings.hideEmptyOrdinance,
-                "ROCKET_HideEmptyOrdinanceDesc".Translate());
+            Settings.fuelScale = listing.Slider(Settings.fuelScale, 0f, 1f);
 
             listing.End();
-            base.DoSettingsWindowContents(inRect);
+        }
+
+        private static void DrawDebugTab(Rect rect)
+        {
+            var listing = new Listing_Standard();
+            listing.Begin(rect);
+            Text.Font = GameFont.Small;
+
+            GUI.color = new Color(0.7f, 0.7f, 0.7f);
+            listing.Label("ROCKET_DebugTabBlurb".Translate());
+            GUI.color = Color.white;
+            listing.Gap(6f);
+
+            listing.CheckboxLabeled(
+                "ROCKET_DebugDrawFlightPathLabel".Translate(),
+                ref Settings.debugDrawFlightPath,
+                "ROCKET_DebugDrawFlightPathDesc".Translate());
+
+            listing.End();
         }
     }
 
     public class AirstrikeModSettings : ModSettings
     {
         public float fuelScale = 1f;
-        public bool hideEmptyOrdinance;
+        public bool debugDrawFlightPath;
 
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Values.Look(ref fuelScale, nameof(fuelScale), 1f);
-            Scribe_Values.Look(ref hideEmptyOrdinance, nameof(hideEmptyOrdinance));
+            Scribe_Values.Look(ref debugDrawFlightPath, nameof(debugDrawFlightPath));
         }
     }
 }

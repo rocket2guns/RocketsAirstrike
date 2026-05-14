@@ -118,10 +118,6 @@ namespace AirstrikeMod
                 return;
             }
 
-            // use the first segments bomb anchor to pick its flight line
-            ChooseFlightLine(map, segments[0].bombCells[0], segments[0].flightDir,
-                out var start, out var end);
-
             var skyfaller = (VehicleSkyfaller_Bombing)
                 VehicleSkyfallerMaker.MakeSkyfaller(bombingSkyfallerDef, vehicle);
 
@@ -135,15 +131,11 @@ namespace AirstrikeMod
 
             skyfaller.segments = segments;
             skyfaller.segmentIdx = 0;
-            skyfaller.startCell = start;
-            skyfaller.endCell = end;
-            skyfaller.bombCells = segments[0].bombCells;
             skyfaller.pattern = pattern;
             skyfaller.ordinance = ordinance;
             skyfaller.returnCell = returnCell;
             skyfaller.returnRot = returnRot;
             skyfaller.originMapParent = originMapParent;
-            skyfaller.totalTicks = ComputeBuzzTicks(start, end, vehicle);
             skyfaller.scatter = scatter;
             skyfaller.visualAltitude = flyAltitude;
             skyfaller.buzzSpeedMultiplier = buzzSpeedMultiplier;
@@ -155,9 +147,173 @@ namespace AirstrikeMod
             skyfaller.strafingSpreadCells = strafingSpreadCells;
             skyfaller.strafingFireOriginOffset = strafingFireOriginOffset;
 
-            GenSpawn.Spawn(skyfaller, start, map, segments[0].flightDir);
+            IntVec3 spawnCell;
+            Rot4 spawnRot;
+            var splineEligible = segments.Count > 1
+                && (pattern == OrdinancePattern.Single || pattern == OrdinancePattern.Line);
+            if (splineEligible)
+            {
+                BuildPolyline(map, segments, out var waypoints, out var waypointIsDrop);
+                skyfaller.waypoints = waypoints;
+                skyfaller.waypointIsDrop = waypointIsDrop;
+                skyfaller.traveled = 0f;
+                skyfaller.startCell = waypoints[0];
+                skyfaller.endCell = waypoints[waypoints.Count - 1];
+                skyfaller.bombCells = null;
+                skyfaller.totalTicks = ComputeBuzzTicks(waypoints[0],
+                    waypoints[waypoints.Count - 1], vehicle);
+                spawnCell = waypoints[0];
+                spawnRot = segments[0].flightDir;
+            }
+            else
+            {
+                ChooseFlightLine(map, segments[0].bombCells[0], segments[0].flightDir,
+                    out var start, out var end);
+                skyfaller.startCell = start;
+                skyfaller.endCell = end;
+                skyfaller.bombCells = segments[0].bombCells;
+                skyfaller.totalTicks = ComputeBuzzTicks(start, end, vehicle);
+                spawnCell = start;
+                spawnRot = segments[0].flightDir;
+            }
+
+            GenSpawn.Spawn(skyfaller, spawnCell, map, spawnRot);
 
             aerialVehicle?.ClearAndDestroy();
+        }
+
+        private const int POLYLINE_EDGE_MARGIN = 1;
+        private const float LINE_TENSION_FRACTION = 0.33f;
+        private const float LINE_TO_LINE_SWING_CELLS = 15f;
+
+        private static void BuildPolyline(Map map, List<BombingSegment> segments,
+            out List<IntVec3> waypoints, out List<bool> waypointIsDrop)
+        {
+            waypoints = new List<IntVec3>();
+            waypointIsDrop = new List<bool>();
+            if (segments.Count == 0) return;
+
+            var inner = new List<IntVec3>();
+            var innerIsDrop = new List<bool>();
+            for (var seg = 0; seg < segments.Count; seg++)
+            {
+                var s = segments[seg];
+                if (s?.bombCells == null || s.bombCells.Count == 0) continue;
+                if (s.bombCells.Count == 1)
+                {
+                    inner.Add(s.bombCells[0]);
+                    innerIsDrop.Add(true);
+                }
+                else
+                {
+                    AppendLineSegment(s.bombCells, inner, innerIsDrop);
+                }
+            }
+            if (inner.Count == 0) return;
+
+            InsertLineToLineSwings(inner, innerIsDrop);
+
+            var entryFrom = inner.Count >= 2 ? inner[1] : inner[0];
+            var exitFrom = inner.Count >= 2 ? inner[inner.Count - 2] : inner[inner.Count - 1];
+            var entry = ExtrapolateToEdge(map, entryFrom, inner[0]);
+            var exit = ExtrapolateToEdge(map, exitFrom, inner[inner.Count - 1]);
+
+            waypoints.Add(entry); waypointIsDrop.Add(false);
+            waypoints.AddRange(inner);
+            waypointIsDrop.AddRange(innerIsDrop);
+            waypoints.Add(exit); waypointIsDrop.Add(false);
+        }
+
+        private static void InsertLineToLineSwings(List<IntVec3> inner,
+            List<bool> innerIsDrop)
+        {
+            if (Mathf.Abs(LINE_TO_LINE_SWING_CELLS) < 0.01f) return;
+
+            var inserts = new List<(int idx, IntVec3 node)>();
+            for (var i = 1; i + 2 < inner.Count; i++)
+            {
+                if (!innerIsDrop[i - 1]) continue;
+                if (innerIsDrop[i]) continue;
+                if (innerIsDrop[i + 1]) continue;
+                if (!innerIsDrop[i + 2]) continue;
+
+                var aPost = inner[i].ToVector3Shifted();
+                var bPre = inner[i + 1].ToVector3Shifted();
+                var sep = bPre - aPost;
+                if (sep.sqrMagnitude < 0.01f) continue;
+
+                var perp = new Vector3(-sep.z, 0f, sep.x).normalized;
+                var mid = (aPost + bPre) * 0.5f;
+                var swingPos = mid + perp * LINE_TO_LINE_SWING_CELLS;
+                var swingCell = new IntVec3(
+                    Mathf.RoundToInt(swingPos.x),
+                    inner[i].y,
+                    Mathf.RoundToInt(swingPos.z));
+                inserts.Add((i + 1, swingCell));
+            }
+
+            for (var k = inserts.Count - 1; k >= 0; k--)
+            {
+                inner.Insert(inserts[k].idx, inserts[k].node);
+                innerIsDrop.Insert(inserts[k].idx, false);
+            }
+        }
+
+        private static void AppendLineSegment(List<IntVec3> bombCells,
+            List<IntVec3> dst, List<bool> dstIsDrop)
+        {
+            var start = bombCells[0];
+            var end = bombCells[bombCells.Count - 1];
+            var dx = end.x - start.x;
+            var dz = end.z - start.z;
+            var runLen = Mathf.Sqrt(dx * dx + dz * dz);
+            if (runLen <= 0f)
+            {
+                dst.Add(start);
+                dstIsDrop.Add(true);
+                return;
+            }
+            var tensionCells = Mathf.Max(1, Mathf.RoundToInt(runLen * LINE_TENSION_FRACTION));
+            var ux = dx / runLen;
+            var uz = dz / runLen;
+            var pre = new IntVec3(
+                Mathf.RoundToInt(start.x - ux * tensionCells), start.y,
+                Mathf.RoundToInt(start.z - uz * tensionCells));
+            var post = new IntVec3(
+                Mathf.RoundToInt(end.x + ux * tensionCells), end.y,
+                Mathf.RoundToInt(end.z + uz * tensionCells));
+
+            dst.Add(pre); dstIsDrop.Add(false);
+            for (var i = 0; i < bombCells.Count; i++)
+            {
+                dst.Add(bombCells[i]);
+                dstIsDrop.Add(true);
+            }
+            dst.Add(post); dstIsDrop.Add(false);
+        }
+
+        private static IntVec3 ExtrapolateToEdge(Map map, IntVec3 from, IntVec3 through)
+        {
+            var dx = through.x - from.x;
+            var dz = through.z - from.z;
+            var sx = map.Size.x;
+            var sz = map.Size.z;
+            if (dx == 0 && dz == 0)
+            {
+                return new IntVec3(sx - 1 - POLYLINE_EDGE_MARGIN, through.y, through.z);
+            }
+            var tCandidates = new float[4];
+            tCandidates[0] = dx != 0 ? (POLYLINE_EDGE_MARGIN - through.x) / (float)dx : float.PositiveInfinity;
+            tCandidates[1] = dx != 0 ? (sx - 1 - POLYLINE_EDGE_MARGIN - through.x) / (float)dx : float.PositiveInfinity;
+            tCandidates[2] = dz != 0 ? (POLYLINE_EDGE_MARGIN - through.z) / (float)dz : float.PositiveInfinity;
+            tCandidates[3] = dz != 0 ? (sz - 1 - POLYLINE_EDGE_MARGIN - through.z) / (float)dz : float.PositiveInfinity;
+            var tBest = float.PositiveInfinity;
+            for (var i = 0; i < tCandidates.Length; i++)
+                if (tCandidates[i] > 0f && tCandidates[i] < tBest) tBest = tCandidates[i];
+            if (float.IsInfinity(tBest) || tBest <= 0f) return through;
+            var x = Mathf.Clamp(Mathf.RoundToInt(through.x + tBest * dx), 0, sx - 1);
+            var z = Mathf.Clamp(Mathf.RoundToInt(through.z + tBest * dz), 0, sz - 1);
+            return new IntVec3(x, through.y, z);
         }
 
         /// <summary>

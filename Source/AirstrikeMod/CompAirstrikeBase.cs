@@ -16,6 +16,7 @@ namespace AirstrikeMod
         public CompProperties_AirstrikeBase BaseProps => (CompProperties_AirstrikeBase)props;
 
         private ThingDef selectedOrdinance;
+        private bool showAllOrdinance = true;
 
         private static readonly FieldInfo SubGraphicsField = typeof(Graphic_Collection)
             .GetField("subGraphics", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -164,6 +165,12 @@ namespace AirstrikeMod
         {
             get => Primary.selectedOrdinance;
             set => Primary.selectedOrdinance = value;
+        }
+
+        public bool ShowAllOrdinance
+        {
+            get => Primary.showAllOrdinance;
+            set => Primary.showAllOrdinance = value;
         }
 
         /// <summary>
@@ -545,6 +552,7 @@ namespace AirstrikeMod
             base.PostExposeData();
             // Only the primary's value is read at runtime; secondaries scribe null.
             Scribe_Defs.Look(ref selectedOrdinance, nameof(selectedOrdinance));
+            Scribe_Values.Look(ref showAllOrdinance, nameof(showAllOrdinance), true);
         }
     }
 }

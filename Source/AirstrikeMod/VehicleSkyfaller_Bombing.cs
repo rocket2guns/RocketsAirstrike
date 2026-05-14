@@ -33,6 +33,24 @@ namespace AirstrikeMod
         public int segmentIdx;
         public int gapTicksRemaining;
 
+        public List<IntVec3> waypoints;
+        public List<bool> waypointIsDrop;
+        public float tension = 1f;
+        public float turnSmoothness = 1f;
+        public float cornerLookaheadCells = 6f;
+        public float cornerMinSpeedFactor = 0.55f;
+        public float traveled;
+        public List<bool> bombFired;
+
+        private List<Vector3> _splinePositions;
+        private List<float> _splineCumLengths;
+        private List<float> _waypointArcs;
+        private List<IntVec3> _dropCells;
+        private List<float> _dropArcLengths;
+        private float _totalLength;
+        private float _cellsPerTick = -1f;
+        private bool _splineBuilt;
+
         public IntVec3 returnCell;
         public Rot4 returnRot;
 
@@ -82,8 +100,21 @@ namespace AirstrikeMod
         /// Lerped along startCell -> endCell at ground altitude. Used for the shadow and
         /// the bomb-trip cross product.
         /// </summary>
-        private Vector3 GroundPos =>
-            Vector3.Lerp(startCell.ToVector3Shifted(), endCell.ToVector3Shifted(), Progress);
+        private Vector3 GroundPos
+        {
+            get
+            {
+                if (waypoints != null && waypoints.Count >= 2)
+                {
+                    EnsureSplineBuilt();
+                    SampleSplineAtDistance(Mathf.Clamp(traveled, 0f, _totalLength),
+                        out var pos, out _);
+                    return pos;
+                }
+                return Vector3.Lerp(startCell.ToVector3Shifted(),
+                    endCell.ToVector3Shifted(), Progress);
+            }
+        }
 
         public override Vector3 DrawPos
         {
@@ -101,14 +132,44 @@ namespace AirstrikeMod
             if (gapTicksRemaining > 0) return;
 
             var pos = DrawPos;
-            vehicle.DrawAt(in pos, Rotation, 0f);
+            var extraRotation = 0f;
+            if (waypoints != null)
+            {
+                SnapRotationToHeading(CurrentHeadingDeg(), out var rot, out var residual);
+                Rotation = rot;
+                extraRotation = residual;
+            }
+            vehicle.DrawAt(in pos, Rotation, extraRotation);
             DrawShadow();
             if (!_engineFlameLookedUp)
             {
                 _engineFlame = vehicle?.GetComp<CompEngineFlame>();
                 _engineFlameLookedUp = true;
             }
-            _engineFlame?.DrawFlames(pos, Rotation, 0f);
+            _engineFlame?.DrawFlames(pos, Rotation, extraRotation);
+
+            if (waypoints != null && AirstrikeMod.Settings is { debugDrawFlightPath: true })
+                DrawDebugFlightPath();
+        }
+
+        private void DrawDebugFlightPath()
+        {
+            EnsureSplineBuilt();
+            if (_splinePositions == null || _splinePositions.Count < 2) return;
+
+            var y = AltitudeLayer.MetaOverlays.AltitudeFor();
+            for (var i = 1; i < _splinePositions.Count; i++)
+            {
+                var a = _splinePositions[i - 1]; a.y = y;
+                var b = _splinePositions[i]; b.y = y;
+                GenDraw.DrawLineBetween(a, b, SimpleColor.White, 0.15f);
+            }
+            if (waypointIsDrop == null) return;
+            for (var i = 0; i < waypointIsDrop.Count; i++)
+            {
+                if (!waypointIsDrop[i]) continue;
+                GenDraw.DrawRadiusRing(waypoints[i], 0.5f);
+            }
         }
 
         private void DrawShadow()
@@ -139,6 +200,12 @@ namespace AirstrikeMod
                 gapTicksRemaining--;
                 if (gapTicksRemaining == 0)
                     BeginNextSegment();
+                return;
+            }
+
+            if (waypoints != null)
+            {
+                SplineTick();
                 return;
             }
 
@@ -201,6 +268,211 @@ namespace AirstrikeMod
             totalTicks = ArrivalAction_BombMap.ComputeBuzzTicks(newStart, newEnd, vehicle);
             // Position on the map doesn't move — DrawPos / GroundPos derive from
             // startCell/endCell, so updating those is enough for visuals and shadow.
+        }
+
+        private const float SPLINE_BUZZ_TIME_CONSTANT = 30f;
+        private const int SAMPLES_PER_SEGMENT = 32;
+        private const float CR_ALPHA = 0.5f;
+
+        private void SplineTick()
+        {
+            EnsureSplineBuilt();
+            if (_totalLength <= 0f) { ExitMap(); return; }
+            EnsureCellsPerTick();
+
+            traveled = Mathf.Min(_totalLength,
+                traveled + _cellsPerTick * ComputeCornerSpeedFactor());
+
+            if (Spawned && Map != null && _dropCells != null && bombFired != null)
+            {
+                var n = Math.Min(_dropCells.Count, bombFired.Count);
+                for (var i = 0; i < n; i++)
+                {
+                    if (bombFired[i]) continue;
+                    if (traveled < _dropArcLengths[i]) continue;
+                    FireAtCell(_dropCells[i]);
+                    bombFired[i] = true;
+                }
+            }
+
+            if (traveled >= _totalLength) ExitMap();
+        }
+
+        private void EnsureCellsPerTick()
+        {
+            if (_cellsPerTick > 0f) return;
+            var flightSpeed = vehicle.CompVehicleLauncher?.FlightSpeed ?? 10f;
+            if (flightSpeed <= 0f) flightSpeed = 10f;
+            _cellsPerTick = flightSpeed / SPLINE_BUZZ_TIME_CONSTANT;
+        }
+
+        private float ComputeCornerSpeedFactor()
+        {
+            if (cornerMinSpeedFactor >= 1f || cornerLookaheadCells <= 0f) return 1f;
+            if (_splinePositions == null || _splinePositions.Count < 2) return 1f;
+
+            SampleSplineAtDistance(traveled, out _, out var here);
+            var ahead = Mathf.Min(traveled + cornerLookaheadCells, _totalLength);
+            SampleSplineAtDistance(ahead, out _, out var aheadTangent);
+
+            if (here.sqrMagnitude < 0.0001f || aheadTangent.sqrMagnitude < 0.0001f) return 1f;
+            var angleDeg = Vector3.Angle(here, aheadTangent);
+            var t = Mathf.Clamp01(angleDeg / 90f);
+            return Mathf.Lerp(1f, cornerMinSpeedFactor, t);
+        }
+
+        private void EnsureSplineBuilt()
+        {
+            if (_splineBuilt) return;
+            if (waypoints == null || waypoints.Count < 2) return;
+            _splineBuilt = true;
+            BuildSplineSamples();
+            BuildDrops();
+            if (bombFired == null || bombFired.Count != _dropCells.Count)
+            {
+                bombFired = new List<bool>(_dropCells.Count);
+                for (var i = 0; i < _dropCells.Count; i++) bombFired.Add(false);
+            }
+        }
+
+        private void BuildDrops()
+        {
+            _dropCells = new List<IntVec3>();
+            _dropArcLengths = new List<float>();
+            if (waypointIsDrop == null || _waypointArcs == null) return;
+            var n = Math.Min(waypointIsDrop.Count, _waypointArcs.Count);
+            for (var i = 0; i < n; i++)
+            {
+                if (!waypointIsDrop[i]) continue;
+                _dropCells.Add(waypoints[i]);
+                _dropArcLengths.Add(_waypointArcs[i]);
+            }
+        }
+
+        private void BuildSplineSamples()
+        {
+            _splinePositions = new List<Vector3>(waypoints.Count * SAMPLES_PER_SEGMENT);
+            _splineCumLengths = new List<float>(waypoints.Count * SAMPLES_PER_SEGMENT);
+            _waypointArcs = new List<float>(waypoints.Count);
+            _totalLength = 0f;
+
+            var ctrl = new List<Vector3>(waypoints.Count + 2);
+            var first = waypoints[0].ToVector3Shifted();
+            var second = waypoints[1].ToVector3Shifted();
+            ctrl.Add(first + (first - second));
+            for (var i = 0; i < waypoints.Count; i++) ctrl.Add(waypoints[i].ToVector3Shifted());
+            var last = waypoints[waypoints.Count - 1].ToVector3Shifted();
+            var penult = waypoints[waypoints.Count - 2].ToVector3Shifted();
+            ctrl.Add(last + (last - penult));
+
+            var numSegments = ctrl.Count - 3;
+            var cumLen = 0f;
+            Vector3 lastPos = ctrl[1];
+            var added = false;
+
+            for (var seg = 0; seg < numSegments; seg++)
+            {
+                var p0 = ctrl[seg];
+                var p1 = ctrl[seg + 1];
+                var p2 = ctrl[seg + 2];
+                var p3 = ctrl[seg + 3];
+
+                var samples = seg == numSegments - 1 ? SAMPLES_PER_SEGMENT + 1 : SAMPLES_PER_SEGMENT;
+                for (var i = 0; i < samples; i++)
+                {
+                    var t = (float)i / SAMPLES_PER_SEGMENT;
+                    var pos = HermiteCR(p0, p1, p2, p3, t, tension, turnSmoothness);
+                    if (!added)
+                    {
+                        added = true;
+                        cumLen = 0f;
+                    }
+                    else
+                    {
+                        cumLen += Vector3.Distance(lastPos, pos);
+                    }
+                    _splinePositions.Add(pos);
+                    _splineCumLengths.Add(cumLen);
+                    lastPos = pos;
+
+                    if (i == 0) _waypointArcs.Add(cumLen);
+                    else if (seg == numSegments - 1 && i == samples - 1) _waypointArcs.Add(cumLen);
+                }
+            }
+            _totalLength = cumLen;
+        }
+
+        private static Vector3 HermiteCR(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3,
+            float t, float tension, float turnSmoothness)
+        {
+            var d01 = Mathf.Pow(Mathf.Max(0.0001f, Vector3.Distance(p0, p1)), CR_ALPHA);
+            var d12 = Mathf.Pow(Mathf.Max(0.0001f, Vector3.Distance(p1, p2)), CR_ALPHA);
+            var d23 = Mathf.Pow(Mathf.Max(0.0001f, Vector3.Distance(p2, p3)), CR_ALPHA);
+
+            var m1 = ((p1 - p0) / d01 - (p2 - p0) / (d01 + d12) + (p2 - p1) / d12) * d12
+                     * turnSmoothness;
+            var m2 = ((p2 - p1) / d12 - (p3 - p1) / (d12 + d23) + (p3 - p2) / d23) * d12
+                     * turnSmoothness;
+
+            var t2 = t * t;
+            var t3 = t2 * t;
+            var h00 = 2f * t3 - 3f * t2 + 1f;
+            var h10 = t3 - 2f * t2 + t;
+            var h01 = -2f * t3 + 3f * t2;
+            var h11 = t3 - t2;
+            var c = h00 * p1 + h10 * m1 + h01 * p2 + h11 * m2;
+
+            var linear = Vector3.Lerp(p1, p2, t);
+            return Vector3.LerpUnclamped(linear, c, tension);
+        }
+
+        private void SampleSplineAtDistance(float dist, out Vector3 pos, out Vector3 tangent)
+        {
+            if (_splinePositions == null || _splinePositions.Count == 0)
+            {
+                pos = Vector3.zero; tangent = Vector3.right; return;
+            }
+            int lo = 0, hi = _splineCumLengths.Count - 1;
+            while (lo < hi)
+            {
+                var mid = (lo + hi) >> 1;
+                if (_splineCumLengths[mid] < dist) lo = mid + 1;
+                else hi = mid;
+            }
+            if (lo == 0)
+            {
+                pos = _splinePositions[0];
+                tangent = _splinePositions.Count >= 2
+                    ? _splinePositions[1] - _splinePositions[0]
+                    : Vector3.right;
+            }
+            else
+            {
+                var d0 = _splineCumLengths[lo - 1];
+                var d1 = _splineCumLengths[lo];
+                var t = d1 > d0 ? (dist - d0) / (d1 - d0) : 0f;
+                pos = Vector3.Lerp(_splinePositions[lo - 1], _splinePositions[lo], t);
+                tangent = _splinePositions[lo] - _splinePositions[lo - 1];
+            }
+            if (tangent.sqrMagnitude < 0.0001f) tangent = Vector3.right;
+        }
+
+        private float CurrentHeadingDeg()
+        {
+            EnsureSplineBuilt();
+            SampleSplineAtDistance(Mathf.Clamp(traveled, 0f, _totalLength), out _, out var tangent);
+            return -Mathf.Atan2(tangent.z, tangent.x) * Mathf.Rad2Deg;
+        }
+
+        private static void SnapRotationToHeading(float screenCwDeg, out Rot4 rot,
+            out float residualDeg)
+        {
+            var d = screenCwDeg;
+            while (d > 180f) d -= 360f;
+            while (d <= -180f) d += 360f;
+            if (d >= -45f && d < 45f) { rot = Rot4.East;  residualDeg = d; }
+            else if (d >= 45f)         { rot = Rot4.South; residualDeg = d - 90f; }
+            else                        { rot = Rot4.North; residualDeg = d + 90f; }
         }
 
         private void EnsureSlowZone()
@@ -519,6 +791,14 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref buzzSpeedMultiplier, nameof(buzzSpeedMultiplier), 1f);
             Scribe_Values.Look(ref buzzSpeedRampCells, nameof(buzzSpeedRampCells), 3);
             Scribe_Values.Look(ref progress, nameof(progress));
+            Scribe_Collections.Look(ref waypoints, nameof(waypoints), LookMode.Value);
+            Scribe_Collections.Look(ref waypointIsDrop, nameof(waypointIsDrop), LookMode.Value);
+            Scribe_Values.Look(ref tension, nameof(tension), 1f);
+            Scribe_Values.Look(ref turnSmoothness, nameof(turnSmoothness), 1f);
+            Scribe_Values.Look(ref cornerLookaheadCells, nameof(cornerLookaheadCells), 6f);
+            Scribe_Values.Look(ref cornerMinSpeedFactor, nameof(cornerMinSpeedFactor), 0.55f);
+            Scribe_Values.Look(ref traveled, nameof(traveled));
+            Scribe_Collections.Look(ref bombFired, nameof(bombFired), LookMode.Value);
         }
     }
 
