@@ -112,6 +112,17 @@ namespace AirstrikeMod
                 $"{"ROCKET_TargetingAccuracy".Translate()}: <color=#{hex}>{rating}</color>";
         }
 
+        private const string SKILL_HIGHLIGHT_HEX = "#bb8f04";
+
+        protected string BuildRequiredSkillDescLine()
+        {
+            var skill = BaseProps.requiredSkill;
+            var level = BaseProps.requiredSkillLevel;
+            if (skill == null || level <= 0) return "";
+            var coloredSkill = $"<color={SKILL_HIGHLIGHT_HEX}>{skill.LabelCap}</color>";
+            return $"\n\n{"ROCKET_RequiredSkillLine".Translate(level, coloredSkill)}";
+        }
+
         protected string BuildTargetingAccuracyDescLine()
         {
             string rating;
@@ -304,7 +315,7 @@ namespace AirstrikeMod
             var cmd = new Command_AirstrikeLaunch
             {
                 defaultLabel = label,
-                defaultDesc = desc + BuildTargetingAccuracyDescLine(),
+                defaultDesc = desc + BuildRequiredSkillDescLine() + BuildTargetingAccuracyDescLine(),
                 icon = topIcon,
                 iconUnderlay = iconUnderlayOverride ?? (useSingleVariantIcon
                     ? GetSingleVariantIcon(sel)
