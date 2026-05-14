@@ -1,124 +1,204 @@
 # Rocket's Airstrike
 
-RimWorld 1.6 mod. Adds airstrike gizmos to aerial vehicles built on [Vehicle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3014915404).
+A RimWorld 1.6 mod for [Vehicle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3014915404). Adds airstrike gizmos to flying vehicles: drop bombs on a point, carpet-bomb in a line, or strafe with cannons. The aircraft taxis, takes off, flies the strike, then returns and lands - same map or across the world.
 
-The vehicle takes off, flies a pass over the chosen target, drops ordnance or strafes with its cannon, then lands back at a chosen cell on the same map (or returns from a cross-map sortie).
+## What you get in-game
 
-## Strike modes
+### Three strike modes
 
-Three gizmos, one ordnance pool:
+- **Precision Strike** - one bomb on one cell. Use when you only need to delete one target.
+- **Bombing Run** - a line of bombs along a rotatable rectangle. Spacing is driven by the selected bomb's explosion radius.
+- **Strafing Run** - cannon fire down a long, thin rectangle. Uses a separate cannon ammo type (steel by default), not the bomb pool.
 
-- **Precision Strike**. Single drop on one cell. Player picks the target cell.
-- **Bombing Run**. Five drops along a player-rotated rectangle. Player picks the centre cell and rotates the footprint.
-- **Strafing Run**. Cannon line. Fires a configured number of rounds along a strafe lane (separate cannon ammo, not the bomb pool).
+Each mode is a separate gizmo on the vehicle. A fourth **Select ordinance** gizmo picks which shell/bomb type the Precision and Bombing Run gizmos drop.
 
-A separate **Select ordinance** gizmo picks the loaded shell type for Precision/Bombing. Selection is per-vehicle and save-persisted.
+### Multi-target chains (Shift+click)
 
-Cargo is consumed atomically when the targeting is confirmed. Cancelling during targeting wastes nothing. A Bombing Run that can't pay all five shells is refused outright.
+For Bombing Run and Strafing Run, **hold Shift while clicking** to add another rectangle to the run. Right-click to commit the chain (or cancel if nothing's locked).
 
-## Cross-map strikes
+When you chain two or more targets, the aircraft flies a smooth curved path through every rectangle in one continuous pass - no second takeoff, no landing in between. The plane banks naturally between rectangles. Chain length is capped by how many sortie-worths of ordnance you have in cargo.
 
-When more than one map is loaded, the gizmo opens a FloatMenu of loaded maps before targeting. Pick the destination, target on that map, then pick the landing cell on the vehicle's home map. Cross-map sorties fly real round-trip world flights and the fuel cost reflects that.
+A faded ghost of the aircraft is shown on the approach side of the cursor so you can see where the plane will be coming from.
 
-## Supported vehicles
+### Pilot skill matters
 
-The mod ships with **ROCKET_Falcon**, a buildable jet aircraft gated behind a Jet Aircraft research project.
+Each strike comp has a required skill (Intellectual for bombs, Shooting for cannons) and a minimum level. The vehicle won't launch the strike until at least one assigned pilot meets the level. Higher skill levels narrow the bomb scatter and earn XP per drop (or once per strafing sortie). The tooltip on each gizmo shows the targeting accuracy rating in colour.
 
-Optional [Vanilla Vehicles Expanded](https://steamcommunity.com/sharedfiles/filedetails/?id=3014906877) patches add the gizmos to:
+### Cross-map strikes
 
-- **VVE_Mosquito** (helicopter, vertical takeoff)
-- **VVE_Warbird** (plane, runway takeoff)
+If you have more than one map loaded, clicking a strike gizmo opens a menu to pick which map you're striking. Pick the destination, then target on that map. The aircraft does a real round-trip world flight and is billed real fuel. Cross-map sorties also let you pick where the aircraft lands on the home map afterwards.
 
-Patches are mod-gated via `PatchOperationFindMod`, so they no-op if VVE isn't loaded. Add more vehicles by editing `1.6/Patches/Vehicle_Patches.xml`. Each target needs `Vehicles.CompProperties_VehicleLauncher` and one or more of the `CompProperties_AirstrikePrecision` / `_BombingRun` / `_StrafingRun` comps.
+### Settings
 
-There is also an opt-in LTS Ammunition compat patch at `1.6/Patches/LTS_Ammunition_Patch.xml` (mod-gated).
+- **General** tab: fuel cost percentage for an airstrike sortie.
+- **Debug** tab: draw the spline flight path in white for tuning.
 
-## Items shipped by the mod
+## Vehicles that get the gizmos
 
-- **High Explosive Bomb** (`Bomb_HighExplosive`). Larger payload than mortar shells, intended for bombing runs.
-- **30mm Round** (`Round_30mm`). Cannon ammunition for strafing runs.
-- Bomb-category ThingCategoryDef so the items shelf together.
+**Ships in this mod**
 
-## Records
+- **Falcon** (`ROCKET_Falcon`) - jet aircraft, gated behind the Jet Aircraft research project (or Combat Vehicles when Vanilla Vehicles Expanded is loaded). Precision, Bombing Run, and Strafing Run.
 
-Pilots accumulate three records, visible in their Records tab:
+**Mod-gated compatibility patches** (no-op if the host mod isn't loaded)
 
-- **sorties flown**. Incremented once per launch, regardless of mode.
-- **ordinance dropped**. Incremented by the number of bombs released. Strafing runs do not contribute.
-- **time on sortie**. Wall-clock ticks the pilot spent in a sortie-flagged vehicle.
+- **Vanilla Vehicles Expanded**: adds Precision + Strafing Run to the **Warbird**.
+- **LTS Ammunition (Simple Ammo Pack)**: swaps the Falcon's strafing ammo from steel to `AmmoIndustrial`.
 
-## Using the gizmos
+You can hand-edit `1.6/Patches/Vehicle_Patches.xml` to add the gizmos to any other aerial vehicle.
 
-Click a strike gizmo. Two-stage targeting:
+## New items
 
-1. Target stage. Crosshair (Precision), rotatable rectangle (Bombing Run), or strafe lane (Strafing Run). A radius ring or footprint outline previews the impact.
-2. Landing stage. Pick where the vehicle lands once the strike is done. Runway vehicles get the standard runway-clearance check.
+- **Explosive / High-Explosive / Incendiary / Antigrain bomb** (`ROCKET_Bomb_*`) - large air-dropped bombs, craftable at the machining table. Drop in Bombs category.
+- The Bombing Run and Precision Strike can also drop any vanilla mortar shell from cargo.
 
-Disable conditions match the vanilla Launch gizmo (runway clear, fuel, operators, not under roof, not moving, not rotated, etc.). Hovering shows the takeoff-restriction overlay for runway vehicles.
+## Pilot records
 
-The vehicle ends a sortie facing its pre-launch direction. The landing approach itself comes in from the opposite heading; the orientation is restored when the landing animation completes.
+Pilots earn three records visible in the Records tab:
 
-## Settings
+- **sorties flown** - once per launch, regardless of mode.
+- **ordinance dropped** - one per bomb (chosen pilot only, not the whole crew).
+- **time on sortie** - wall-clock ticks spent in an airstrike-flagged sortie.
 
-Mod settings expose:
+---
 
-- **Airstrike fuel cost** (as a percentage of one world-tile flight).
-- **Hide unavailable ordinance** (skip zero-cargo ordnance types in the picker instead of greying them out).
+## For modders: adding airstrike to your own vehicle
 
-Per-ordnance overrides (in `OrdinanceDef`): `damageDef`, `radius`, `damage`, `preExplosionSpawn*`, `postExplosionSpawn*`, `fuelCostOverride`. Stats inherit from the source projectile (`thingDef.projectileWhenLoaded`) by default, so for vanilla mortar shells nothing extra needs to be set.
+The mod exposes three comps that you bolt onto a `Vehicles.VehicleDef`. The vehicle must already have a `Vehicles.CompProperties_VehicleLauncher` (i.e. it's a Vehicle Framework aerial vehicle).
 
-Per-vehicle overrides live in `CompProperties_AirstrikeBase` and its subclasses (Precision / BombingRun / StrafingRun) on the vehicle def.
+### Quickest path: patch an existing vehicle
+
+```xml
+<Operation Class="PatchOperationFindMod">
+    <mods><li>YourHostMod</li></mods>
+    <match Class="PatchOperationAdd">
+        <xpath>Defs/Vehicles.VehicleDef[defName="YourVehicle"]/comps</xpath>
+        <value>
+            <li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
+                <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+                <bombFireSound>ROCKET_HardpointLatchRelease</bombFireSound>
+                <requiredSkill>Intellectual</requiredSkill>
+                <requiredSkillLevel>4</requiredSkillLevel>
+                <scatter>1</scatter>
+                <skillScatter>4</skillScatter>
+                <ordinance>
+                    <li>Shell_HighExplosive</li>
+                    <li>ROCKET_Bomb_Explosive</li>
+                </ordinance>
+            </li>
+        </value>
+    </match>
+</Operation>
+```
+
+Mod-gate with `PatchOperationFindMod` so your patch is silent when the host mod (or this mod) isn't loaded.
+
+### The three comp classes
+
+| Class | Gizmo | Pattern |
+|---|---|---|
+| `AirstrikeMod.CompProperties_AirstrikePrecision` | Precision Strike | Single bomb on the cursor cell |
+| `AirstrikeMod.CompProperties_AirstrikeBombingRun` | Bombing Run | Line of `dropCount` bombs |
+| `AirstrikeMod.CompProperties_AirstrikeStrafingRun` | Strafing Run | Cannon fire across a rectangle |
+
+You can add any subset. A vehicle with all three gets all three gizmos.
+
+### Shared fields (all three comps)
+
+These come from `CompProperties_AirstrikeBase`:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `skyfallerBombing` | required | Skyfaller def used for the buzz. Always `ROCKET_BombingPass` unless you've defined your own. |
+| `ordinance` | (list) | Allowed ThingDefs the player can pick in the ordnance selector. Precision and Bombing only. Strafing ignores this. |
+| `scatter` | `0` | Floor on per-bomb random offset in cells. 0 = always lands exactly. |
+| `skillScatter` | `0` | Additional scatter cells added at zero pilot skill; falls to 0 at max skill. Total scatter is capped at `flyAltitude` and at 16 cells. |
+| `flyAltitude` | `6` | Draw altitude of the plane during the buzz. Also caps total scatter. Lower for low-altitude strafers. |
+| `sortieSpeedMultiplier` | `1` | Multiplies the plane's `FlightSpeed` for the whole sortie. `0.5` = slow movie pass; `1.5` = streaking attack. |
+| `bombFireSound` | `null` | One-shot sound at the plane's position per bomb dropped. Strafing has its own `fireSound` field. |
+| `requiredSkill` | `null` | `SkillDef` gating launch and driving accuracy. Null = anyone can use, no XP awarded. |
+| `requiredSkillLevel` | `0` | Minimum level the best pilot must have in `requiredSkill`. Ignored if `requiredSkill` is null. |
+
+### `CompProperties_AirstrikeBombingRun` extras
+
+| Field | Default | Meaning |
+|---|---|---|
+| `dropCount` | `5` | Bombs per sortie. Required-shells count. Drives footprint length. |
+| `spacingMultiplier` | `1.8` | Bomb-to-bomb spacing as a multiple of the selected bomb's explosion radius. |
+
+### `CompProperties_AirstrikeStrafingRun` extras
+
+| Field | Default | Meaning |
+|---|---|---|
+| `projectileDef` | required | Vanilla bullet projectile to spawn per shot (e.g. `Bullet_AutocannonTurret`). |
+| `ammoDef` | `null` | Cargo item consumed for rounds. Null = free (no ammo cost). |
+| `ammoPerRound` | `1` | Units of `ammoDef` per round fired. |
+| `fireSound` | `null` | One-shot sound at each fired cell. |
+| `runLength` | `40` | Cells along the flight axis. Drives sortie ammo cost (`runLength × ammoPerRound`). |
+| `runWidth` | `3` | Cells perpendicular to flight axis. Each fire-cell gets a random perpendicular offset within this width. |
+| `leadCells` | `8` | Fires this many cells ahead of the plane's current position (so the bullets visibly fall from the plane). |
+| `bulletsPerRound` | `4` | Bullets spawned per fired cell. |
+| `spreadCells` | `1` | Per-bullet biaxial scatter on top of the run-width perpendicular offset. |
+| `fireOriginOffset` | `3` | Cells between bullet spawn point and its target cell (gives the bullet visible travel time). |
+
+### Sounds and visuals provided by the mod
+
+Reference these directly from your patches - they're shipped by Rocket's Airstrike.
+
+| Def | What it's for |
+|---|---|
+| `ROCKET_BombingPass` | The standard buzz skyfaller. Use as `<skyfallerBombing>`. |
+| `ROCKET_HardpointLatchRelease` | Per-bomb release thunk. Positional, pitch-varied. |
+| `ROCKET_InterfaceBeep1` | UI beep on confirmed target placement (used internally by all targeters). |
+
+### Engine flames (optional, cosmetic)
+
+Add `AirstrikeMod.CompProperties_EngineFlame` to draw animated exhaust flames during takeoff, landing, and the buzz. See the Falcon's vehicle def for a complete example - you set the flame `drawSize`, `pivot`, `rotationDeg`, and per-cardinal-direction offset lists.
+
+### Multi-comp on one vehicle
+
+The "Select ordinance" picker and the `ShowAllOrdinance` toggle are stored on the *primary* comp (first-found) of the vehicle. All comps share the same selected ordnance and visibility setting at runtime, so you can attach Precision + BombingRun and they'll always operate on the same bomb type.
+
+### Save compatibility note
+
+If you rename or remove a `CompProperties_Airstrike*` from a vehicle after a save was created with the previous setup, the comp's stored fields (`selectedOrdinance`, `showAllOrdinance`) will simply default on load. In-flight sorties survive save/load via the skyfaller's own Scribe entries.
+
+---
 
 ## Project layout
 
 ```
-About/                              Mod metadata. Hard-requires Vehicle Framework + Harmony.
+About/                          Mod metadata; depends on VF + Harmony.
 1.6/
   Defs/
-    OrdinanceDefs.xml               Ordnance defs (shell-based and HE bomb).
-    Skyfallers.xml                  Bombing skyfaller + falling bomb projectile.
-    SoundDefs.xml                   Mod sounds.
-    RecordDefs/                     Pilot record defs (sorties, ordnance, time).
-    ResearchDefs/                   Jet Aircraft research project.
-    ThingCategoryDefs/              Bombs category.
-    ThingDefs_Items/                HE bomb, 30mm round.
-    VehicleDefs/Falcon/             ROCKET_Falcon vehicle.
+    OrdinanceDefs.xml           Per-shell explosion-customisation defs.
+    Skyfallers.xml              ROCKET_BombingPass + ROCKET_FallingBomb.
+    SoundDefs.xml               Mod sounds (engine, hardpoint, beep).
+    Stats/                      ROCKET_TargetingAbility (vestigial; skill-driven now).
+    RecordDefs/                 Pilot record defs.
+    ResearchDefs/               ROCKET_JetAircraft, ROCKET_StealthAircraft.
+    ThingCategoryDefs/          Bombs category.
+    ThingDefs_Items/            HE / Incendiary / Antigrain bombs.
+    VehicleDefs/Falcon/         ROCKET_Falcon + buildable.
   Patches/
-    Vehicle_Patches.xml             Per-vehicle CompAirstrike injections (mod-gated).
-    LTS_Ammunition_Patch.xml        LTS Ammunition compat (mod-gated).
-  Assemblies/                       Released DLL.
-Source/
-  AirstrikeMod/                     C# source (csproj + cs files).
-  Assemblies/                       Build output (gitignored).
-Languages/English/Keyed/            Translatable strings.
-Textures/                           Vehicle, item, and UI textures.
+    Vehicle_Patches.xml         VVE Warbird & Falcon upgrades (mod-gated).
+    LTS_Ammunition_Patch.xml    LTS Ammunition compat (mod-gated).
+  Assemblies/                   Shipped DLL.
+Source/AirstrikeMod/            C# source (csproj + .cs files).
+Languages/English/Keyed/        Translatable strings.
+Textures/                       Vehicle, item, and UI textures.
+Sounds/                         WAV files referenced by SoundDefs.
 ```
 
 ## Building from source
 
 1. Open `Source/AirstrikeMod/AirstrikeMod.csproj` in Rider or Visual Studio.
-2. The csproj references RimWorld and Vehicle Framework DLLs via `HintPath`. Adjust the `<RimWorldDir>` and `<VehicleFrameworkDir>` properties at the top of the csproj if your installs aren't at the default Steam locations.
+2. The csproj points at RimWorld and Vehicle Framework DLLs via `<RimWorldDir>` and `<VehicleFrameworkDir>` properties at the top - edit those if your installs aren't at the default Steam locations.
 3. Build. Output goes to `Source/Assemblies/AirstrikeMod.dll`.
-4. Copy the DLL to `1.6/Assemblies/` for release. (Or change `OutputPath` in the csproj to deploy directly.)
+4. Copy the DLL to `1.6/Assemblies/` for release.
 
-Target framework: `net48`, language version `latest`.
-
-## Architecture (high-level)
-
-- `CompAirstrikeBase` (and the Precision / BombingRun / StrafingRun subclasses) exposes the gizmos, runs the FloatMenu for multi-map UX, and runs the two-stage targeter. It mirrors VF's vanilla Launch viability checks.
-- `ArrivalAction_BombMap` fires on world-flight arrival (degenerate same-tile flight for same-map strikes, real flight for cross-map) and synchronously spawns the bombing skyfaller before destroying the `AerialVehicleInFlight`.
-- `VehicleSkyfaller_Bombing` extends `VehicleSkyfaller` directly (not `_FlyOver`, which is incomplete in VF). Owns its own animation, lerps through the bomb cells, drops each bomb on a side-of-line cross-product trip, then either spawns a vanilla `VehicleSkyfaller_Arriving` (same-map) or starts a return world flight via `AerialVehicleInFlight.Create` (cross-map).
-- `ProjectileSkyfaller_AirstrikeBomb` animates each falling bomb and runs the configured explosion at impact.
-- `CompEngineFlame` draws engine-flame quads during takeoff, landing, and the buzz.
-- Harmony patches: takeoff/landing tick speed doubling for the airstrike round-trip, post-landing rotation restore and cleanup on `VehicleSkyfaller_Arriving.FinalizeLanding`, bomb-radius ring overlay on `Targeter.TargeterUpdate`, and engine-flame draw piggybacking on `LaunchProtocol.Draw`.
-
-See `CLAUDE.md` (repo root and `Source/AirstrikeMod/`) for the architectural rationale and the catalogue of VF quirks worked around.
+Target framework `net48`, language version `latest`.
 
 ## Dependencies
 
 - [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077)
 - [Vehicle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3014915404)
-
-## License
-
-(none specified, add a LICENSE file if you want one)
