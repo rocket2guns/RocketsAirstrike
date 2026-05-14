@@ -36,7 +36,7 @@ namespace AirstrikeMod
         public List<IntVec3> waypoints;
         public List<bool> waypointIsDrop;
         public float tension = 1f;
-        public float turnSmoothness = 1f;
+        public float turnSmoothness = 1.5f;
         public float cornerLookaheadCells = 6f;
         public float cornerMinSpeedFactor = 0.5f;
         public float traveled;
@@ -209,6 +209,8 @@ namespace AirstrikeMod
             progress = Mathf.Min(1f,
                 progress + baseStep * Mathf.Max(0.01f, sortieSpeedMultiplier));
 
+            SyncPositionToGroundPos();
+
             if (Spawned && Map != null && bombCells is { Count: > 0 })
             {
                 EnsureDropTracker();
@@ -274,6 +276,8 @@ namespace AirstrikeMod
             traveled = Mathf.Min(_totalLength,
                 traveled + _cellsPerTick * ComputeCornerSpeedFactor());
 
+            SyncPositionToGroundPos();
+
             if (Spawned && Map != null && _dropCells != null && bombFired != null)
             {
                 var lead = pattern is OrdinancePattern.Strafing ? leadCells : 0;
@@ -288,6 +292,13 @@ namespace AirstrikeMod
             }
 
             if (traveled >= _totalLength) ExitMap();
+        }
+
+        private void SyncPositionToGroundPos()
+        {
+            if (!Spawned || Map == null) return;
+            var cell = GroundPos.ToIntVec3();
+            if (cell.InBounds(Map) && cell != Position) Position = cell;
         }
 
         private void EnsureCellsPerTick()

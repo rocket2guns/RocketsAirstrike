@@ -43,9 +43,15 @@ namespace AirstrikeMod
                 postExplosionSpawnThingDef: pp.postExplosionSpawnThingDef,
                 postExplosionSpawnChance: pp.postExplosionSpawnChance,
                 postExplosionSpawnThingCount: pp.postExplosionSpawnThingCount,
+                postExplosionGasType: pp.postExplosionGasType,
+                applyDamageToExplosionCellsNeighbors: pp.applyDamageToExplosionCellsNeighbors,
                 preExplosionSpawnThingDef: pp.preExplosionSpawnThingDef,
                 preExplosionSpawnChance: pp.preExplosionSpawnChance,
                 preExplosionSpawnThingCount: pp.preExplosionSpawnThingCount,
+                chanceToStartFire: pp.explosionChanceToStartFire,
+                damageFalloff: pp.explosionDamageFalloff,
+                postExplosionSpawnSingleThingDef: pp.postExplosionSpawnSingleThingDef,
+                preExplosionSpawnSingleThingDef: pp.preExplosionSpawnSingleThingDef,
                 screenShakeFactor: pp.screenShakeFactor);
         }
     }

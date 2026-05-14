@@ -363,13 +363,12 @@
 				<sortieSpeedMultiplier>0.33</sortieSpeedMultiplier>
 				<bombFireSound>ROCKET_HardpointLatchRelease</bombFireSound>
 				<requiredSkill>Intellectual</requiredSkill>
-				<requiredSkillLevel>7</requiredSkillLevel>
+				<requiredSkillLevel>6</requiredSkillLevel>
 				<scatter>1</scatter>
 				<dropCount>5</dropCount>
 				<skillScatter>5</skillScatter>
 				<ordinance>
 					<li>ROCKET_Bomb_Explosive</li>
-					<li>ROCKET_Bomb_HighExplosive</li>
 					<li>ROCKET_Bomb_Incendiary</li>
 				</ordinance>
 			</li>

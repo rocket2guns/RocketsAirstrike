@@ -61,7 +61,7 @@
                 <explosiveExpandPerStackcount>0.4</explosiveExpandPerStackcount>
                 <startWickHitPointsPercent>0.7</startWickHitPointsPercent>
                 <wickTicks>30~60</wickTicks>
-                <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
+                <preExplosionSpawnSingleThingDef>CraterSmall</preExplosionSpawnSingleThingDef>
             </li>
         </comps>
         <projectileWhenLoaded>ROCKET_Bullet_Bomb_Explosive</projectileWhenLoaded>
@@ -95,7 +95,7 @@
                 <explosiveExpandPerStackcount>0.4</explosiveExpandPerStackcount>
                 <startWickHitPointsPercent>0.7</startWickHitPointsPercent>
                 <wickTicks>30~60</wickTicks>
-                <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
+                <preExplosionSpawnSingleThingDef>CraterMedium</preExplosionSpawnSingleThingDef>
             </li>
         </comps>
         <projectileWhenLoaded>ROCKET_Bullet_Bomb_HighExplosive</projectileWhenLoaded>
@@ -170,7 +170,7 @@
                 <explosionEffect>GiantExplosion</explosionEffect>
                 <explosionSound>Explosion_GiantBomb</explosionSound>
                 <wickTicks>60~120</wickTicks>
-                <preExplosionSpawnSingleThingDef>CraterMedium</preExplosionSpawnSingleThingDef>
+                <preExplosionSpawnSingleThingDef>CraterLarge</preExplosionSpawnSingleThingDef>
             </li>
         </comps>
         <projectileWhenLoaded>ROCKET_Bullet_Bomb_Antigrain</projectileWhenLoaded>
@@ -207,7 +207,7 @@
             <soundExplode>MortarBomb_Explode</soundExplode>
             <soundImpactAnticipate>MortarRound_PreImpact</soundImpactAnticipate>
             <soundAmbient>MortarRound_Ambient</soundAmbient>
-            <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
+            <preExplosionSpawnSingleThingDef>CraterSmall</preExplosionSpawnSingleThingDef>
         </projectile>
     </ThingDef>
 
@@ -231,7 +231,7 @@
             <soundExplode>MortarBomb_Explode</soundExplode>
             <soundImpactAnticipate>MortarRound_PreImpact</soundImpactAnticipate>
             <soundAmbient>MortarRound_Ambient</soundAmbient>
-            <preExplosionSpawnSingleThingDef>Filth_BlastMark</preExplosionSpawnSingleThingDef>
+            <preExplosionSpawnSingleThingDef>CraterMedium</preExplosionSpawnSingleThingDef>
         </projectile>
     </ThingDef>
 

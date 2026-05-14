@@ -198,7 +198,6 @@ namespace AirstrikeMod
 
         private const int POLYLINE_EDGE_MARGIN = 1;
         private const float LINE_TENSION_FRACTION = 0.33f;
-        private const float LINE_TO_LINE_SWING_CELLS = 15f;
 
         private static void BuildPolyline(Map map, List<BombingSegment> segments,
             out List<IntVec3> waypoints, out List<bool> waypointIsDrop)
@@ -225,8 +224,6 @@ namespace AirstrikeMod
             }
             if (inner.Count == 0) return;
 
-            InsertLineToLineSwings(inner, innerIsDrop);
-
             var entryFrom = inner.Count >= 2 ? inner[1] : inner[0];
             var exitFrom = inner.Count >= 2 ? inner[inner.Count - 2] : inner[inner.Count - 1];
             var entry = ExtrapolateToEdge(map, entryFrom, inner[0]);
@@ -236,41 +233,6 @@ namespace AirstrikeMod
             waypoints.AddRange(inner);
             waypointIsDrop.AddRange(innerIsDrop);
             waypoints.Add(exit); waypointIsDrop.Add(false);
-        }
-
-        private static void InsertLineToLineSwings(List<IntVec3> inner,
-            List<bool> innerIsDrop)
-        {
-            if (Mathf.Abs(LINE_TO_LINE_SWING_CELLS) < 0.01f) return;
-
-            var inserts = new List<(int idx, IntVec3 node)>();
-            for (var i = 1; i + 2 < inner.Count; i++)
-            {
-                if (!innerIsDrop[i - 1]) continue;
-                if (innerIsDrop[i]) continue;
-                if (innerIsDrop[i + 1]) continue;
-                if (!innerIsDrop[i + 2]) continue;
-
-                var aPost = inner[i].ToVector3Shifted();
-                var bPre = inner[i + 1].ToVector3Shifted();
-                var sep = bPre - aPost;
-                if (sep.sqrMagnitude < 0.01f) continue;
-
-                var perp = new Vector3(-sep.z, 0f, sep.x).normalized;
-                var mid = (aPost + bPre) * 0.5f;
-                var swingPos = mid + perp * LINE_TO_LINE_SWING_CELLS;
-                var swingCell = new IntVec3(
-                    Mathf.RoundToInt(swingPos.x),
-                    inner[i].y,
-                    Mathf.RoundToInt(swingPos.z));
-                inserts.Add((i + 1, swingCell));
-            }
-
-            for (var k = inserts.Count - 1; k >= 0; k--)
-            {
-                inner.Insert(inserts[k].idx, inserts[k].node);
-                innerIsDrop.Insert(inserts[k].idx, false);
-            }
         }
 
         private static void AppendLineSegment(List<IntVec3> bombCells,
