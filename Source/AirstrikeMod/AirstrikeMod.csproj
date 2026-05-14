@@ -60,4 +60,12 @@
   <ItemGroup>
     <PackageReference Include="Lib.Harmony" Version="2.3.3" ExcludeAssets="runtime" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\1.6\**\*.xml" Link="ModXML\1.6\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\..\Languages\**\*.xml" Link="ModXML\Languages\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\..\Patches\**\*.xml" Link="ModXML\Patches\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\..\About\*.xml" Link="ModXML\About\%(Filename)%(Extension)" />
+    <None Include="..\..\LoadFolders.xml" Link="ModXML\LoadFolders.xml" />
+  </ItemGroup>
 </Project>

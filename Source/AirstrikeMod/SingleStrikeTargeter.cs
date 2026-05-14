@@ -66,7 +66,7 @@ namespace AirstrikeMod
                 var cursorCell = UI.MouseCell();
                 if (action != null && cursorCell.InBounds(map) && IsValidPlacement(cursorCell))
                 {
-                    SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
+                    AirstrikeDefOf.ROCKET_InterfaceBeep1.PlayOneShotOnCamera(null);
                     var roomForMore = lockedTargets.Count + 1 < maxChain;
                     if (Event.current.shift && roomForMore)
                     {
@@ -129,7 +129,8 @@ namespace AirstrikeMod
 
         public override void TargeterOnGUI()
         {
-            GenUI.DrawMouseAttachment(mouseAttachment);
+            CursorLabel.Icon = mouseAttachment;
+            CursorLabel.FootprintHalfExtent = new Vector2(radius, radius);
             CursorLabel.FourthLine = (lockedTargets.Count > 0
                 ? "ROCKET_RightClickBegin"
                 : "ROCKET_RightClickCancel").Translate();

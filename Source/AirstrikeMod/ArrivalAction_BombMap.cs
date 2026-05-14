@@ -26,8 +26,10 @@ namespace AirstrikeMod
         protected ThingDef ordinance;
         protected float scatter;
         protected float flyAltitude = 6f;
-        protected float buzzSpeedMultiplier = 1f;
-        protected int buzzSpeedRampCells = 3;
+        protected float sortieSpeedMultiplier = 1f;
+        protected SoundDef bombFireSound;
+        protected Pawn chosenPilot;
+        protected SkillDef xpSkill;
 
         // Strafing-only: when set, the skyfaller fires Projectile.Launch(...) from its
         // DrawPos toward each bombCell, with firing leading the plane by strafingLeadCells.
@@ -60,8 +62,10 @@ namespace AirstrikeMod
             float scatter = 0f,
             MapParent originMapParent = null,
             float flyAltitude = 6f,
-            float buzzSpeedMultiplier = 1f,
-            int buzzSpeedRampCells = 3,
+            float sortieSpeedMultiplier = 1f,
+            SoundDef bombFireSound = null,
+            Pawn chosenPilot = null,
+            SkillDef xpSkill = null,
             ThingDef strafingProjectileDef = null,
             int strafingLeadCells = 0,
             SoundDef strafingFireSound = null,
@@ -80,8 +84,10 @@ namespace AirstrikeMod
             this.scatter = scatter;
             this.originMapParent = originMapParent;
             this.flyAltitude = flyAltitude;
-            this.buzzSpeedMultiplier = buzzSpeedMultiplier;
-            this.buzzSpeedRampCells = buzzSpeedRampCells;
+            this.sortieSpeedMultiplier = sortieSpeedMultiplier;
+            this.bombFireSound = bombFireSound;
+            this.chosenPilot = chosenPilot;
+            this.xpSkill = xpSkill;
             this.strafingProjectileDef = strafingProjectileDef;
             this.strafingLeadCells = strafingLeadCells;
             this.strafingFireSound = strafingFireSound;
@@ -138,8 +144,10 @@ namespace AirstrikeMod
             skyfaller.originMapParent = originMapParent;
             skyfaller.scatter = scatter;
             skyfaller.visualAltitude = flyAltitude;
-            skyfaller.buzzSpeedMultiplier = buzzSpeedMultiplier;
-            skyfaller.buzzSpeedRampCells = buzzSpeedRampCells;
+            skyfaller.sortieSpeedMultiplier = sortieSpeedMultiplier;
+            skyfaller.bombFireSound = bombFireSound;
+            skyfaller.chosenPilot = chosenPilot;
+            skyfaller.xpSkill = xpSkill;
             skyfaller.strafingProjectileDef = strafingProjectileDef;
             skyfaller.leadCells = strafingLeadCells;
             skyfaller.strafingFireSound = strafingFireSound;
@@ -379,8 +387,10 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref scatter, nameof(scatter));
             Scribe_References.Look(ref originMapParent, nameof(originMapParent));
             Scribe_Values.Look(ref flyAltitude, nameof(flyAltitude), 6f);
-            Scribe_Values.Look(ref buzzSpeedMultiplier, nameof(buzzSpeedMultiplier), 1f);
-            Scribe_Values.Look(ref buzzSpeedRampCells, nameof(buzzSpeedRampCells), 3);
+            Scribe_Values.Look(ref sortieSpeedMultiplier, nameof(sortieSpeedMultiplier), 1f);
+            Scribe_Defs.Look(ref bombFireSound, nameof(bombFireSound));
+            Scribe_References.Look(ref chosenPilot, nameof(chosenPilot));
+            Scribe_Defs.Look(ref xpSkill, nameof(xpSkill));
             Scribe_Defs.Look(ref strafingProjectileDef, nameof(strafingProjectileDef));
             Scribe_Values.Look(ref strafingLeadCells, nameof(strafingLeadCells));
             Scribe_Defs.Look(ref strafingFireSound, nameof(strafingFireSound));

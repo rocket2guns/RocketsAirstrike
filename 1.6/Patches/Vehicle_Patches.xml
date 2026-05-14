@@ -10,6 +10,9 @@
             <value>
                 <li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
                     <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+                    <bombFireSound>ROCKET_HardpointLatchRelease</bombFireSound>
+                    <requiredSkill>Intellectual</requiredSkill>
+                    <requiredSkillLevel>4</requiredSkillLevel>
                     <scatter>2</scatter>
                     <skillScatter>4</skillScatter>
                     <ordinance>
@@ -25,6 +28,8 @@
                 <li Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun">
                     <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
                     <projectileDef>Bullet_AutocannonTurret</projectileDef>
+                    <requiredSkill>Shooting</requiredSkill>
+                    <requiredSkillLevel>4</requiredSkillLevel>
                     <ammoDef>Steel</ammoDef>
                     <fireSound>Shot_Autocannon</fireSound>
                     <runWidth>3</runWidth>
@@ -33,8 +38,6 @@
                     <flyAltitude>2</flyAltitude>
                     <bulletsPerRound>4</bulletsPerRound>
                     <spreadCells>1</spreadCells>
-                    <buzzSpeedMultiplier>0.7</buzzSpeedMultiplier>
-                    <buzzSpeedRampCells>30</buzzSpeedRampCells>
                     <skillScatter>3</skillScatter>
                 </li>
             </value>

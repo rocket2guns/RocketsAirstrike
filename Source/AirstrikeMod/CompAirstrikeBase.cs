@@ -41,7 +41,7 @@ namespace AirstrikeMod
         public static float BombTargetingRadius;
 
         private const float ABSOLUTE_MAX_SCATTER = 16f;
-        private const float XP_PER_MUNITION = 50f;
+        public const float XP_PER_MUNITION = 50f;
 
         private static readonly (float minAbility, string labelKey, string hex)[] RatingBuckets =
         {
@@ -52,19 +52,32 @@ namespace AirstrikeMod
             (0.00f, "ROCKET_Rating_VeryPoor",  "#E04040"),
         };
 
-        protected float BestTargetingAbility()
+        public (Pawn pilot, float ability) BestPilotAndAbility()
         {
             var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
-            var stat = AirstrikeDefOf.ROCKET_TargetingAbility;
-            var best = 0f;
+            if (pilots == null || pilots.Count == 0) return (null, 0f);
+
+            var skill = BaseProps.requiredSkill;
+            if (skill == null) return (pilots[0], 1f);
+
+            Pawn best = null;
+            var bestLevel = -1;
             for (var i = 0; i < pilots.Count; i++)
             {
-                if (stat.Worker.IsDisabledFor(pilots[i])) continue;
-                var v = pilots[i].GetStatValue(stat);
-                if (v > best) best = v;
+                var p = pilots[i];
+                var record = p.skills?.GetSkill(skill);
+                if (record == null || record.TotallyDisabled) continue;
+                if (record.Level > bestLevel)
+                {
+                    best = p;
+                    bestLevel = record.Level;
+                }
             }
-            return best;
+            if (best == null) return (null, 0f);
+            return (best, Mathf.Clamp01(bestLevel / 20f));
         }
+
+        protected float BestTargetingAbility() => BestPilotAndAbility().ability;
 
         private static float ResolveScatterFloat(float baseScatter, float skillScatter, float ability,
             float flyAltitude)
@@ -140,23 +153,35 @@ namespace AirstrikeMod
                 reason = "ROCKET_NoPilots".Translate();
                 return true;
             }
+
             var allZeroManip = true;
             for (var i = 0; i < pilots.Count; i++)
             {
-                var p = pilots[i];
-                var intelDisabled = p.skills?.GetSkill(SkillDefOf.Intellectual)?.TotallyDisabled ?? true;
-                if (intelDisabled)
-                {
-                    reason = "ROCKET_PilotIncapableIntellectual".Translate(p.LabelShort);
-                    return true;
-                }
-                var manip = p.health?.capacities?.GetLevel(PawnCapacityDefOf.Manipulation) ?? 0f;
-                if (manip > 0f) allZeroManip = false;
+                var manip = pilots[i].health?.capacities?.GetLevel(PawnCapacityDefOf.Manipulation) ?? 0f;
+                if (manip > 0f) { allZeroManip = false; break; }
             }
             if (allZeroManip)
             {
                 reason = "ROCKET_PilotZeroManipulation".Translate();
                 return true;
+            }
+
+            var skill = BaseProps.requiredSkill;
+            if (skill != null && BaseProps.requiredSkillLevel > 0)
+            {
+                var bestLevel = -1;
+                for (var i = 0; i < pilots.Count; i++)
+                {
+                    var record = pilots[i].skills?.GetSkill(skill);
+                    if (record == null || record.TotallyDisabled) continue;
+                    if (record.Level > bestLevel) bestLevel = record.Level;
+                }
+                if (bestLevel < BaseProps.requiredSkillLevel)
+                {
+                    reason = "ROCKET_PilotSkillRequired".Translate(
+                        BaseProps.requiredSkillLevel, skill.LabelCap, Mathf.Max(0, bestLevel));
+                    return true;
+                }
             }
             return false;
         }
@@ -464,15 +489,8 @@ namespace AirstrikeMod
 
             var pilots = Vehicle.PawnsByHandlingType[HandlingType.Movement];
             for (var i = 0; i < pilots.Count; i++)
-            {
-                var pilot = pilots[i];
-                pilot.records.Increment(AirstrikeDefOf.RocketsAirstrike_SortiesFlown);
-                if (strafing == null)
-                {
-                    pilot.records.AddTo(AirstrikeDefOf.RocketsAirstrike_OrdinanceDropped, totalBombs);
-                    pilot.skills?.Learn(SkillDefOf.Intellectual, XP_PER_MUNITION * totalBombs);
-                }
-            }
+                pilots[i].records.Increment(AirstrikeDefOf.RocketsAirstrike_SortiesFlown);
+            var (chosenPilot, _) = BestPilotAndAbility();
 
             BombingSpeedManager.MarkFast(Vehicle, Vehicle.Rotation);
 
@@ -494,8 +512,10 @@ namespace AirstrikeMod
                 scatter: resolvedScatter,
                 originMapParent: crossMap ? originMapParent : null,
                 flyAltitude: BaseProps.flyAltitude,
-                buzzSpeedMultiplier: BaseProps.buzzSpeedMultiplier,
-                buzzSpeedRampCells: BaseProps.buzzSpeedRampCells,
+                sortieSpeedMultiplier: BaseProps.sortieSpeedMultiplier,
+                bombFireSound: BaseProps.bombFireSound,
+                chosenPilot: chosenPilot,
+                xpSkill: BaseProps.requiredSkill,
                 strafingProjectileDef: strafing?.projectileDef,
                 strafingLeadCells: strafing?.leadCells ?? 0,
                 strafingFireSound: strafing?.fireSound,

@@ -79,7 +79,7 @@ namespace AirstrikeMod
                 var cursorCell = UI.MouseCell();
                 if (action != null && cursorCell.InBounds(map) && IsValidPlacement(cursorCell))
                 {
-                    SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
+                    AirstrikeDefOf.ROCKET_InterfaceBeep1.PlayOneShotOnCamera(null);
                     var drops = ComputeDropCells(cursorCell, rotation, ordinance, dropCount);
                     var dir = rotation;
                     // total committed
@@ -164,11 +164,23 @@ namespace AirstrikeMod
 
         public override void TargeterOnGUI()
         {
-            GenUI.DrawMouseAttachment(mouseAttachment);
+            CursorLabel.Icon = mouseAttachment;
+            CursorLabel.FootprintHalfExtent = ComputeFootprintHalfExtent();
             CursorLabel.FourthLine = (lockedSegments.Count > 0
                 ? "ROCKET_RightClickBegin"
                 : "ROCKET_RightClickCancel").Translate();
             CursorLabel.Draw();
+        }
+
+        private Vector2 ComputeFootprintHalfExtent()
+        {
+            var spacing = Spacing(ordinance);
+            var halfL = spacing * dropCount * 0.5f;
+            var halfW = spacing * 0.5f;
+            var longAxisIsX = rotation == Rot4.East || rotation == Rot4.West;
+            return longAxisIsX
+                ? new Vector2(halfL, halfW)
+                : new Vector2(halfW, halfL);
         }
 
         public override void TargeterUpdate()
@@ -197,6 +209,38 @@ namespace AirstrikeMod
                 ? new Color(1f, 0.3f, 0.2f)
                 : (Event.current.shift && !atCapacity ? ChainHintColor : Color.white);
             GenDraw.DrawFieldEdges(footprintBuffer, color);
+
+            DrawApproachGhost(cursorCell, color);
+        }
+
+        private const float APPROACH_PADDING_CELLS = 2f;
+        private const int PING_PONG_TICKS = 100;
+        private static float ghostFramesOpen;
+
+        private IntVec3 ComputeApproachCell(IntVec3 cursor)
+        {
+            var spacing = Spacing(ordinance);
+            var halfFootprintLen = (spacing * dropCount) * 0.5f;
+            var planeHalf = (vehicle?.VehicleGraphic?.data?.drawSize.y ?? 3f) * 0.5f;
+            var offsetCells = Mathf.RoundToInt(halfFootprintLen + planeHalf + APPROACH_PADDING_CELLS);
+
+            var dirVec = rotation.FacingCell;
+            return new IntVec3(
+                cursor.x - dirVec.x * offsetCells, 0,
+                cursor.z - dirVec.z * offsetCells);
+        }
+
+        private void DrawApproachGhost(IntVec3 cursor, Color tint)
+        {
+            var buildDef = vehicle?.VehicleDef?.buildDef;
+            if (buildDef?.graphic == null) return;
+
+            ghostFramesOpen++;
+            tint.a = Mathf.PingPong(ghostFramesOpen, PING_PONG_TICKS / 1.5f)
+                     / PING_PONG_TICKS + 0.25f;
+
+            GhostDrawer.DrawGhostThing(ComputeApproachCell(cursor), rotation,
+                buildDef, buildDef.graphic, tint, AltitudeLayer.Blueprint);
         }
 
         private static readonly Color LockedColor = new(1f, 1f, 1f, 0.45f);

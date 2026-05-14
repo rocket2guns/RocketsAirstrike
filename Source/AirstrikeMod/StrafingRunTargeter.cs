@@ -64,7 +64,7 @@ namespace AirstrikeMod
                 var cursorCell = UI.MouseCell();
                 if (action != null && cursorCell.InBounds(map) && IsValidPlacement(cursorCell))
                 {
-                    SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
+                    AirstrikeDefOf.ROCKET_InterfaceBeep1.PlayOneShotOnCamera(null);
                     var fireCells = ComputeFireCells(cursorCell, rotation, runWidth, runLength);
                     var callback = action;
                     var rot = rotation;
@@ -118,8 +118,19 @@ namespace AirstrikeMod
 
         public override void TargeterOnGUI()
         {
-            GenUI.DrawMouseAttachment(mouseAttachment);
+            CursorLabel.Icon = mouseAttachment;
+            CursorLabel.FootprintHalfExtent = ComputeFootprintHalfExtent();
             CursorLabel.Draw();
+        }
+
+        private Vector2 ComputeFootprintHalfExtent()
+        {
+            var halfL = runLength * 0.5f;
+            var halfW = runWidth * 0.5f;
+            var longAxisIsX = rotation == Rot4.East || rotation == Rot4.West;
+            return longAxisIsX
+                ? new Vector2(halfL, halfW)
+                : new Vector2(halfW, halfL);
         }
 
         public override void TargeterUpdate()

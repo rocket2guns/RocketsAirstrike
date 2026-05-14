@@ -12,6 +12,8 @@ namespace AirstrikeMod
 
         public static StatDef ROCKET_TargetingAbility;
 
+        public static SoundDef ROCKET_InterfaceBeep1;
+
         static AirstrikeDefOf()
         {
             DefOfHelper.EnsureInitializedInCtor(typeof(AirstrikeDefOf));

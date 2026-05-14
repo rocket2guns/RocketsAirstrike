@@ -36,4 +36,34 @@
 			</li>
 		</subSounds>
 	</SoundDef>
+	<SoundDef>
+		<defName>ROCKET_HardpointLatchRelease</defName>
+		<context>MapOnly</context>
+		<subSounds>
+			<li>
+				<grains>
+					<li Class="AudioGrain_Clip">
+						<clipPath>HardpointLatchRelease</clipPath>
+					</li>
+				</grains>
+				<volumeRange>55~55</volumeRange>
+				<pitchRange>0.92~1.08</pitchRange>
+			</li>
+		</subSounds>
+	</SoundDef>
+	<SoundDef>
+		<defName>ROCKET_InterfaceBeep1</defName>
+		<context>MapOnly</context>
+		<subSounds>
+			<li>
+				<onCamera>true</onCamera>
+				<grains>
+					<li Class="AudioGrain_Clip">
+						<clipPath>InterfaceBeep1</clipPath>
+					</li>
+				</grains>
+				<volumeRange>50~50</volumeRange>
+			</li>
+		</subSounds>
+	</SoundDef>
 </Defs>

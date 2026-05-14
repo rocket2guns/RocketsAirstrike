@@ -9,10 +9,7 @@ namespace AirstrikeMod
 
         public override void GameComponentTick()
         {
-            // Pumps the vanilla record-tick path for pilots whose vehicle is in a
-            // sortie. RecordsTickInterval iterates Time-type records and consults
-            // each RecordDef.Worker — our RecordWorker_OnSortie gates the
-            // RocketsAirstrike_TimeFlown record on sortie state.
+            // pumps the vanilla record-tick path for pilots whose vehicle is in a sortie.
             foreach (var vehicle in BombingSpeedManager.Active)
             {
                 var pilots = vehicle.PawnsByHandlingType[HandlingType.Movement];

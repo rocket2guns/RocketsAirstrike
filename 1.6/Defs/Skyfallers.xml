@@ -1,32 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
 
-    <!--
-        Bombing-pass skyfaller. Graphicless (draws the contained vehicle).
-
-        Animation is fully owned by AirstrikeMod.VehicleSkyfaller_Bombing — it lerps
-        startCell→endCell over its own ticksRunning counter and ignores the launch
-        protocol. So we deliberately don't set movementType/speed/ticksToImpactRange
-        here; VF's VehicleSkyfaller_FlyOver pipeline (which would have read those) is
-        broken and we don't go through it.
-    -->
     <ThingDef ParentName="VehicleSkyfallerBase">
         <defName>ROCKET_BombingPass</defName>
         <thingClass>AirstrikeMod.VehicleSkyfaller_Bombing</thingClass>
-        <!--
-            shadowSize intentionally not set here — VehicleSkyfaller_Bombing.DrawShadow
-            pulls vehicle.VehicleGraphic.data.drawSize at runtime so each vehicle gets a
-            silhouette-sized shadow.
-        -->
     </ThingDef>
-
-    <!--
-        Falling-bomb projectile skyfaller. Spawned from VehicleSkyfaller_Bombing.Detonate
-        when the buzz crosses a target cell — animates the ordnance falling from the
-        aircraft to the impact point, then runs the airstrike's explosion (with our
-        OrdinanceDef overrides intact). Mirrors VF's vanilla ProjectileSkyfaller def
-        but with our subclass as thingClass.
-    -->
+    
     <ThingDef>
         <defName>ROCKET_FallingBomb</defName>
         <label>falling bomb</label>

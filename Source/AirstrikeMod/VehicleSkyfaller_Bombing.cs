@@ -38,7 +38,7 @@ namespace AirstrikeMod
         public float tension = 1f;
         public float turnSmoothness = 1f;
         public float cornerLookaheadCells = 6f;
-        public float cornerMinSpeedFactor = 0.55f;
+        public float cornerMinSpeedFactor = 0.5f;
         public float traveled;
         public List<bool> bombFired;
 
@@ -68,23 +68,16 @@ namespace AirstrikeMod
         public int strafingSpreadCells;
         public int strafingFireOriginOffset = 3;
 
-        public float buzzSpeedMultiplier = 1f;
-        public int buzzSpeedRampCells = 3;
+        public float sortieSpeedMultiplier = 1f;
+        public SoundDef bombFireSound;
+        public Pawn chosenPilot;
+        public SkillDef xpSkill;
+        private bool strafingXpGranted;
 
         protected int ticksRunning;
         protected List<bool> bombsDropped;
         protected float progress;
 
-        // Cached firing-zone bounds in progress space [0..1] and the ramp width
-        // (same units). Recomputed lazily on first tick from bombCells/startCell/
-        // endCell/leadCells. No need to serialize.
-        private float _slowZoneStart = 1f;
-        private float _slowZoneEnd = 1f;
-        private float _rampProgress;
-        private bool _slowZoneComputed;
-
-        // Resolved lazily on first DrawAt and reused — DrawAt fires every frame, and
-        // VehiclePawn.GetComp<T> iterates AllComps. Not serialized; rebuilt on load.
         private CompEngineFlame _engineFlame;
         private bool _engineFlameLookedUp;
 
@@ -209,11 +202,11 @@ namespace AirstrikeMod
                 return;
             }
 
-            EnsureSlowZone();
             ticksRunning++;
 
             var baseStep = 1f / Math.Max(1, totalTicks);
-            progress = Mathf.Min(1f, progress + baseStep * ComputeSpeedFactor());
+            progress = Mathf.Min(1f,
+                progress + baseStep * Mathf.Max(0.01f, sortieSpeedMultiplier));
 
             if (Spawned && Map != null && bombCells is { Count: > 0 })
             {
@@ -264,10 +257,7 @@ namespace AirstrikeMod
             progress = 0f;
             ticksRunning = 0;
             bombsDropped = null;
-            _slowZoneComputed = false;
             totalTicks = ArrivalAction_BombMap.ComputeBuzzTicks(newStart, newEnd, vehicle);
-            // Position on the map doesn't move — DrawPos / GroundPos derive from
-            // startCell/endCell, so updating those is enough for visuals and shadow.
         }
 
         private const float SPLINE_BUZZ_TIME_CONSTANT = 30f;
@@ -303,7 +293,8 @@ namespace AirstrikeMod
             if (_cellsPerTick > 0f) return;
             var flightSpeed = vehicle.CompVehicleLauncher?.FlightSpeed ?? 10f;
             if (flightSpeed <= 0f) flightSpeed = 10f;
-            _cellsPerTick = flightSpeed / SPLINE_BUZZ_TIME_CONSTANT;
+            _cellsPerTick = flightSpeed / SPLINE_BUZZ_TIME_CONSTANT
+                            * Mathf.Max(0.01f, sortieSpeedMultiplier);
         }
 
         private float ComputeCornerSpeedFactor()
@@ -475,75 +466,6 @@ namespace AirstrikeMod
             else                        { rot = Rot4.North; residualDeg = d + 90f; }
         }
 
-        private void EnsureSlowZone()
-        {
-            if (_slowZoneComputed) return;
-            _slowZoneComputed = true;
-            _slowZoneStart = 1f;
-            _slowZoneEnd = 1f;
-            _rampProgress = 0f;
-            if (bombCells == null || bombCells.Count == 0) return;
-            var dx = endCell.x - startCell.x;
-            var dz = endCell.z - startCell.z;
-            var axisLen = Math.Abs(dx) + Math.Abs(dz);
-            if (axisLen == 0) return;
-            long totalDot = (long)dx * dx + (long)dz * dz;
-            if (totalDot <= 0) return;
-            var lead = pattern == OrdinancePattern.Strafing ? leadCells : 0;
-            long minDot = long.MaxValue;
-            long maxDot = long.MinValue;
-            for (var i = 0; i < bombCells.Count; i++)
-            {
-                var c = bombCells[i];
-                var d = (long)(c.x - startCell.x) * dx + (long)(c.z - startCell.z) * dz
-                        - (long)lead * axisLen;
-                if (d < minDot) minDot = d;
-                if (d > maxDot) maxDot = d;
-            }
-            _slowZoneStart = Mathf.Clamp01((float)minDot / totalDot);
-            _slowZoneEnd = Mathf.Clamp01((float)maxDot / totalDot);
-            _rampProgress = buzzSpeedRampCells > 0
-                ? (float)buzzSpeedRampCells / axisLen
-                : 0f;
-        }
-
-        // Speed factor relative to the full-speed buzz. Returns 1 outside the
-        // ramp+slow region, buzzSpeedMultiplier inside the core firing zone, and
-        // a smoothstepped lerp through the ramp at each end.
-        private float ComputeSpeedFactor()
-        {
-            if (buzzSpeedMultiplier >= 1f) return 1f;
-
-            float t;
-            if (_rampProgress <= 0f)
-            {
-                t = progress >= _slowZoneStart && progress < _slowZoneEnd ? 1f : 0f;
-            }
-            else if (progress < _slowZoneStart - _rampProgress)
-            {
-                t = 0f;
-            }
-            else if (progress < _slowZoneStart)
-            {
-                t = Mathf.SmoothStep(0f, 1f,
-                    (progress - (_slowZoneStart - _rampProgress)) / _rampProgress);
-            }
-            else if (progress < _slowZoneEnd)
-            {
-                t = 1f;
-            }
-            else if (progress < _slowZoneEnd + _rampProgress)
-            {
-                t = Mathf.SmoothStep(0f, 1f, 1f - (progress - _slowZoneEnd) / _rampProgress);
-            }
-            else
-            {
-                t = 0f;
-            }
-
-            return Mathf.Lerp(1f, Math.Max(0.01f, buzzSpeedMultiplier), t);
-        }
-
         private void EnsureDropTracker()
         {
             if (bombsDropped == null || bombsDropped.Count != bombCells.Count)
@@ -580,9 +502,39 @@ namespace AirstrikeMod
             DropBomb(cell);
         }
 
+        private const int BOMB_FALL_TICKS = 30;
+
+        private void PlayBombFireSound()
+        {
+            if (bombFireSound == null || Map == null) return;
+            var planeCell = GroundPos.ToIntVec3();
+            if (!planeCell.InBounds(Map)) planeCell = Position;
+            bombFireSound.PlayOneShot(new TargetInfo(planeCell, Map));
+        }
+
+        private void GrantMunitionXP()
+        {
+            if (chosenPilot == null) return;
+            chosenPilot.records.AddTo(AirstrikeDefOf.RocketsAirstrike_OrdinanceDropped, 1);
+            if (xpSkill != null)
+                chosenPilot.skills?.Learn(xpSkill, CompAirstrikeBase.XP_PER_MUNITION);
+        }
+
+        private const float STRAFING_XP_PER_SORTIE = 50f;
+
+        private void GrantStrafingSortieXP()
+        {
+            if (strafingXpGranted) return;
+            strafingXpGranted = true;
+            if (chosenPilot == null || xpSkill == null) return;
+            chosenPilot.skills?.Learn(xpSkill, STRAFING_XP_PER_SORTIE);
+        }
+
         private void DropBomb(IntVec3 cell)
         {
             if (ordinance == null) return;
+            GrantMunitionXP();
+            PlayBombFireSound();
             var impactCell = ApplyScatter(cell);
 
             var def = FallingBombDef;
@@ -593,12 +545,17 @@ namespace AirstrikeMod
                 return;
             }
 
+            var origin = DrawPos;
+            var destination = impactCell.ToVector3Shifted();
+            var magnitude = (origin - destination).magnitude;
+
             var bomb = (ProjectileSkyfaller_AirstrikeBomb)ThingMaker.MakeThing(def);
             bomb.caster = vehicle;
             bomb.ordinance = ordinance;
             bomb.projectileDef = projectileDef;
-            bomb.origin = DrawPos;
-            bomb.destination = impactCell.ToVector3Shifted();
+            bomb.origin = origin;
+            bomb.destination = destination;
+            bomb.speedTilesPerTick = Mathf.Max(magnitude / BOMB_FALL_TICKS, 0.0001f);
             GenSpawn.Spawn(bomb, impactCell, Map);
         }
 
@@ -607,6 +564,7 @@ namespace AirstrikeMod
             if (strafingProjectileDef == null) return;
             if (!cell.InBounds(Map)) return;
 
+            GrantStrafingSortieXP();
             var bullets = Math.Max(1, strafingBulletsPerRound);
             for (var i = 0; i < bullets; i++)
             {
@@ -788,8 +746,11 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref strafingBulletsPerRound, nameof(strafingBulletsPerRound), 1);
             Scribe_Values.Look(ref strafingSpreadCells, nameof(strafingSpreadCells));
             Scribe_Values.Look(ref strafingFireOriginOffset, nameof(strafingFireOriginOffset), 3);
-            Scribe_Values.Look(ref buzzSpeedMultiplier, nameof(buzzSpeedMultiplier), 1f);
-            Scribe_Values.Look(ref buzzSpeedRampCells, nameof(buzzSpeedRampCells), 3);
+            Scribe_Values.Look(ref sortieSpeedMultiplier, nameof(sortieSpeedMultiplier), 1f);
+            Scribe_Defs.Look(ref bombFireSound, nameof(bombFireSound));
+            Scribe_References.Look(ref chosenPilot, nameof(chosenPilot));
+            Scribe_Defs.Look(ref xpSkill, nameof(xpSkill));
+            Scribe_Values.Look(ref strafingXpGranted, nameof(strafingXpGranted));
             Scribe_Values.Look(ref progress, nameof(progress));
             Scribe_Collections.Look(ref waypoints, nameof(waypoints), LookMode.Value);
             Scribe_Collections.Look(ref waypointIsDrop, nameof(waypointIsDrop), LookMode.Value);
