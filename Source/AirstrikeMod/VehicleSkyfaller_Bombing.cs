@@ -98,7 +98,7 @@ namespace AirstrikeMod
         {
             get
             {
-                if (waypoints != null && waypoints.Count >= 2)
+                if (waypoints is { Count: >= 2 })
                 {
                     EnsureSplineBuilt();
                     SampleSplineAtDistance(Mathf.Clamp(traveled, 0f, _totalLength),
@@ -178,8 +178,14 @@ namespace AirstrikeMod
 
         public override void SpawnSetup(Map map, bool respawningAfterLoad)
         {
+            if (!respawningAfterLoad && vehicle == null)
+            {
+                Log.Warning("[Rockets.Airstrike] ROCKET_BombingPass spawned without a sortie (likely dev mode). Destroying.");
+                Destroy(DestroyMode.Vanish);
+                return;
+            }
             base.SpawnSetup(map, respawningAfterLoad);
-            if (!respawningAfterLoad) 
+            if (!respawningAfterLoad)
                 vehicle.EventRegistry[VehicleEventDefOf.AerialVehicleLanding].ExecuteEvents();
         }
 

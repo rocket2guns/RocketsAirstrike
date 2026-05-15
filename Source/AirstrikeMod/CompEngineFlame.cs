@@ -19,7 +19,7 @@ namespace AirstrikeMod
             var path = Props?.texturePath;
             if (string.IsNullOrEmpty(path)) return null;
             if (ContentFinder<Texture2D>.Get(path, reportFailure: false) == null) return null;
-            _flameMaterial = MaterialPool.MatFrom(path, ShaderDatabase.Transparent);
+            _flameMaterial = MaterialPool.MatFrom(path, ShaderDatabase.MoteGlow);
             return _flameMaterial;
         }
 
