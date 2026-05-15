@@ -395,6 +395,7 @@
 				<bulletsPerRound>3</bulletsPerRound>
 				<spreadCells>1</spreadCells>
 				<skillScatter>2</skillScatter>
+				<inPlaceSortie>true</inPlaceSortie>
 			</li>
 			<li Class="AirstrikeMod.CompProperties_RotorSpinUp">
 				<targetRotationRate>30</targetRotationRate>

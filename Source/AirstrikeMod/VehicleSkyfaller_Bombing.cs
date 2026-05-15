@@ -57,6 +57,8 @@ namespace AirstrikeMod
         // Null = same-map. Non-null = return-flight target for cross-map.
         public MapParent originMapParent;
 
+        public bool inPlaceMode;
+
         public int totalTicks = 240;
         public float visualAltitude = 6f;
         public float scatter = 0f;
@@ -81,6 +83,9 @@ namespace AirstrikeMod
 
         private CompEngineFlame _engineFlame;
         private bool _engineFlameLookedUp;
+
+        private CompRotorSpinUp _rotorSpinUp;
+        private bool _rotorSpinUpLookedUp;
 
         [Obsolete("Implemented for Xml Deserialization only. Use VehicleSkyfallerMaker instead.")]
         [UsedImplicitly]
@@ -194,6 +199,8 @@ namespace AirstrikeMod
         {
             base.Tick();
 
+            TickRotorSpin();
+
             // Between-passes gap: pause motion + drops until the timer expires, then
             // swap in the next segment's flight line and drop list.
             if (gapTicksRemaining > 0)
@@ -299,6 +306,17 @@ namespace AirstrikeMod
             }
 
             if (traveled >= _totalLength) ExitMap();
+        }
+
+        private void TickRotorSpin()
+        {
+            if (!_rotorSpinUpLookedUp)
+            {
+                _rotorSpinUp = vehicle?.GetComp<CompRotorSpinUp>();
+                _rotorSpinUpLookedUp = true;
+            }
+            if (_rotorSpinUp == null) return;
+            vehicle.DrawTracker?.overlayRenderer?.SetAcceleration(_rotorSpinUp.TargetRate);
         }
 
         private void SyncPositionToGroundPos()
@@ -757,10 +775,22 @@ namespace AirstrikeMod
         // Same-map: spawn a VehicleSkyfaller_Arriving directly. No return world-flight.
         private void ExitMapSameMap(Map map)
         {
-            var arrivingDef = vehicle.CompVehicleLauncher.Props.skyfallerIncoming;
+            ThingDef arrivingDef;
+            Rot4 landingRot;
+            if (inPlaceMode)
+            {
+                arrivingDef = AirstrikeDefOf.ROCKET_HoverLanding;
+                landingRot = returnRot;
+            }
+            else
+            {
+                arrivingDef = vehicle.CompVehicleLauncher.Props.skyfallerIncoming;
+                landingRot = vehicle.CompVehicleLauncher.launchProtocol.LandingProperties?.forcedRotation
+                              ?? returnRot;
+            }
             if (arrivingDef == null)
             {
-                Log.Warning("[Rockets.Airstrike] Vehicle has no skyfallerIncoming def; landing vehicle directly.");
+                Log.Warning("[Rockets.Airstrike] Vehicle has no incoming skyfaller def; landing vehicle directly.");
                 GenSpawn.Spawn(vehicle, returnCell, map, returnRot);
                 Destroy();
                 return;
@@ -768,8 +798,8 @@ namespace AirstrikeMod
             var arriving = (VehicleSkyfaller_Arriving)
                 VehicleSkyfallerMaker.MakeSkyfaller(arrivingDef, vehicle);
             arriving.rotatePostLanding = returnRot;
-            var landingRot = vehicle.CompVehicleLauncher.launchProtocol.LandingProperties?.forcedRotation
-                              ?? returnRot;
+            if (arriving is VehicleSkyfaller_HoverLanding hover)
+                hover.visualAltitude = visualAltitude;
             GenSpawn.Spawn(arriving, returnCell, map, landingRot);
             Destroy();
             vehicle.SetSustainerTarget(arriving);
@@ -835,6 +865,7 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref cornerMinSpeedFactor, nameof(cornerMinSpeedFactor), 0.55f);
             Scribe_Values.Look(ref traveled, nameof(traveled));
             Scribe_Collections.Look(ref bombFired, nameof(bombFired), LookMode.Value);
+            Scribe_Values.Look(ref inPlaceMode, nameof(inPlaceMode));
         }
     }
 

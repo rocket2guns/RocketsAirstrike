@@ -487,6 +487,7 @@ namespace AirstrikeMod
             var crossMap = destMap != Vehicle.Map;
             var originMapParent = Vehicle.Map.Parent;
             var destMapParent = destMap.Parent;
+            var inPlace = BaseProps.inPlaceSortie && !crossMap;
 
             Vehicle.CompFueledTravel?.ConsumeFuel(ComputeFuelCost(destMap, segments.Count));
 
@@ -525,12 +526,34 @@ namespace AirstrikeMod
                 strafingBulletsPerRound: strafing?.bulletsPerRound ?? 1,
                 strafingSpreadCells: resolvedStrafingSpread,
                 strafingFireOriginOffset: strafing?.fireOriginOffset ?? 3,
-                strafingRunWidth: strafing?.runWidth ?? 1);
+                strafingRunWidth: strafing?.runWidth ?? 1,
+                inPlaceAnchor: inPlace ? Vehicle.Position : (IntVec3?)null,
+                inPlaceForward: inPlace ? Vehicle.Rotation : (Rot4?)null,
+                hoverApproachCells: BaseProps.hoverApproachCells);
+
+            if (inPlace)
+            {
+                LaunchInPlace(arrival);
+                return;
+            }
 
             var targetData = new TargetData<GlobalTargetInfo>();
             targetData.targets.Add(new GlobalTargetInfo(destMap.Tile));
 
             Vehicle.CompVehicleLauncher.Launch(targetData, arrival);
+        }
+
+        private void LaunchInPlace(ArrivalAction_BombMap arrival)
+        {
+            var launcher = Vehicle.CompVehicleLauncher;
+            launcher.inFlight = true;
+
+            var skyfaller = (VehicleSkyfaller_HoverLaunch)
+                VehicleSkyfallerMaker.MakeSkyfaller(AirstrikeDefOf.ROCKET_HoverLaunch, Vehicle);
+            skyfaller.arrivalAction = arrival;
+            skyfaller.createWorldObject = false;
+
+            GenSpawn.Spawn(skyfaller, Vehicle.Position, Vehicle.Map, Vehicle.Rotation);
         }
 
         public int CountInCargo(ThingDef def)

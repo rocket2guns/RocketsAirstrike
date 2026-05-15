@@ -9,6 +9,8 @@ namespace AirstrikeMod
 
         private float _currentRate;
 
+        public float TargetRate => Props.targetRotationRate;
+
         public override void CompTick()
         {
             base.CompTick();

@@ -60,5 +60,15 @@ namespace AirstrikeMod
         /// for launch to be allowed. Ignored when <see cref="requiredSkill"/> is null.
         /// </summary>
         public int requiredSkillLevel = 0;
+
+        /// <summary>
+        /// Same-map VTOL hover-launch/landing. Cross-map sorties unaffected.
+        /// </summary>
+        public bool inPlaceSortie = false;
+
+        /// <summary>
+        /// In-place spline forward/behind anchor distance. Larger = wider arcs.
+        /// </summary>
+        public int hoverApproachCells = 5;
     }
 }

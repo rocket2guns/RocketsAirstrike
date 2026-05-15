@@ -25,7 +25,7 @@ namespace AirstrikeMod
         protected ThingDef bombingSkyfallerDef;
         protected ThingDef ordinance;
         protected float scatter;
-        protected float flyAltitude = 6f;
+        public float flyAltitude = 6f;
         protected float sortieSpeedMultiplier = 1f;
         protected SoundDef bombFireSound;
         protected Pawn chosenPilot;
@@ -44,6 +44,10 @@ namespace AirstrikeMod
         // Null = same-map. Non-null = cross-map: the bombing skyfaller's ExitMap builds
         // a return AerialVehicleInFlight back to this MapParent.
         protected MapParent originMapParent;
+
+        public IntVec3? inPlaceAnchor;
+        public Rot4? inPlaceForward;
+        public int hoverApproachCells = 5;
 
         public override bool DestroyOnArrival => false;
 
@@ -73,7 +77,10 @@ namespace AirstrikeMod
             int strafingBulletsPerRound = 1,
             int strafingSpreadCells = 0,
             int strafingFireOriginOffset = 3,
-            int strafingRunWidth = 1)
+            int strafingRunWidth = 1,
+            IntVec3? inPlaceAnchor = null,
+            Rot4? inPlaceForward = null,
+            int hoverApproachCells = 5)
             : base(vehicle)
         {
             this.mapParent = mapParent;
@@ -97,6 +104,9 @@ namespace AirstrikeMod
             this.strafingSpreadCells = strafingSpreadCells;
             this.strafingFireOriginOffset = strafingFireOriginOffset;
             this.strafingRunWidth = strafingRunWidth;
+            this.inPlaceAnchor = inPlaceAnchor;
+            this.inPlaceForward = inPlaceForward;
+            this.hoverApproachCells = hoverApproachCells;
         }
 
         public override void Arrived(GlobalTargetInfo target)
@@ -119,23 +129,34 @@ namespace AirstrikeMod
                 return;
             }
 
-            if (segments == null || segments.Count == 0
-                || segments[0].bombCells == null || segments[0].bombCells.Count == 0)
+            if (!SpawnBombingSkyfaller(map))
             {
-                Log.Error("[Rockets.Airstrike] BombMap arrival: no segments / bomb cells.");
                 aerialVehicle?.SwitchToCaravan();
                 return;
             }
 
+            aerialVehicle?.ClearAndDestroy();
+        }
+
+        // Called by both the world-flight arrival path and the in-place
+        // hover-launch path; returns false if validation/creation failed.
+        public bool SpawnBombingSkyfaller(Map map)
+        {
+            if (map == null) return false;
+            if (segments == null || segments.Count == 0
+                || segments[0].bombCells == null || segments[0].bombCells.Count == 0)
+            {
+                Log.Error("[Rockets.Airstrike] BombMap arrival: no segments / bomb cells.");
+                return false;
+            }
+
             var skyfaller = (VehicleSkyfaller_Bombing)
                 VehicleSkyfallerMaker.MakeSkyfaller(bombingSkyfallerDef, vehicle);
-
             if (skyfaller == null)
             {
                 Log.Error("[Rockets.Airstrike] Failed to create bombing skyfaller. Check thingClass on " +
                           bombingSkyfallerDef?.defName);
-                aerialVehicle?.SwitchToCaravan();
-                return;
+                return false;
             }
 
             skyfaller.segments = segments;
@@ -158,16 +179,20 @@ namespace AirstrikeMod
             skyfaller.strafingSpreadCells = strafingSpreadCells;
             skyfaller.strafingFireOriginOffset = strafingFireOriginOffset;
             skyfaller.strafingRunWidth = strafingRunWidth;
+            skyfaller.inPlaceMode = inPlaceAnchor.HasValue;
 
             IntVec3 spawnCell;
             Rot4 spawnRot;
-            var splineEligible = segments.Count > 1
-                && (pattern == OrdinancePattern.Single
-                    || pattern == OrdinancePattern.Line
-                    || pattern == OrdinancePattern.Strafing);
+            // In-place sorties always go spline so entry/exit anchor consistently.
+            var splineEligible = inPlaceAnchor.HasValue
+                || (segments.Count > 1
+                    && (pattern == OrdinancePattern.Single
+                        || pattern == OrdinancePattern.Line
+                        || pattern == OrdinancePattern.Strafing));
             if (splineEligible)
             {
-                BuildPolyline(map, segments, out var waypoints, out var waypointIsDrop);
+                BuildPolyline(map, segments, inPlaceAnchor, inPlaceForward, hoverApproachCells,
+                    out var waypoints, out var waypointIsDrop);
                 skyfaller.waypoints = waypoints;
                 skyfaller.waypointIsDrop = waypointIsDrop;
                 skyfaller.traveled = 0f;
@@ -192,14 +217,14 @@ namespace AirstrikeMod
             }
 
             GenSpawn.Spawn(skyfaller, spawnCell, map, spawnRot);
-
-            aerialVehicle?.ClearAndDestroy();
+            return true;
         }
 
         private const int POLYLINE_EDGE_MARGIN = 1;
         private const float LINE_TENSION_FRACTION = 0.33f;
 
         private static void BuildPolyline(Map map, List<BombingSegment> segments,
+            IntVec3? inPlaceAnchor, Rot4? inPlaceForward, int hoverApproachCells,
             out List<IntVec3> waypoints, out List<bool> waypointIsDrop)
         {
             waypoints = new List<IntVec3>();
@@ -223,6 +248,25 @@ namespace AirstrikeMod
                 }
             }
             if (inner.Count == 0) return;
+
+            if (inPlaceAnchor.HasValue && inPlaceForward.HasValue)
+            {
+                var anchor = inPlaceAnchor.Value;
+                var fwd = inPlaceForward.Value.FacingCell;
+                var n = Mathf.Max(1, hoverApproachCells);
+                var forwardNode = new IntVec3(
+                    anchor.x + fwd.x * n, anchor.y, anchor.z + fwd.z * n);
+                var behindNode = new IntVec3(
+                    anchor.x - fwd.x * n, anchor.y, anchor.z - fwd.z * n);
+
+                waypoints.Add(anchor); waypointIsDrop.Add(false);
+                waypoints.Add(forwardNode); waypointIsDrop.Add(false);
+                waypoints.AddRange(inner);
+                waypointIsDrop.AddRange(innerIsDrop);
+                waypoints.Add(behindNode); waypointIsDrop.Add(false);
+                waypoints.Add(anchor); waypointIsDrop.Add(false);
+                return;
+            }
 
             var entryFrom = inner.Count >= 2 ? inner[1] : inner[0];
             var exitFrom = inner.Count >= 2 ? inner[inner.Count - 2] : inner[inner.Count - 1];
@@ -366,6 +410,9 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref strafingSpreadCells, nameof(strafingSpreadCells));
             Scribe_Values.Look(ref strafingFireOriginOffset, nameof(strafingFireOriginOffset), 3);
             Scribe_Values.Look(ref strafingRunWidth, nameof(strafingRunWidth), 1);
+            Scribe_Values.Look(ref inPlaceAnchor, nameof(inPlaceAnchor));
+            Scribe_Values.Look(ref inPlaceForward, nameof(inPlaceForward));
+            Scribe_Values.Look(ref hoverApproachCells, nameof(hoverApproachCells), 5);
         }
     }
 }

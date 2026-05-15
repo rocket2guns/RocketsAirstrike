@@ -5,6 +5,16 @@
         <defName>ROCKET_BombingPass</defName>
         <thingClass>AirstrikeMod.VehicleSkyfaller_Bombing</thingClass>
     </ThingDef>
+
+    <ThingDef ParentName="VehicleSkyfallerBase">
+        <defName>ROCKET_HoverLaunch</defName>
+        <thingClass>AirstrikeMod.VehicleSkyfaller_HoverLaunch</thingClass>
+    </ThingDef>
+
+    <ThingDef ParentName="VehicleSkyfallerBase">
+        <defName>ROCKET_HoverLanding</defName>
+        <thingClass>AirstrikeMod.VehicleSkyfaller_HoverLanding</thingClass>
+    </ThingDef>
     
     <ThingDef>
         <defName>ROCKET_FallingBomb</defName>
