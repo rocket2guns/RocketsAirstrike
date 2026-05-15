@@ -78,6 +78,6 @@
     <ROCKET_RunwayInfo_RequiredTerrain_Label>Allowed terrain</ROCKET_RunwayInfo_RequiredTerrain_Label>
     <ROCKET_RunwayInfo_RequiredTerrain_Desc>Additional terrain types that qualify as runway, even if they would otherwise not be eligible.</ROCKET_RunwayInfo_RequiredTerrain_Desc>
     <ROCKET_RunwayInfo_ExcludedTerrain_Label>Excluded terrain</ROCKET_RunwayInfo_ExcludedTerrain_Label>
-    <ROCKET_RunwayInfo_ExcludedTerrain_Desc>Terrain types that disqualify a cell as runway, even if they would otherwise be eligible.</ROCKET_RunwayInfo_ExcludedTerrain_Desc>
+    <ROCKET_RunwayInfo_ExcludedTerrain_Desc>Terrain and floor families that disqualify a cell as runway, even if they would otherwise be eligible.</ROCKET_RunwayInfo_ExcludedTerrain_Desc>
 
 </LanguageData>

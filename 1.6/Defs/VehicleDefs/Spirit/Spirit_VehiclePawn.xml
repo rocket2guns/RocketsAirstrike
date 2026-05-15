@@ -565,7 +565,6 @@
 					<li>MarshyTerrain</li>
 					<li>PackedDirt</li>
 					<li>Mud</li>
-					<li>Carpet</li>
 					<li>BurnedCarpet</li>
 					<li>WoodPlankFloor</li>
 					<li>BurnedWoodPlankFloor</li>
@@ -573,6 +572,10 @@
 					<li>StrawMatting</li>
 					<li>BurnedStrawMatting</li>
 				</excludedTerrain>
+				<excludedDesignators>
+					<li>Floor_Carpet</li>
+					<li MayRequire="Ludeon.RimWorld.Royalty">Floor_Carpet_Fine</li>
+				</excludedDesignators>
 			</li>
 		</comps>
 	</Vehicles.VehicleDef>

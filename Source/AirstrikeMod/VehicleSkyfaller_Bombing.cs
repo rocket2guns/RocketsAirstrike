@@ -129,7 +129,8 @@ namespace AirstrikeMod
             var extraRotation = 0f;
             if (waypoints != null)
             {
-                SnapRotationToHeading(CurrentHeadingDeg(), out var rot, out var residual);
+                SnapRotationToHeading(CurrentHeadingDeg(), VehicleNegatesWestResidual(),
+                    out var rot, out var residual);
                 Rotation = rot;
                 extraRotation = residual;
             }
@@ -474,15 +475,29 @@ namespace AirstrikeMod
             return -Mathf.Atan2(tangent.z, tangent.x) * Mathf.Rad2Deg;
         }
 
-        private static void SnapRotationToHeading(float screenCwDeg, out Rot4 rot,
-            out float residualDeg)
+        private bool VehicleNegatesWestResidual()
+        {
+            if (vehicle?.VehicleDef?.graphicData?.Graphic is not Graphic_Rgb g) return false;
+            return g.WestFlipped && !g.EastRotated;
+        }
+
+        private static void SnapRotationToHeading(float screenCwDeg, bool negateWestResidual,
+            out Rot4 rot, out float residualDeg)
         {
             var d = screenCwDeg;
             while (d > 180f) d -= 360f;
             while (d <= -180f) d += 360f;
             if (d >= -45f && d < 45f) { rot = Rot4.East;  residualDeg = d; }
-            else if (d >= 45f)         { rot = Rot4.South; residualDeg = d - 90f; }
-            else                        { rot = Rot4.North; residualDeg = d + 90f; }
+            else if (d >= 45f && d < 135f) { rot = Rot4.South; residualDeg = d - 90f; }
+            else if (d >= -135f && d < -45f) { rot = Rot4.North; residualDeg = d + 90f; }
+            else
+            {
+                rot = Rot4.West;
+                var diff = d - 180f;
+                while (diff > 180f) diff -= 360f;
+                while (diff <= -180f) diff += 360f;
+                residualDeg = negateWestResidual ? -diff : diff;
+            }
         }
 
         private void EnsureDropTracker()

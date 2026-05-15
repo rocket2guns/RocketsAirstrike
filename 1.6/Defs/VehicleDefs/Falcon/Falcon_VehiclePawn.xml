@@ -575,6 +575,23 @@
 					<li>(0, -3)</li>
 				</exhaustOffsetsSouth>
 			</li>
+			<li Class="AirstrikeMod.CompProperties_PreparedRunway">
+				<requiresHeavy>true</requiresHeavy>
+				<excludedTerrain>
+					<li>Sand</li>
+					<li>SoftSand</li>
+					<li>MarshyTerrain</li>
+					<li>Mud</li>
+					<li>BurnedCarpet</li>
+					<li>WoodPlankFloor</li>
+					<li>BurnedWoodPlankFloor</li>
+					<li>AncientWoodPlankFloor</li>
+				</excludedTerrain>
+				<excludedDesignators>
+					<li>Floor_Carpet</li>
+					<li MayRequire="Ludeon.RimWorld.Royalty">Floor_Carpet_Fine</li>
+				</excludedDesignators>
+			</li>
 		</comps>
 	</Vehicles.VehicleDef>
 </Defs>

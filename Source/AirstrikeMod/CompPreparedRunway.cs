@@ -77,6 +77,8 @@ namespace AirstrikeMod
         {
             var props = Props;
             if (props.excludedTerrain != null && props.excludedTerrain.Contains(terrain)) return false;
+            if (props.excludedDesignators != null && terrain.designatorDropdown != null
+                && props.excludedDesignators.Contains(terrain.designatorDropdown)) return false;
             if (props.requiredTerrain != null && props.requiredTerrain.Contains(terrain)) return true;
             if (props.requiresHeavy && HasHeavyAffordance(terrain)) return true;
             return false;

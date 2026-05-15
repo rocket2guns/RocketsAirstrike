@@ -52,15 +52,46 @@ namespace AirstrikeMod.Patches
                     49);
             }
 
-            if (!props.excludedTerrain.NullOrEmpty())
+            var excludedJoined = JoinExcluded(props.excludedTerrain, props.excludedDesignators);
+            if (excludedJoined != null)
             {
                 yield return new VehicleStatDrawEntry(
                     category,
                     "ROCKET_RunwayInfo_ExcludedTerrain_Label".Translate(),
-                    JoinTerrainLabels(props.excludedTerrain),
+                    excludedJoined,
                     "ROCKET_RunwayInfo_ExcludedTerrain_Desc".Translate(),
                     48);
             }
+        }
+
+        private static string JoinExcluded(
+            List<TerrainDef> terrains, List<DesignatorDropdownGroupDef> designators)
+        {
+            var hasTerrains = !terrains.NullOrEmpty();
+            var hasDesignators = !designators.NullOrEmpty();
+            if (!hasTerrains && !hasDesignators) return null;
+
+            var sb = new StringBuilder();
+            var first = true;
+            if (hasDesignators)
+            {
+                for (var i = 0; i < designators.Count; i++)
+                {
+                    if (!first) sb.Append(", ");
+                    sb.Append(designators[i].LabelCap);
+                    first = false;
+                }
+            }
+            if (hasTerrains)
+            {
+                for (var i = 0; i < terrains.Count; i++)
+                {
+                    if (!first) sb.Append(", ");
+                    sb.Append(terrains[i].LabelCap);
+                    first = false;
+                }
+            }
+            return sb.ToString();
         }
 
         private static string JoinTerrainLabels(List<TerrainDef> defs)
