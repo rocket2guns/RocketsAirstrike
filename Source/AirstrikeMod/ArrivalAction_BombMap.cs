@@ -48,6 +48,8 @@ namespace AirstrikeMod
         public IntVec3? inPlaceAnchor;
         public Rot4? inPlaceForward;
         public int hoverApproachCells = 5;
+        public int hoverTakeoffTicks = 90;
+        public int hoverLandingTicks = 90;
 
         public override bool DestroyOnArrival => false;
 
@@ -80,7 +82,9 @@ namespace AirstrikeMod
             int strafingRunWidth = 1,
             IntVec3? inPlaceAnchor = null,
             Rot4? inPlaceForward = null,
-            int hoverApproachCells = 5)
+            int hoverApproachCells = 5,
+            int hoverTakeoffTicks = 90,
+            int hoverLandingTicks = 90)
             : base(vehicle)
         {
             this.mapParent = mapParent;
@@ -107,6 +111,8 @@ namespace AirstrikeMod
             this.inPlaceAnchor = inPlaceAnchor;
             this.inPlaceForward = inPlaceForward;
             this.hoverApproachCells = hoverApproachCells;
+            this.hoverTakeoffTicks = hoverTakeoffTicks;
+            this.hoverLandingTicks = hoverLandingTicks;
         }
 
         public override void Arrived(GlobalTargetInfo target)
@@ -180,6 +186,7 @@ namespace AirstrikeMod
             skyfaller.strafingFireOriginOffset = strafingFireOriginOffset;
             skyfaller.strafingRunWidth = strafingRunWidth;
             skyfaller.inPlaceMode = inPlaceAnchor.HasValue;
+            skyfaller.hoverLandingTicks = hoverLandingTicks;
 
             IntVec3 spawnCell;
             Rot4 spawnRot;
@@ -413,6 +420,8 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref inPlaceAnchor, nameof(inPlaceAnchor));
             Scribe_Values.Look(ref inPlaceForward, nameof(inPlaceForward));
             Scribe_Values.Look(ref hoverApproachCells, nameof(hoverApproachCells), 5);
+            Scribe_Values.Look(ref hoverTakeoffTicks, nameof(hoverTakeoffTicks), 90);
+            Scribe_Values.Look(ref hoverLandingTicks, nameof(hoverLandingTicks), 90);
         }
     }
 }

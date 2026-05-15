@@ -434,7 +434,7 @@ namespace AirstrikeMod
             Map originalMap, StrafingPayload strafing = null)
         {
             OnTargetsChosen(destMap, segments, Vehicle.Position,
-                Vehicle.Rotation.Opposite, strafing);
+                Vehicle.Rotation, strafing);
             RestoreCurrentMap(originalMap);
         }
 
@@ -529,7 +529,9 @@ namespace AirstrikeMod
                 strafingRunWidth: strafing?.runWidth ?? 1,
                 inPlaceAnchor: inPlace ? Vehicle.Position : (IntVec3?)null,
                 inPlaceForward: inPlace ? Vehicle.Rotation : (Rot4?)null,
-                hoverApproachCells: BaseProps.hoverApproachCells);
+                hoverApproachCells: BaseProps.hoverApproachCells,
+                hoverTakeoffTicks: BaseProps.hoverTakeoffTicks,
+                hoverLandingTicks: BaseProps.hoverLandingTicks);
 
             if (inPlace)
             {

@@ -58,6 +58,7 @@ namespace AirstrikeMod
         public MapParent originMapParent;
 
         public bool inPlaceMode;
+        public int hoverLandingTicks = 90;
 
         public int totalTicks = 240;
         public float visualAltitude = 6f;
@@ -132,15 +133,23 @@ namespace AirstrikeMod
 
             var pos = DrawPos;
             var extraRotation = 0f;
+            float spriteHeadingDeg;
             if (waypoints != null)
             {
-                SnapRotationToHeading(CurrentHeadingDeg(), VehicleNegatesWestResidual(),
+                var tan = ComputeFlightTangent();
+                var screenCwDeg = -Mathf.Atan2(tan.z, tan.x) * Mathf.Rad2Deg;
+                spriteHeadingDeg = screenCwDeg + 90f;
+                SnapRotationToHeading(screenCwDeg, VehicleNegatesWestResidual(),
                     out var rot, out var residual);
                 Rotation = rot;
                 extraRotation = residual;
             }
+            else
+            {
+                spriteHeadingDeg = Rotation.AsAngle;
+            }
             vehicle.DrawAt(in pos, Rotation, extraRotation);
-            DrawShadow();
+            DrawShadow(spriteHeadingDeg);
             if (!_engineFlameLookedUp)
             {
                 _engineFlame = vehicle?.GetComp<CompEngineFlame>();
@@ -172,14 +181,13 @@ namespace AirstrikeMod
             }
         }
 
-        private void DrawShadow()
+        private void DrawShadow(float headingDeg)
         {
             if (cachedShadowMaterial == null && !string.IsNullOrEmpty(def.skyfaller.shadow))
                 cachedShadowMaterial = MaterialPool.MatFrom(def.skyfaller.shadow, ShaderDatabase.Transparent);
             if (cachedShadowMaterial == null) return;
-            var shadowSize = vehicle.VehicleGraphic?.data?.drawSize ?? def.skyfaller.shadowSize;
-            var shadowTicks = Mathf.RoundToInt(visualAltitude * 10f);
-            DrawDropSpotShadow(GroundPos, Rotation, cachedShadowMaterial, shadowSize, shadowTicks);
+            var size = vehicle.VehicleGraphic?.data?.drawSize ?? def.skyfaller.shadowSize;
+            AirstrikeShadow.Draw(GroundPos, size, headingDeg, visualAltitude, cachedShadowMaterial);
         }
 
         public override void SpawnSetup(Map map, bool respawningAfterLoad)
@@ -197,12 +205,7 @@ namespace AirstrikeMod
 
         protected override void Tick()
         {
-            base.Tick();
-
             TickRotorSpin();
-
-            // Between-passes gap: pause motion + drops until the timer expires, then
-            // swap in the next segment's flight line and drop list.
             if (gapTicksRemaining > 0)
             {
                 gapTicksRemaining--;
@@ -484,13 +487,6 @@ namespace AirstrikeMod
                 tangent = _splinePositions[lo] - _splinePositions[lo - 1];
             }
             if (tangent.sqrMagnitude < 0.0001f) tangent = Vector3.right;
-        }
-
-        private float CurrentHeadingDeg()
-        {
-            EnsureSplineBuilt();
-            SampleSplineAtDistance(Mathf.Clamp(traveled, 0f, _totalLength), out _, out var tangent);
-            return -Mathf.Atan2(tangent.z, tangent.x) * Mathf.Rad2Deg;
         }
 
         private bool VehicleNegatesWestResidual()
@@ -799,7 +795,10 @@ namespace AirstrikeMod
                 VehicleSkyfallerMaker.MakeSkyfaller(arrivingDef, vehicle);
             arriving.rotatePostLanding = returnRot;
             if (arriving is VehicleSkyfaller_HoverLanding hover)
+            {
                 hover.visualAltitude = visualAltitude;
+                hover.descentTicks = hoverLandingTicks;
+            }
             GenSpawn.Spawn(arriving, returnCell, map, landingRot);
             Destroy();
             vehicle.SetSustainerTarget(arriving);
@@ -866,6 +865,7 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref traveled, nameof(traveled));
             Scribe_Collections.Look(ref bombFired, nameof(bombFired), LookMode.Value);
             Scribe_Values.Look(ref inPlaceMode, nameof(inPlaceMode));
+            Scribe_Values.Look(ref hoverLandingTicks, nameof(hoverLandingTicks), 90);
         }
     }
 

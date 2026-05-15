@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using RimWorld;
 using UnityEngine;
 using Vehicles;
 using Verse;
@@ -8,11 +9,12 @@ namespace AirstrikeMod
 {
     public class VehicleSkyfaller_HoverLaunch : VehicleSkyfaller_Leaving
     {
-        private int _hoverPhaseTicks = -1;
-        private int _ownTicks;
-        private int _delayRemaining = -1;
-        private float _launchCurveEndZ = -1f;
+        private int _ticks;
+        public int riseTicks = 90;
+
         private float _sortieAltCache = -1f;
+        private CompRotorSpinUp _rotorSpinUp;
+        private bool _rotorSpinUpLookedUp;
 
         [UsedImplicitly]
         [Obsolete("Implemented for Xml Deserialization only. Use VehicleSkyfallerMaker instead.", error: true)]
@@ -20,78 +22,61 @@ namespace AirstrikeMod
         {
         }
 
-        protected override void Tick()
+        public override void SpawnSetup(Map map, bool respawningAfterLoad)
         {
-            EnsureTimingCached();
-
-            if (_delayRemaining > 0)
-            {
-                _delayRemaining--;
-                return;
-            }
-
-            vehicle.CompVehicleLauncher.launchProtocol.Tick();
-            _ownTicks++;
-
-            if (_ownTicks >= _hoverPhaseTicks)
-                LeaveMap();
+            base.SpawnSetup(map, respawningAfterLoad);
+            if (respawningAfterLoad) return;
+            if (arrivalAction is ArrivalAction_BombMap bomb)
+                riseTicks = Math.Max(1, bomb.hoverTakeoffTicks);
         }
 
-        private void EnsureTimingCached()
+        protected override void Tick()
         {
-            if (_hoverPhaseTicks >= 0) return;
-
-            var protocol = vehicle.CompVehicleLauncher?.launchProtocol;
-            if (_delayRemaining < 0)
-                _delayRemaining = protocol?.CurAnimationProperties?.delayByTicks ?? 0;
-
-            if (protocol is PropellerTakeoff prop)
-            {
-                var pp = prop.LaunchProperties_Propeller;
-                _hoverPhaseTicks = (pp?.maxTicksPropeller ?? 0) + (pp?.maxTicksVertical ?? 0);
-            }
-            else
-            {
-                Log.Warning("[Rockets.Airstrike] HoverLaunch on a non-PropellerTakeoff vehicle; " +
-                            "transitioning to bombing skyfaller after a short default delay.");
-                _hoverPhaseTicks = 120;
-            }
+            _ticks++;
+            TickRotor();
+            if (_ticks >= riseTicks)
+                LeaveMap();
         }
 
         protected override void DrawAt(Vector3 drawLoc, bool flip = false)
         {
-            base.DrawAt(drawLoc, flip);
-            launchProtocolDrawPos = ScaleAltitudeToSortie(launchProtocolDrawPos);
+            var altitude = CurrentAltitude();
+            var pos = RootPos;
+            pos.y = AltitudeLayer.Skyfaller.AltitudeFor();
+            pos.z += altitude;
+            launchProtocolDrawPos = pos;
+            vehicle.DrawAt(in pos, Rotation, 0f);
+            DrawShadow(altitude);
         }
 
-        private Vector3 ScaleAltitudeToSortie(Vector3 pos)
+        private void DrawShadow(float altitude)
+        {
+            if (cachedShadowMaterial == null && !string.IsNullOrEmpty(def.skyfaller.shadow))
+                cachedShadowMaterial = MaterialPool.MatFrom(def.skyfaller.shadow,
+                    ShaderDatabase.Transparent);
+            if (cachedShadowMaterial == null) return;
+            var size = vehicle.VehicleGraphic?.data?.drawSize ?? def.skyfaller.shadowSize;
+            AirstrikeShadow.Draw(RootPos, size, Rotation.AsAngle, altitude,
+                cachedShadowMaterial);
+        }
+
+        private float CurrentAltitude()
         {
             if (_sortieAltCache < 0f)
                 _sortieAltCache = (arrivalAction as ArrivalAction_BombMap)?.flyAltitude ?? 0f;
-            if (_sortieAltCache <= 0f) return pos;
-            var endZ = GetLaunchCurveEndZ();
-            if (endZ <= 0.0001f) return pos;
-            var rootZ = RootPos.z;
-            pos.z = rootZ + (pos.z - rootZ) * (_sortieAltCache / endZ);
-            return pos;
+            var t = Mathf.Clamp01((float)_ticks / Mathf.Max(1, riseTicks));
+            return _sortieAltCache * Mathf.SmoothStep(0f, 1f, t);
         }
 
-        private float GetLaunchCurveEndZ()
+        private void TickRotor()
         {
-            if (_launchCurveEndZ >= 0f) return _launchCurveEndZ;
-            _launchCurveEndZ = 0f;
-            if (vehicle?.CompVehicleLauncher?.launchProtocol is PropellerTakeoff prop)
+            if (!_rotorSpinUpLookedUp)
             {
-                var props = prop.LaunchProperties_Propeller;
-                if (props != null)
-                {
-                    if (props.zPositionPropellerCurve != null)
-                        _launchCurveEndZ += props.zPositionPropellerCurve.Evaluate(1f);
-                    if (props.zPositionVerticalCurve != null)
-                        _launchCurveEndZ += props.zPositionVerticalCurve.Evaluate(1f);
-                }
+                _rotorSpinUp = vehicle?.GetComp<CompRotorSpinUp>();
+                _rotorSpinUpLookedUp = true;
             }
-            return _launchCurveEndZ;
+            if (_rotorSpinUp == null) return;
+            vehicle.DrawTracker?.overlayRenderer?.SetAcceleration(_rotorSpinUp.TargetRate);
         }
 
         protected override void LeaveMap()
@@ -107,9 +92,6 @@ namespace AirstrikeMod
                 return;
             }
 
-            // Recovery: drop the vehicle back on the map so it isn't orphaned in
-            // a destroyed skyfaller (createWorldObject=false means base.LeaveMap
-            // would just Destroy with no respawn).
             Log.Error("[Rockets.Airstrike] HoverLaunch handoff failed; respawning vehicle in place.");
             if (map != null)
             {
@@ -122,8 +104,8 @@ namespace AirstrikeMod
         public override void ExposeData()
         {
             base.ExposeData();
-            Scribe_Values.Look(ref _ownTicks, nameof(_ownTicks));
-            Scribe_Values.Look(ref _delayRemaining, nameof(_delayRemaining), -1);
+            Scribe_Values.Look(ref _ticks, nameof(_ticks));
+            Scribe_Values.Look(ref riseTicks, nameof(riseTicks), 90);
         }
     }
 }

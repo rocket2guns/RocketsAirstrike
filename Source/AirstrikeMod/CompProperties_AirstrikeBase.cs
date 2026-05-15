@@ -70,5 +70,8 @@ namespace AirstrikeMod
         /// In-place spline forward/behind anchor distance. Larger = wider arcs.
         /// </summary>
         public int hoverApproachCells = 5;
+
+        public int hoverTakeoffTicks = 90;
+        public int hoverLandingTicks = 90;
     }
 }
