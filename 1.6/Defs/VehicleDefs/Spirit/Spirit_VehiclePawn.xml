@@ -380,13 +380,13 @@
 			</li>
 			<li Class="Vehicles.CompProperties_VehicleLauncher">
 				<fuelConsumptionWorldMultiplier>50</fuelConsumptionWorldMultiplier>
-				<launchProtocol Class="Vehicles.DirectionalTakeoff">
+				<launchProtocol Class="AirstrikeMod.LaunchProtocol_PreparedRunwayDirectional">
 					<launchProperties>
 						<horizontal>
 							<maxTicks>450</maxTicks>
 							<flipHorizontal>West</flipHorizontal>
 							<lockShadowZ>true</lockShadowZ>
-							<restriction Class="Vehicles.LaunchRestriction_Runway">
+							<restriction Class="AirstrikeMod.LaunchRestriction_PreparedRunway">
 								<width>(-4, 36)</width>
 								<height>(-3, 3)</height>
 								<fillPercent>0.21</fillPercent>
@@ -431,7 +431,7 @@
 						<vertical>
 							<maxTicks>450</maxTicks>
 							<flipVertical>South</flipVertical>
-							<restriction Class="Vehicles.LaunchRestriction_Runway">
+							<restriction Class="AirstrikeMod.LaunchRestriction_PreparedRunway">
 								<width>(-3, 3)</width>
 								<height>(-2, 38)</height>
 								<fillPercent>0.21</fillPercent>
@@ -462,7 +462,7 @@
 							<maxTicks>600</maxTicks>
 							<flipHorizontal>West</flipHorizontal>
 							<lockShadowZ>true</lockShadowZ>
-							<restriction Class="Vehicles.LaunchRestriction_Runway">
+							<restriction Class="AirstrikeMod.LaunchRestriction_PreparedRunway">
 								<width>(-38, 2)</width>
 								<height>(-3, 3)</height>
 								<fillPercent>0.21</fillPercent>
@@ -506,7 +506,7 @@
 						<vertical>
 							<maxTicks>600</maxTicks>
 							<flipVertical>South</flipVertical>
-							<restriction Class="Vehicles.LaunchRestriction_Runway">
+							<restriction Class="AirstrikeMod.LaunchRestriction_PreparedRunway">
 								<width>(-3, 3)</width>
 								<height>(-38, 2)</height>
 								<fillPercent>0.21</fillPercent>
@@ -554,6 +554,25 @@
 					<li>(-1.7, -1.8)</li>
 					<li>(1.7, -1.8)</li>
 				</exhaustOffsetsSouth>
+			</li>
+			<li Class="AirstrikeMod.CompProperties_PreparedRunway">
+				<requiresHeavy>true</requiresHeavy>
+				<excludedTerrain>
+					<li>Sand</li>
+					<li>SoftSand</li>
+					<li>Soil</li>
+					<li>SoilRich</li>
+					<li>MarshyTerrain</li>
+					<li>PackedDirt</li>
+					<li>Mud</li>
+					<li>Carpet</li>
+					<li>BurnedCarpet</li>
+					<li>WoodPlankFloor</li>
+					<li>BurnedWoodPlankFloor</li>
+					<li>AncientWoodPlankFloor</li>
+					<li>StrawMatting</li>
+					<li>BurnedStrawMatting</li>
+				</excludedTerrain>
 			</li>
 		</comps>
 	</Vehicles.VehicleDef>

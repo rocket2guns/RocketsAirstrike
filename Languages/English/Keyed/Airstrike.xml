@@ -68,4 +68,16 @@
     <ROCKET_NoOrdinanceSelected>No ordinance selected.</ROCKET_NoOrdinanceSelected>
     <ROCKET_NeedShells>Need {0} {1} in cargo.</ROCKET_NeedShells>
 
+    <!-- Prepared runway: failure tooltips on the disabled launch gizmo + inspect line -->
+    <ROCKET_PreparedRunwayFailure>Prepared runway required: {0} cells under the takeoff strip aren't suitable ({1}).</ROCKET_PreparedRunwayFailure>
+    <ROCKET_PreparedRunwayFailure_OutOfBounds>Prepared runway required: runway strip extends off the map.</ROCKET_PreparedRunwayFailure_OutOfBounds>
+
+    <!-- Prepared runway: stat rows in the Aerial section of the info card -->
+    <ROCKET_RunwayInfo_RequiresHeavy_Label>Heavy required</ROCKET_RunwayInfo_RequiresHeavy_Label>
+    <ROCKET_RunwayInfo_RequiresHeavy_Desc>If Yes, this vehicle can only take off and land from terrain that supports heavy construction (Concrete, Paved Tile, Metal Tile, Sterile Tile, and most modded industrial floors). Any terrain in the excluded list still disqualifies regardless.</ROCKET_RunwayInfo_RequiresHeavy_Desc>
+    <ROCKET_RunwayInfo_RequiredTerrain_Label>Allowed terrain</ROCKET_RunwayInfo_RequiredTerrain_Label>
+    <ROCKET_RunwayInfo_RequiredTerrain_Desc>Additional terrain types that qualify as runway, even if they would otherwise not be eligible.</ROCKET_RunwayInfo_RequiredTerrain_Desc>
+    <ROCKET_RunwayInfo_ExcludedTerrain_Label>Excluded terrain</ROCKET_RunwayInfo_ExcludedTerrain_Label>
+    <ROCKET_RunwayInfo_ExcludedTerrain_Desc>Terrain types that disqualify a cell as runway, even if they would otherwise be eligible.</ROCKET_RunwayInfo_ExcludedTerrain_Desc>
+
 </LanguageData>

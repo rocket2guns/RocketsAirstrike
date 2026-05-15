@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+    <StatCategoryDef>
+        <defName>ROCKET_Runway</defName>
+        <label>Runway</label>
+        <displayOrder>65</displayOrder>
+    </StatCategoryDef>
+
+</Defs>
