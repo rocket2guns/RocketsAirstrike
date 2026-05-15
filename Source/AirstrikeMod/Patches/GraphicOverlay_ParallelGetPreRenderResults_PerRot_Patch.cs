@@ -2,6 +2,7 @@ using HarmonyLib;
 using SmashTools.Rendering;
 using UnityEngine;
 using Vehicles;
+using Vehicles.Rendering;
 
 namespace AirstrikeMod.Patches
 {
