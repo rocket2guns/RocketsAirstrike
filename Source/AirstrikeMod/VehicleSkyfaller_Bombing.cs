@@ -35,8 +35,7 @@ namespace AirstrikeMod
 
         public List<IntVec3> waypoints;
         public List<bool> waypointIsDrop;
-        public float tension = 1f;
-        public float turnSmoothness = 1.5f;
+        public float tangentScale = 1f;
         public float cornerLookaheadCells = 6f;
         public float cornerMinSpeedFactor = 0.5f;
         public float traveled;
@@ -45,6 +44,7 @@ namespace AirstrikeMod
         private List<Vector3> _splinePositions;
         private List<float> _splineCumLengths;
         private List<float> _waypointArcs;
+        private List<Vector3> _waypointTangents;
         private List<IntVec3> _dropCells;
         private List<float> _dropArcLengths;
         private float _totalLength;
@@ -282,7 +282,6 @@ namespace AirstrikeMod
 
         private const float SPLINE_BUZZ_TIME_CONSTANT = 30f;
         private const int SAMPLES_PER_SEGMENT = 32;
-        private const float CR_ALPHA = 0.5f;
 
         private void SplineTick()
         {
@@ -367,53 +366,92 @@ namespace AirstrikeMod
             }
         }
 
+        /*
+        Okay buckle up. Here we walk segments in sync with the waypoint layout (prefix 1 for entry, 2 for
+        in-place anchor+forward). Single-drop segments map to 1 waypoint; multi-drop
+        line segments map to 2 waypoints (first + last drop), with intermediates
+        placed by arc-length fraction across the (geometrically straight) section
+        between those two waypoints.
+         */
         private void BuildDrops()
         {
             _dropCells = new List<IntVec3>();
             _dropArcLengths = new List<float>();
-            if (waypointIsDrop == null || _waypointArcs == null) return;
-            var n = Math.Min(waypointIsDrop.Count, _waypointArcs.Count);
-            for (var i = 0; i < n; i++)
+            if (segments == null || _waypointArcs == null) return;
+
+            var wpIdx = inPlaceMode ? 2 : 1;
+            for (var s = 0; s < segments.Count; s++)
             {
-                if (!waypointIsDrop[i]) continue;
-                _dropCells.Add(waypoints[i]);
-                _dropArcLengths.Add(_waypointArcs[i]);
+                var seg = segments[s];
+                var cells = seg?.bombCells;
+                if (cells == null || cells.Count == 0) continue;
+
+                if (cells.Count == 1)
+                {
+                    if (wpIdx < _waypointArcs.Count)
+                    {
+                        _dropCells.Add(cells[0]);
+                        _dropArcLengths.Add(_waypointArcs[wpIdx]);
+                    }
+                    wpIdx += 1;
+                    continue;
+                }
+
+                if (wpIdx + 1 >= _waypointArcs.Count) break;
+                var firstArc = _waypointArcs[wpIdx];
+                var lastArc = _waypointArcs[wpIdx + 1];
+                var first = cells[0];
+                var last = cells[cells.Count - 1];
+                var dx = last.x - first.x;
+                var dz = last.z - first.z;
+                var totalDist = Mathf.Sqrt(dx * dx + dz * dz);
+                if (totalDist <= 0.0001f)
+                {
+                    _dropCells.Add(first);
+                    _dropArcLengths.Add(firstArc);
+                }
+                else
+                {
+                    for (var k = 0; k < cells.Count; k++)
+                    {
+                        var c = cells[k];
+                        var cdx = c.x - first.x;
+                        var cdz = c.z - first.z;
+                        var f = Mathf.Sqrt(cdx * cdx + cdz * cdz) / totalDist;
+                        _dropCells.Add(c);
+                        _dropArcLengths.Add(Mathf.Lerp(firstArc, lastArc, f));
+                    }
+                }
+                wpIdx += 2;
             }
         }
 
         private void BuildSplineSamples()
         {
+            ComputeWaypointTangents();
+
             _splinePositions = new List<Vector3>(waypoints.Count * SAMPLES_PER_SEGMENT);
             _splineCumLengths = new List<float>(waypoints.Count * SAMPLES_PER_SEGMENT);
             _waypointArcs = new List<float>(waypoints.Count);
             _totalLength = 0f;
 
-            var ctrl = new List<Vector3>(waypoints.Count + 2);
-            var first = waypoints[0].ToVector3Shifted();
-            var second = waypoints[1].ToVector3Shifted();
-            ctrl.Add(first + (first - second));
-            for (var i = 0; i < waypoints.Count; i++) ctrl.Add(waypoints[i].ToVector3Shifted());
-            var last = waypoints[waypoints.Count - 1].ToVector3Shifted();
-            var penult = waypoints[waypoints.Count - 2].ToVector3Shifted();
-            ctrl.Add(last + (last - penult));
-
-            var numSegments = ctrl.Count - 3;
+            var numSegments = waypoints.Count - 1;
             var cumLen = 0f;
-            Vector3 lastPos = ctrl[1];
+            Vector3 lastPos = waypoints[0].ToVector3Shifted();
             var added = false;
 
             for (var seg = 0; seg < numSegments; seg++)
             {
-                var p0 = ctrl[seg];
-                var p1 = ctrl[seg + 1];
-                var p2 = ctrl[seg + 2];
-                var p3 = ctrl[seg + 3];
+                var p0 = waypoints[seg].ToVector3Shifted();
+                var p1 = waypoints[seg + 1].ToVector3Shifted();
+                var m0 = _waypointTangents[seg];
+                var m1 = _waypointTangents[seg + 1];
 
                 var samples = seg == numSegments - 1 ? SAMPLES_PER_SEGMENT + 1 : SAMPLES_PER_SEGMENT;
                 for (var i = 0; i < samples; i++)
                 {
                     var t = (float)i / SAMPLES_PER_SEGMENT;
-                    var pos = HermiteCR(p0, p1, p2, p3, t, tension, turnSmoothness);
+                    var pos = Hermite(p0, p1, m0, m1, t);
                     if (!added)
                     {
                         added = true;
@@ -434,28 +472,100 @@ namespace AirstrikeMod
             _totalLength = cumLen;
         }
 
-        private static Vector3 HermiteCR(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3,
-            float t, float tension, float turnSmoothness)
+        private static Vector3 Hermite(Vector3 p0, Vector3 p1, Vector3 m0, Vector3 m1, float t)
         {
-            var d01 = Mathf.Pow(Mathf.Max(0.0001f, Vector3.Distance(p0, p1)), CR_ALPHA);
-            var d12 = Mathf.Pow(Mathf.Max(0.0001f, Vector3.Distance(p1, p2)), CR_ALPHA);
-            var d23 = Mathf.Pow(Mathf.Max(0.0001f, Vector3.Distance(p2, p3)), CR_ALPHA);
-
-            var m1 = ((p1 - p0) / d01 - (p2 - p0) / (d01 + d12) + (p2 - p1) / d12) * d12
-                     * turnSmoothness;
-            var m2 = ((p2 - p1) / d12 - (p3 - p1) / (d12 + d23) + (p3 - p2) / d23) * d12
-                     * turnSmoothness;
-
             var t2 = t * t;
             var t3 = t2 * t;
             var h00 = 2f * t3 - 3f * t2 + 1f;
             var h10 = t3 - 2f * t2 + t;
             var h01 = -2f * t3 + 3f * t2;
             var h11 = t3 - t2;
-            var c = h00 * p1 + h10 * m1 + h01 * p2 + h11 * m2;
+            return h00 * p0 + h10 * m0 + h01 * p1 + h11 * m1;
+        }
 
-            var linear = Vector3.Lerp(p1, p2, t);
-            return Vector3.LerpUnclamped(linear, c, tension);
+        // Tangent rule: drops belonging to a multi-cell line segment get the segment's
+        // line direction (so the curve enters/exits the line colinearly; line interior
+        // becomes geometrically straight). Everything else (entry/exit, single drops,
+        // in-place anchor + forward/behind nodes) uses centered finite difference on
+        // neighbor positions. Magnitude = average chord of incident edges, scaled by
+        // tangentScale. Endpoints mirror one neighbor for the missing side.
+        private void ComputeWaypointTangents()
+        {
+            var n = waypoints.Count;
+            _waypointTangents = new List<Vector3>(n);
+            var positions = new Vector3[n];
+            for (var i = 0; i < n; i++) positions[i] = waypoints[i].ToVector3Shifted();
+
+            var forcedDir = new Vector3[n];
+            var forced = new bool[n];
+            AssignLineForcedDirections(forcedDir, forced);
+
+            for (var i = 0; i < n; i++)
+            {
+                Vector3 prev = i == 0
+                    ? positions[i] - (positions[i + 1] - positions[i])
+                    : positions[i - 1];
+                Vector3 next = i == n - 1
+                    ? positions[i] + (positions[i] - positions[i - 1])
+                    : positions[i + 1];
+                var chord = 0.5f * ((positions[i] - prev).magnitude
+                                    + (next - positions[i]).magnitude);
+
+                Vector3 dir;
+                if (forced[i])
+                {
+                    dir = forcedDir[i];
+                }
+                else
+                {
+                    var centered = next - prev;
+                    dir = centered.sqrMagnitude > 0.0001f
+                        ? centered.normalized
+                        : Vector3.right;
+                }
+                _waypointTangents.Add(dir * chord * tangentScale);
+            }
+        }
+
+        // Walks segments in sync with the waypoint layout (prefix 1 for entry, 2 for
+        // in-place anchor+forward). Multi-drop line segments contribute 2 waypoints
+        // (first + last drop); both get forced line direction. Single-drop segments
+        // contribute 1 waypoint with no forced direction (neighbor geometry decides).
+        private void AssignLineForcedDirections(Vector3[] forcedDir, bool[] forced)
+        {
+            if (segments == null) return;
+            var idx = inPlaceMode ? 2 : 1;
+            for (var s = 0; s < segments.Count; s++)
+            {
+                var seg = segments[s];
+                var cellCount = seg?.bombCells?.Count ?? 0;
+                if (cellCount == 0) continue;
+                if (cellCount == 1)
+                {
+                    idx += 1;
+                    continue;
+                }
+                var lineDir = ComputeLineDir(seg);
+                if (idx < waypoints.Count) { forcedDir[idx] = lineDir; forced[idx] = true; }
+                if (idx + 1 < waypoints.Count) { forcedDir[idx + 1] = lineDir; forced[idx + 1] = true; }
+                idx += 2;
+            }
+        }
+
+        private static Vector3 ComputeLineDir(BombingSegment seg)
+        {
+            var cells = seg.bombCells;
+            var first = cells[0];
+            var last = cells[cells.Count - 1];
+            var dx = last.x - first.x;
+            var dz = last.z - first.z;
+            if (dx == 0 && dz == 0)
+            {
+                var f = seg.flightDir.FacingCell;
+                var fv = new Vector3(f.x, 0f, f.z);
+                return fv.sqrMagnitude > 0.0001f ? fv.normalized : Vector3.right;
+            }
+            return new Vector3(dx, 0f, dz).normalized;
         }
 
         private void SampleSplineAtDistance(float dist, out Vector3 pos, out Vector3 tangent)
@@ -858,8 +968,7 @@ namespace AirstrikeMod
             Scribe_Values.Look(ref progress, nameof(progress));
             Scribe_Collections.Look(ref waypoints, nameof(waypoints), LookMode.Value);
             Scribe_Collections.Look(ref waypointIsDrop, nameof(waypointIsDrop), LookMode.Value);
-            Scribe_Values.Look(ref tension, nameof(tension), 1f);
-            Scribe_Values.Look(ref turnSmoothness, nameof(turnSmoothness), 1f);
+            Scribe_Values.Look(ref tangentScale, nameof(tangentScale), 1f);
             Scribe_Values.Look(ref cornerLookaheadCells, nameof(cornerLookaheadCells), 6f);
             Scribe_Values.Look(ref cornerMinSpeedFactor, nameof(cornerMinSpeedFactor), 0.55f);
             Scribe_Values.Look(ref traveled, nameof(traveled));

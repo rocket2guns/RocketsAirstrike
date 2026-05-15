@@ -228,7 +228,6 @@ namespace AirstrikeMod
         }
 
         private const int POLYLINE_EDGE_MARGIN = 1;
-        private const float LINE_TENSION_FRACTION = 0.33f;
 
         private static void BuildPolyline(Map map, List<BombingSegment> segments,
             IntVec3? inPlaceAnchor, Rot4? inPlaceForward, int hoverApproachCells,
@@ -239,7 +238,6 @@ namespace AirstrikeMod
             if (segments.Count == 0) return;
 
             var inner = new List<IntVec3>();
-            var innerIsDrop = new List<bool>();
             for (var seg = 0; seg < segments.Count; seg++)
             {
                 var s = segments[seg];
@@ -247,11 +245,11 @@ namespace AirstrikeMod
                 if (s.bombCells.Count == 1)
                 {
                     inner.Add(s.bombCells[0]);
-                    innerIsDrop.Add(true);
                 }
                 else
                 {
-                    AppendLineSegment(s.bombCells, inner, innerIsDrop);
+                    inner.Add(s.bombCells[0]);
+                    inner.Add(s.bombCells[s.bombCells.Count - 1]);
                 }
             }
             if (inner.Count == 0) return;
@@ -268,8 +266,11 @@ namespace AirstrikeMod
 
                 waypoints.Add(anchor); waypointIsDrop.Add(false);
                 waypoints.Add(forwardNode); waypointIsDrop.Add(false);
-                waypoints.AddRange(inner);
-                waypointIsDrop.AddRange(innerIsDrop);
+                for (var i = 0; i < inner.Count; i++)
+                {
+                    waypoints.Add(inner[i]);
+                    waypointIsDrop.Add(true);
+                }
                 waypoints.Add(behindNode); waypointIsDrop.Add(false);
                 waypoints.Add(anchor); waypointIsDrop.Add(false);
                 return;
@@ -281,42 +282,12 @@ namespace AirstrikeMod
             var exit = ExtrapolateToEdge(map, exitFrom, inner[inner.Count - 1]);
 
             waypoints.Add(entry); waypointIsDrop.Add(false);
-            waypoints.AddRange(inner);
-            waypointIsDrop.AddRange(innerIsDrop);
+            for (var i = 0; i < inner.Count; i++)
+            {
+                waypoints.Add(inner[i]);
+                waypointIsDrop.Add(true);
+            }
             waypoints.Add(exit); waypointIsDrop.Add(false);
-        }
-
-        private static void AppendLineSegment(List<IntVec3> bombCells,
-            List<IntVec3> dst, List<bool> dstIsDrop)
-        {
-            var start = bombCells[0];
-            var end = bombCells[bombCells.Count - 1];
-            var dx = end.x - start.x;
-            var dz = end.z - start.z;
-            var runLen = Mathf.Sqrt(dx * dx + dz * dz);
-            if (runLen <= 0f)
-            {
-                dst.Add(start);
-                dstIsDrop.Add(true);
-                return;
-            }
-            var tensionCells = Mathf.Max(1, Mathf.RoundToInt(runLen * LINE_TENSION_FRACTION));
-            var ux = dx / runLen;
-            var uz = dz / runLen;
-            var pre = new IntVec3(
-                Mathf.RoundToInt(start.x - ux * tensionCells), start.y,
-                Mathf.RoundToInt(start.z - uz * tensionCells));
-            var post = new IntVec3(
-                Mathf.RoundToInt(end.x + ux * tensionCells), end.y,
-                Mathf.RoundToInt(end.z + uz * tensionCells));
-
-            dst.Add(pre); dstIsDrop.Add(false);
-            for (var i = 0; i < bombCells.Count; i++)
-            {
-                dst.Add(bombCells[i]);
-                dstIsDrop.Add(true);
-            }
-            dst.Add(post); dstIsDrop.Add(false);
         }
 
         private static IntVec3 ExtrapolateToEdge(Map map, IntVec3 from, IntVec3 through)
