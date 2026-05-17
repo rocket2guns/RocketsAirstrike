@@ -31,6 +31,12 @@ namespace AirstrikeMod.Patches
     [HarmonyPatch(typeof(Vehicles.LandingTargeter), nameof(Vehicles.LandingTargeter.TargeterOnGUI))]
     public static class LandingTargeter_TargeterOnGUI_Patch
     {
-        public static void Postfix() => CursorLabel.Draw();
+        public static void Postfix()
+        {
+            CursorLabel.Draw();
+            // Null icon → text-only attachment, stacks below VF's arrow already drawn this frame.
+            if (!string.IsNullOrEmpty(CompAirstrikeLocalFlight.PendingMouseLabel))
+                GenUI.DrawMouseAttachment(null, CompAirstrikeLocalFlight.PendingMouseLabel);
+        }
     }
 }

@@ -27,6 +27,8 @@
     <ROCKET_BombingRunDesc>Make a bombing pass dropping {0} rounds along a chosen line.</ROCKET_BombingRunDesc>
     <ROCKET_StrafingRun>Strafing Run</ROCKET_StrafingRun>
     <ROCKET_StrafingRunDesc>Strafe a chosen line. Fires {0} cannon rounds, consuming {1} {2} from cargo.</ROCKET_StrafingRunDesc>
+    <ROCKET_LocalFlight>Local Flight</ROCKET_LocalFlight>
+    <ROCKET_LocalFlightDesc>Ferry the vehicle to a chosen cell on this map. Rises in place, transits at altitude, and descends at the destination.</ROCKET_LocalFlightDesc>
     <ROCKET_HoldShiftMultiTarget>Hold SHIFT to select multiple targets</ROCKET_HoldShiftMultiTarget>
     <ROCKET_RightClickCancel>Right click to cancel action</ROCKET_RightClickCancel>
     <ROCKET_RightClickBegin>Right click to begin sortie</ROCKET_RightClickBegin>
@@ -63,6 +65,7 @@
     <ROCKET_SelectTargetLocation>Select Target Location</ROCKET_SelectTargetLocation>
     <ROCKET_SelectTargetRun>Select Target Run</ROCKET_SelectTargetRun>
     <ROCKET_SelectTargetStrafe>Select Strafing Run</ROCKET_SelectTargetStrafe>
+    <ROCKET_SelectLandingCell>Select Landing Cell</ROCKET_SelectLandingCell>
 
     <!-- Reject messages -->
     <ROCKET_NoOrdinanceSelected>No ordinance selected.</ROCKET_NoOrdinanceSelected>

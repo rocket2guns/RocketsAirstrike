@@ -318,7 +318,8 @@ namespace AirstrikeMod
                 _rotorSpinUpLookedUp = true;
             }
             if (_rotorSpinUp == null) return;
-            vehicle.DrawTracker?.overlayRenderer?.SetAcceleration(_rotorSpinUp.TargetRate);
+            vehicle.DrawTracker?.overlayRenderer?.SetAcceleration(
+                CompRotorSpinUp.ScaleForGameSpeed(_rotorSpinUp.TargetRate));
         }
 
         private void SyncPositionToGroundPos()

@@ -397,6 +397,16 @@
 				<skillScatter>2</skillScatter>
 				<inPlaceSortie>true</inPlaceSortie>
 			</li>
+			<li Class="AirstrikeMod.CompProperties_AirstrikeLocalFlight">
+				<skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+				<flyAltitude>2</flyAltitude>
+				<hoverTakeoffTicks>90</hoverTakeoffTicks>
+				<hoverLandingTicks>90</hoverLandingTicks>
+				<hoverApproachCells>5</hoverApproachCells>
+				<sortieSpeedMultiplier>1.0</sortieSpeedMultiplier>
+				<requiredSkill>Intellectual</requiredSkill>
+				<requiredSkillLevel>2</requiredSkillLevel>
+			</li>
 			<li Class="AirstrikeMod.CompProperties_RotorSpinUp">
 				<targetRotationRate>30</targetRotationRate>
 				<spinUpTicks>120</spinUpTicks>

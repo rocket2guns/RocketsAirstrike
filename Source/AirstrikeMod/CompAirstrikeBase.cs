@@ -122,7 +122,7 @@ namespace AirstrikeMod
             return $"\n\n{"ROCKET_RequiredSkillLine".Translate(coloredSkill)}";
         }
 
-        protected string BuildTargetingAccuracyDescLine()
+        protected virtual string BuildTargetingAccuracyDescLine()
         {
             string rating;
             Color color;
@@ -535,7 +535,7 @@ namespace AirstrikeMod
 
             if (inPlace)
             {
-                LaunchInPlace(arrival);
+                LaunchHover(arrival);
                 return;
             }
 
@@ -545,14 +545,14 @@ namespace AirstrikeMod
             Vehicle.CompVehicleLauncher.Launch(targetData, arrival);
         }
 
-        private void LaunchInPlace(ArrivalAction_BombMap arrival)
+        protected void LaunchHover(IHoverArrival arrival)
         {
             var launcher = Vehicle.CompVehicleLauncher;
             launcher.inFlight = true;
 
             var skyfaller = (VehicleSkyfaller_HoverLaunch)
                 VehicleSkyfallerMaker.MakeSkyfaller(AirstrikeDefOf.ROCKET_HoverLaunch, Vehicle);
-            skyfaller.arrivalAction = arrival;
+            skyfaller.arrivalAction = (VehicleArrivalAction)arrival;
             skyfaller.createWorldObject = false;
 
             GenSpawn.Spawn(skyfaller, Vehicle.Position, Vehicle.Map, Vehicle.Rotation);

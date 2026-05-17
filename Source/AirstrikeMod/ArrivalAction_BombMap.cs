@@ -13,7 +13,7 @@ namespace AirstrikeMod
     // InitializeNextFlight on an empty FlightPath and SetSpeed reads First[0],
     // throwing IndexOutOfRange. For cross-map the flight is real but the same path
     // works once Arrived has consumed the last node.
-    public class ArrivalAction_BombMap : VehicleArrivalAction
+    public class ArrivalAction_BombMap : VehicleArrivalAction, IHoverArrival
     {
         protected MapParent mapParent;
         protected List<BombingSegment> segments;
@@ -30,6 +30,10 @@ namespace AirstrikeMod
         protected SoundDef bombFireSound;
         protected Pawn chosenPilot;
         protected SkillDef xpSkill;
+
+        int IHoverArrival.HoverTakeoffTicks => hoverTakeoffTicks;
+        float IHoverArrival.FlyAltitude => flyAltitude;
+        bool IHoverArrival.SpawnNextSkyfaller(Map map) => SpawnBombingSkyfaller(map);
 
         // Strafing-only: when set, the skyfaller fires Projectile.Launch(...) from its
         // DrawPos toward each bombCell, with firing leading the plane by strafingLeadCells.

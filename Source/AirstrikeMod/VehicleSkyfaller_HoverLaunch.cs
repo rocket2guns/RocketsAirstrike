@@ -26,8 +26,11 @@ namespace AirstrikeMod
         {
             base.SpawnSetup(map, respawningAfterLoad);
             if (respawningAfterLoad) return;
-            if (arrivalAction is ArrivalAction_BombMap bomb)
-                riseTicks = Math.Max(1, bomb.hoverTakeoffTicks);
+            if (arrivalAction is IHoverArrival hover)
+            {
+                riseTicks = Math.Max(1, hover.HoverTakeoffTicks);
+                _sortieAltCache = hover.FlyAltitude;
+            }
         }
 
         protected override void Tick()
@@ -63,7 +66,7 @@ namespace AirstrikeMod
         private float CurrentAltitude()
         {
             if (_sortieAltCache < 0f)
-                _sortieAltCache = (arrivalAction as ArrivalAction_BombMap)?.flyAltitude ?? 0f;
+                _sortieAltCache = (arrivalAction as IHoverArrival)?.FlyAltitude ?? 0f;
             var t = Mathf.Clamp01((float)_ticks / Mathf.Max(1, riseTicks));
             return _sortieAltCache * Mathf.SmoothStep(0f, 1f, t);
         }
@@ -76,7 +79,8 @@ namespace AirstrikeMod
                 _rotorSpinUpLookedUp = true;
             }
             if (_rotorSpinUp == null) return;
-            vehicle.DrawTracker?.overlayRenderer?.SetAcceleration(_rotorSpinUp.TargetRate);
+            vehicle.DrawTracker?.overlayRenderer?.SetAcceleration(
+                CompRotorSpinUp.ScaleForGameSpeed(_rotorSpinUp.TargetRate));
         }
 
         protected override void LeaveMap()
@@ -85,8 +89,8 @@ namespace AirstrikeMod
             vehicle.EventRegistry[VehicleEventDefOf.AerialVehicleLeftMap].ExecuteEvents();
 
             var map = Map;
-            var bombArrival = arrivalAction as ArrivalAction_BombMap;
-            if (bombArrival != null && map != null && bombArrival.SpawnBombingSkyfaller(map))
+            var hover = arrivalAction as IHoverArrival;
+            if (hover != null && map != null && hover.SpawnNextSkyfaller(map))
             {
                 Destroy();
                 return;
