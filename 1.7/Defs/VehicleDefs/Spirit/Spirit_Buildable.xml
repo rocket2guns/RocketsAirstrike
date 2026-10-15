@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+	<Vehicles.VehicleBuildDef ParentName="VehicleBaseBuildable">
+		<defName>ROCKET_Spirit_Blueprint</defName>
+		<label>Spirit</label>
+		<description>A stealth strike aircraft, the Spirit trades raw firepower for a low observable profile and a heavy bomb payload. Crewed by two pilots, it specialises in precision bombing and saturation bombing runs against fortified targets.\n\nIts angular skin and dampened signature make it far harder to spot in transit than a conventional jet.\n\n&lt;color=#bb8f04&gt;Crew:&lt;/color&gt; Pilot x2\n&lt;color=#bb8f04&gt;Fuel type:&lt;/color&gt; Chemfuel</description>
+		<designationCategory>VF_Vehicles</designationCategory>
+		<graphicData>
+			<texPath>Things/Vehicles/Spirit/Spirit</texPath>
+			<graphicClass>Graphic_Multi</graphicClass>
+			<drawSize>(19,9.5)</drawSize>
+		</graphicData>
+		<statBases>
+			<MaxHitPoints>500</MaxHitPoints>
+			<WorkToBuild>16000</WorkToBuild>
+			<Flammability>0.5</Flammability>
+		</statBases>
+		<size>(17,9)</size>
+		<researchPrerequisites>
+			<li>ROCKET_StealthAircraft</li>
+		</researchPrerequisites>
+		<costList>
+			<Steel>400</Steel>
+			<Plasteel>180</Plasteel>
+			<Silver>100</Silver>
+			<Gold>100</Gold>
+			<ComponentIndustrial>40</ComponentIndustrial>
+			<ComponentSpacer>10</ComponentSpacer>
+		</costList>
+		<soundImpactDefault>BulletImpact_Metal</soundImpactDefault>
+		<thingToSpawn>ROCKET_Spirit</thingToSpawn>
+		<constructionSkillPrerequisite>10</constructionSkillPrerequisite>
+	</Vehicles.VehicleBuildDef>
+</Defs>

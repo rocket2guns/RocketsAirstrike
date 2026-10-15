@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+	<Vehicles.VehicleBuildDef ParentName="VehicleBaseBuildable">
+		<defName>ROCKET_Apache_Blueprint</defName>
+		<label>Apache</label>
+		<description>A purpose-built attack helicopter, the Apache trades transport capacity for heavy armour and a nose-mounted chain gun. It excels at sustained strafing runs against ground forces and can take off vertically, requiring no prepared strip.\n\nCrewed by a pilot and a gunner, both stations are required to fly and fight.\n\n&lt;color=#bb8f04&gt;Crew:&lt;/color&gt; Pilot x1, Gunner x1\n&lt;color=#bb8f04&gt;Fuel type:&lt;/color&gt; Chemfuel</description>
+		<designationCategory>VF_Vehicles</designationCategory>
+		<graphicData>
+			<texPath>Things/Vehicles/Apache/Apache</texPath>
+			<graphicClass>Graphic_Multi</graphicClass>
+			<drawSize>(5, 9)</drawSize>
+		</graphicData>
+		<statBases>
+			<MaxHitPoints>500</MaxHitPoints>
+			<WorkToBuild>16000</WorkToBuild>
+			<Flammability>0.5</Flammability>
+		</statBases>
+		<size>(3, 7)</size>
+		<researchPrerequisites>
+			<li>ROCKET_JetAircraft</li>
+		</researchPrerequisites>
+		<costList>
+			<Steel>350</Steel>
+			<Plasteel>200</Plasteel>
+			<Silver>120</Silver>
+			<ComponentIndustrial>24</ComponentIndustrial>
+			<ComponentSpacer>5</ComponentSpacer>
+		</costList>
+		<soundImpactDefault>BulletImpact_Metal</soundImpactDefault>
+		<thingToSpawn>ROCKET_Apache</thingToSpawn>
+		<constructionSkillPrerequisite>10</constructionSkillPrerequisite>
+	</Vehicles.VehicleBuildDef>
+</Defs>

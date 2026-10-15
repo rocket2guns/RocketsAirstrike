@@ -15,6 +15,8 @@
     VehicleFrameworkDir points at the workshop folder for "Vehicle Framework" (3014915404).
   -->
   <PropertyGroup>
+    <!-- RimWorld version being built for; selects the Vehicle Framework DLL folder and the mod's version folder. -->
+    <GameVersion>1.7</GameVersion>
     <RimWorldDir>C:\Program Files (x86)\Steam\steamapps\common\RimWorld</RimWorldDir>
     <VehicleFrameworkDir>C:\Program Files (x86)\Steam\steamapps\workshop\content\294100\3014915404</VehicleFrameworkDir>
   </PropertyGroup>
@@ -43,16 +45,16 @@
     </Reference>
 
     <!--
-      Vehicle Framework. Workshop layout ships its 1.6 DLLs under <workshop>/1.6/Assemblies.
+      Vehicle Framework. Workshop layout ships its DLLs under <workshop>/<GameVersion>/Assemblies.
       If you're working from a development checkout instead, point VehicleFrameworkDir there
       and these HintPaths will resolve the same way.
     -->
     <Reference Include="Vehicles">
-      <HintPath>$(VehicleFrameworkDir)\1.6\Assemblies\Vehicles.dll</HintPath>
+      <HintPath>$(VehicleFrameworkDir)\$(GameVersion)\Assemblies\Vehicles.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="SmashTools">
-      <HintPath>$(VehicleFrameworkDir)\1.6\Assemblies\SmashTools.dll</HintPath>
+      <HintPath>$(VehicleFrameworkDir)\$(GameVersion)\Assemblies\SmashTools.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -63,6 +65,7 @@
 
   <ItemGroup>
     <None Include="..\..\1.6\**\*.xml" Link="ModXML\1.6\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\..\1.7\**\*.xml" Link="ModXML\1.7\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="..\..\Languages\**\*.xml" Link="ModXML\Languages\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="..\..\Patches\**\*.xml" Link="ModXML\Patches\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="..\..\About\*.xml" Link="ModXML\About\%(Filename)%(Extension)" />

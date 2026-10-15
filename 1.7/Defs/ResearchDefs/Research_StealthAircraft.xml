@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+	<ResearchProjectDef>
+		<defName>ROCKET_StealthAircraft</defName>
+		<label>stealth aircraft</label>
+		<description>Construct low-observable strike aircraft capable of evading detection while delivering heavy bomb payloads on precision and saturation runs.</description>
+		<baseCost>3500</baseCost>
+		<techLevel>Industrial</techLevel>
+		<prerequisites>
+			<li>AdvancedFabrication</li>
+		</prerequisites>
+		<researchViewX>20.00</researchViewX>
+		<researchViewY>2.30</researchViewY>
+	</ResearchProjectDef>
+</Defs>

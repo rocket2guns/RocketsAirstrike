@@ -4,6 +4,7 @@
   <author>Rocket</author>
   <supportedVersions>
     <li>1.6</li>
+    <li>1.7</li>
   </supportedVersions>
   <packageId>Rockets.Airstrike</packageId>
   <description>Adds an airstrike gizmo to aerial vehicles. The vehicle takes off, makes a bombing pass over a chosen cell on the same map, then returns to its origin. Built on Vehicle Framework.</description>
