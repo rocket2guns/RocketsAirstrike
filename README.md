@@ -1,6 +1,6 @@
 # Rocket's Airstrike
 
-A RimWorld 1.6 mod for [Vehicle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3014915404). Adds airstrike gizmos to flying vehicles: drop bombs on a point, carpet-bomb in a line, or strafe with cannons. The aircraft taxis, takes off, flies the strike, then returns and lands - same map or across the world.
+A RimWorld 1.6 / 1.7 mod for [Vehicle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3014915404). Adds airstrike gizmos to flying vehicles: drop bombs on a point, carpet-bomb in a line, or strafe with cannons. The aircraft taxis, takes off, flies the strike, then returns and lands - same map or across the world.
 
 ## What you get in-game
 
@@ -44,11 +44,12 @@ If you have more than one map loaded, clicking a strike gizmo opens a menu to pi
 - **Vanilla Vehicles Expanded**: adds Precision + Strafing Run to the **Warbird**.
 - **LTS Ammunition (Simple Ammo Pack)**: swaps the Falcon's strafing ammo from steel to `AmmoIndustrial`.
 
-You can hand-edit `1.6/Patches/Vehicle_Patches.xml` to add the gizmos to any other aerial vehicle.
+You can hand-edit `1.7/Patches/Vehicle_Patches.xml` (or the `1.6/` copy) to add the gizmos to any other aerial vehicle.
 
 ## New items
 
 - **Explosive / High-Explosive / Incendiary / Antigrain bomb** (`ROCKET_Bomb_*`) - large air-dropped bombs, craftable at the machining table. Drop in Bombs category.
+- **Blockbuster bomb** (`ROCKET_Bomb_Blockbuster`) - five times the power of the explosive bomb (5x damage and armor penetration, 5x blast area). Precision Strike only on the Falcon and Spirit.
 - The Bombing Run and Precision Strike can also drop any vanilla mortar shell from cargo.
 
 ## Pilot records
@@ -168,7 +169,7 @@ If you rename or remove a `CompProperties_Airstrike*` from a vehicle after a sav
 
 ```
 About/                          Mod metadata; depends on VF + Harmony.
-1.6/
+1.6/, 1.7/                      Per-version defs, patches and DLL (same layout).
   Defs/
     OrdinanceDefs.xml           Per-shell explosion-customisation defs.
     Skyfallers.xml              ROCKET_BombingPass + ROCKET_FallingBomb.
@@ -177,7 +178,7 @@ About/                          Mod metadata; depends on VF + Harmony.
     RecordDefs/                 Pilot record defs.
     ResearchDefs/               ROCKET_JetAircraft, ROCKET_StealthAircraft.
     ThingCategoryDefs/          Bombs category.
-    ThingDefs_Items/            HE / Incendiary / Antigrain bombs.
+    ThingDefs_Items/            Explosive / HE / Incendiary / Antigrain / Blockbuster bombs.
     VehicleDefs/Falcon/         ROCKET_Falcon + buildable.
   Patches/
     Vehicle_Patches.xml         VVE Warbird & Falcon upgrades (mod-gated).
@@ -192,9 +193,9 @@ Sounds/                         WAV files referenced by SoundDefs.
 ## Building from source
 
 1. Open `Source/AirstrikeMod/AirstrikeMod.csproj` in Rider or Visual Studio.
-2. The csproj points at RimWorld and Vehicle Framework DLLs via `<RimWorldDir>` and `<VehicleFrameworkDir>` properties at the top - edit those if your installs aren't at the default Steam locations.
+2. The csproj points at RimWorld and Vehicle Framework DLLs via `<GameVersion>` (default `1.7`), `<RimWorldDir>` and `<VehicleFrameworkDir>` properties at the top - edit those if your installs aren't at the default Steam locations.
 3. Build. Output goes to `Source/Assemblies/AirstrikeMod.dll`.
-4. Copy the DLL to `1.6/Assemblies/` for release.
+4. Copy the DLL to `<GameVersion>/Assemblies/` (e.g. `1.7/Assemblies/`) for release.
 
 Target framework `net48`, language version `latest`.
 

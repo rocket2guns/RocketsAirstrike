@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+    <!-- Vanilla Vehicles Expanded patch to add airstrike for the Warbird -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Warbird"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_AirstrikePrecision">
+                    <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+                    <bombFireSound>ROCKET_HardpointLatchRelease</bombFireSound>
+                    <requiredSkill>Intellectual</requiredSkill>
+                    <requiredSkillLevel>4</requiredSkillLevel>
+                    <scatter>2</scatter>
+                    <skillScatter>4</skillScatter>
+                    <ordinance>
+                        <li>Shell_HighExplosive</li>
+                        <li>Shell_Incendiary</li>
+                        <li>Shell_EMP</li>
+                        <li>Shell_Smoke</li>
+                        <li>Shell_Firefoam</li>
+                        <li>ROCKET_Bomb_Explosive</li>
+                        <li>ROCKET_Bomb_Incendiary</li>
+                    </ordinance>
+                </li>
+                <li Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun">
+                    <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+                    <projectileDef>Bullet_AutocannonTurret</projectileDef>
+                    <requiredSkill>Shooting</requiredSkill>
+                    <requiredSkillLevel>2</requiredSkillLevel>
+                    <ammoDef>Steel</ammoDef>
+                    <fireSound>Shot_Autocannon</fireSound>
+                    <runWidth>3</runWidth>
+                    <runLength>8</runLength>
+                    <leadCells>8</leadCells>
+                    <flyAltitude>2</flyAltitude>
+                    <bulletsPerRound>1</bulletsPerRound>
+                    <spreadCells>1</spreadCells>
+                    <skillScatter>3</skillScatter>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+    <!-- Vanilla Vehicles Expanded: upgrade Falcon to use VVE research, car-part components, and tier-2 stat extension -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded</li>
+        </mods>
+        <match Class="PatchOperationSequence">
+            <operations>
+                <li Class="PatchOperationReplace">
+                    <xpath>Defs/Vehicles.VehicleBuildDef[defName="ROCKET_Falcon_Blueprint"]/researchPrerequisites</xpath>
+                    <value>
+                        <researchPrerequisites>
+                            <li>VVE_CombatVehicles</li>
+                        </researchPrerequisites>
+                    </value>
+                </li>
+                <li Class="PatchOperationReplace">
+                    <xpath>Defs/Vehicles.VehicleBuildDef[defName="ROCKET_Apache_Blueprint"]/researchPrerequisites</xpath>
+                    <value>
+                        <researchPrerequisites>
+                            <li>VVE_CombatVehicles</li>
+                        </researchPrerequisites>
+                    </value>
+                </li>
+                <li Class="PatchOperationRemove">
+                    <xpath>Defs/ResearchProjectDef[defName="ROCKET_JetAircraft"]</xpath>
+                </li>
+                <li Class="PatchOperationReplace">
+                    <xpath>Defs/ResearchProjectDef[defName="ROCKET_StealthAircraft"]/prerequisites</xpath>
+                    <value>
+                        <prerequisites>
+                            <li>VVE_CombatVehicles</li>
+                        </prerequisites>
+                    </value>
+                </li>
+                <li Class="PatchOperationAdd">
+                    <xpath>Defs/ResearchProjectDef[defName="ROCKET_StealthAircraft"]</xpath>
+                    <value>
+                        <tab>Vehicles</tab>
+                    </value>
+                </li>
+                <li Class="PatchOperationReplace">
+                    <xpath>Defs/ResearchProjectDef[defName="ROCKET_StealthAircraft"]/researchViewX</xpath>
+                    <value>
+                        <researchViewX>4.00</researchViewX>
+                    </value>
+                </li>
+                <li Class="PatchOperationReplace">
+                    <xpath>Defs/ResearchProjectDef[defName="ROCKET_StealthAircraft"]/researchViewY</xpath>
+                    <value>
+                        <researchViewY>1.00</researchViewY>
+                    </value>
+                </li>
+                <li Class="PatchOperationReplace">
+                    <xpath>Defs/Vehicles.VehicleBuildDef[defName="ROCKET_Falcon_Blueprint"]/costList</xpath>
+                    <value>
+                        <costList>
+                            <VVE_EngineBlock>4</VVE_EngineBlock>
+                            <VVE_CarAlternator>2</VVE_CarAlternator>
+                            <VVE_CarExhaust>4</VVE_CarExhaust>
+                            <VVE_CarSuspension>3</VVE_CarSuspension>
+                            <VVE_CarWheel>3</VVE_CarWheel>
+                            <VVE_CarTransmission>1</VVE_CarTransmission>
+                            <VVE_CarWiring>1</VVE_CarWiring>
+                            <VVE_CarFuelTank>4</VVE_CarFuelTank>
+                            <Steel>240</Steel>
+                            <Plasteel>120</Plasteel>
+                            <Silver>100</Silver>
+                            <ComponentIndustrial>20</ComponentIndustrial>
+                            <ComponentSpacer>4</ComponentSpacer>
+                        </costList>
+                    </value>
+                </li>
+                <li Class="PatchOperationAdd">
+                    <xpath>Defs/Vehicles.VehicleDef[defName="ROCKET_Falcon"]</xpath>
+                    <value>
+                        <modExtensions>
+                            <li Class="VanillaVehiclesExpanded.StatExtension">
+                                <statToAdd>
+                                    <li>VVE_VehicleTier</li>
+                                </statToAdd>
+                                <statValues>
+                                    <li>VVE_Tier2</li>
+                                </statValues>
+                                <statDescriptions>
+                                    <li>VVE_Tier2Desc</li>
+                                </statDescriptions>
+                            </li>
+                        </modExtensions>
+                    </value>
+                </li>
+            </operations>
+        </match>
+    </Operation>
+
+    <!-- Vanilla Vehicles Expanded: add local-flight comp to the Mosquito (VTOL) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Mosquito"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_AirstrikeLocalFlight">
+                    <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+                    <flyAltitude>2</flyAltitude>
+                    <hoverTakeoffTicks>90</hoverTakeoffTicks>
+                    <hoverLandingTicks>90</hoverLandingTicks>
+                    <hoverApproachCells>5</hoverApproachCells>
+                    <sortieSpeedMultiplier>1.0</sortieSpeedMultiplier>
+                    <requiredSkill>Intellectual</requiredSkill>
+                    <requiredSkillLevel>2</requiredSkillLevel>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+    <!-- Vanilla Vehicles Expanded - Tier 3: add local-flight comp to the Louie (VTOL) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded - Tier 3</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Louie"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_AirstrikeLocalFlight">
+                    <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+                    <flyAltitude>2</flyAltitude>
+                    <hoverTakeoffTicks>90</hoverTakeoffTicks>
+                    <hoverLandingTicks>90</hoverLandingTicks>
+                    <hoverApproachCells>5</hoverApproachCells>
+                    <sortieSpeedMultiplier>1.0</sortieSpeedMultiplier>
+                    <requiredSkill>Intellectual</requiredSkill>
+                    <requiredSkillLevel>2</requiredSkillLevel>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+    <!-- Vanilla Vehicles Expanded - Tier 3: add local-flight comp to the Cherokee (VTOL twin-rotor) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded - Tier 3</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Cherokee"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_AirstrikeLocalFlight">
+                    <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+                    <flyAltitude>2</flyAltitude>
+                    <hoverTakeoffTicks>90</hoverTakeoffTicks>
+                    <hoverLandingTicks>90</hoverLandingTicks>
+                    <hoverApproachCells>5</hoverApproachCells>
+                    <sortieSpeedMultiplier>1.0</sortieSpeedMultiplier>
+                    <requiredSkill>Intellectual</requiredSkill>
+                    <requiredSkillLevel>2</requiredSkillLevel>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+    <!-- RimThunder - Flying Chariot: add local-flight comp to the CH-53E (VTOL) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>RimThunder - Flying Chariot</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="RT_CH53E_Vehicle"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_AirstrikeLocalFlight">
+                    <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+                    <flyAltitude>2</flyAltitude>
+                    <hoverTakeoffTicks>90</hoverTakeoffTicks>
+                    <hoverLandingTicks>90</hoverLandingTicks>
+                    <hoverApproachCells>5</hoverApproachCells>
+                    <sortieSpeedMultiplier>1.0</sortieSpeedMultiplier>
+                    <requiredSkill>Intellectual</requiredSkill>
+                    <requiredSkillLevel>2</requiredSkillLevel>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+    <!-- RimThunder - Flying Chariot: add local-flight comp to the UH-60 (VTOL) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>RimThunder - Flying Chariot</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="RT_UH60_Vehicle"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_AirstrikeLocalFlight">
+                    <skyfallerBombing>ROCKET_BombingPass</skyfallerBombing>
+                    <flyAltitude>2</flyAltitude>
+                    <hoverTakeoffTicks>90</hoverTakeoffTicks>
+                    <hoverLandingTicks>90</hoverLandingTicks>
+                    <hoverApproachCells>5</hoverApproachCells>
+                    <sortieSpeedMultiplier>1.0</sortieSpeedMultiplier>
+                    <requiredSkill>Intellectual</requiredSkill>
+                    <requiredSkillLevel>2</requiredSkillLevel>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+    <!-- VVE Mosquito: bump MoveSpeed (zero suppresses draft gizmo) + add rotor spin-up -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded</li>
+        </mods>
+        <match Class="PatchOperationSequence">
+            <operations>
+                <li Class="PatchOperationReplace">
+                    <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Mosquito"]/vehicleStats/MoveSpeed</xpath>
+                    <value>
+                        <MoveSpeed LockSetting="True">0.5</MoveSpeed>
+                    </value>
+                </li>
+                <li Class="PatchOperationAdd">
+                    <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Mosquito"]/comps</xpath>
+                    <value>
+                        <li Class="AirstrikeMod.CompProperties_RotorSpinUp">
+                            <targetRotationRate>30</targetRotationRate>
+                            <spinUpTicks>120</spinUpTicks>
+                        </li>
+                    </value>
+                </li>
+            </operations>
+        </match>
+    </Operation>
+
+    <!-- VVE Tier 3 Louie: bump MoveSpeed + add rotor spin-up -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded - Tier 3</li>
+        </mods>
+        <match Class="PatchOperationSequence">
+            <operations>
+                <li Class="PatchOperationReplace">
+                    <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Louie"]/vehicleStats/MoveSpeed</xpath>
+                    <value>
+                        <MoveSpeed LockSetting="True">0.5</MoveSpeed>
+                    </value>
+                </li>
+                <li Class="PatchOperationAdd">
+                    <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Louie"]/comps</xpath>
+                    <value>
+                        <li Class="AirstrikeMod.CompProperties_RotorSpinUp">
+                            <targetRotationRate>30</targetRotationRate>
+                            <spinUpTicks>120</spinUpTicks>
+                        </li>
+                    </value>
+                </li>
+            </operations>
+        </match>
+    </Operation>
+
+    <!-- VVE Tier 3 Cherokee: add rotor spin-up (already has draft via MoveSpeed=0.5) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Vehicles Expanded - Tier 3</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Cherokee"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_RotorSpinUp">
+                    <targetRotationRate>30</targetRotationRate>
+                    <spinUpTicks>120</spinUpTicks>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+    <!-- RimThunder CH-53E: add rotor spin-up (already has draft) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>RimThunder - Flying Chariot</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="RT_CH53E_Vehicle"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_RotorSpinUp">
+                    <targetRotationRate>30</targetRotationRate>
+                    <spinUpTicks>120</spinUpTicks>
+                </li>
+            </value>
+        </match>
+    </Operation>
+
+    <!-- RimThunder UH-60: add rotor spin-up (already has draft) -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>RimThunder - Flying Chariot</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/Vehicles.VehicleDef[defName="RT_UH60_Vehicle"]/comps</xpath>
+            <value>
+                <li Class="AirstrikeMod.CompProperties_RotorSpinUp">
+                    <targetRotationRate>30</targetRotationRate>
+                    <spinUpTicks>120</spinUpTicks>
+                </li>
+            </value>
+        </match>
+    </Operation>
+</Patch>

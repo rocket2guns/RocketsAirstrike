@@ -185,6 +185,45 @@
         </recipeMaker>
     </ThingDef>
 
+    <!-- Five times the punch of the standard explosive bomb: 5x blast damage and armor
+         penetration, 5x blast area (radius x sqrt(5)), at 5x the material cost. Reuses the
+         explosive bomb texture. Too heavy for a bombing run, so precision strike only. -->
+    <ThingDef ParentName="MakeableBombBase">
+        <defName>ROCKET_Bomb_Blockbuster</defName>
+        <label>blockbuster bomb</label>
+        <description>A massive aerial bomb packing five times the explosive charge of a standard explosive bomb. Its blast flattens whole blocks of structures. So heavy the carrier aircraft can only deliver it on a precision strike. Explodes when damaged.</description>
+        <stackLimit>5</stackLimit>
+        <statBases>
+            <MarketValue>550</MarketValue>
+            <Mass>25</Mass>
+        </statBases>
+        <graphicData>
+            <texPath>Things/Item/Resource/Bomb/Explosive</texPath>
+            <graphicClass>Graphic_StackCount</graphicClass>
+        </graphicData>
+        <comps>
+            <li Class="CompProperties_Explosive">
+                <explosiveRadius>10.7</explosiveRadius>
+                <explosiveDamageType>Bomb</explosiveDamageType>
+                <damageAmountBase>750</damageAmountBase>
+                <armorPenetrationBase>1.0</armorPenetrationBase>
+                <explosiveExpandPerStackcount>0.4</explosiveExpandPerStackcount>
+                <startWickHitPointsPercent>0.7</startWickHitPointsPercent>
+                <wickTicks>30~60</wickTicks>
+                <preExplosionSpawnSingleThingDef>CraterLarge</preExplosionSpawnSingleThingDef>
+            </li>
+        </comps>
+        <projectileWhenLoaded>ROCKET_Bullet_Bomb_Blockbuster</projectileWhenLoaded>
+        <costList>
+            <Shell_HighExplosive>5</Shell_HighExplosive>
+            <Chemfuel>25</Chemfuel>
+            <Steel>75</Steel>
+        </costList>
+        <recipeMaker>
+            <researchPrerequisite>Fabrication</researchPrerequisite>
+        </recipeMaker>
+    </ThingDef>
+
     <ThingDef ParentName="BaseBullet">
         <defName>ROCKET_Bullet_Bomb_Explosive</defName>
         <label>explosive bomb</label>
@@ -208,6 +247,32 @@
             <soundImpactAnticipate>MortarRound_PreImpact</soundImpactAnticipate>
             <soundAmbient>MortarRound_Ambient</soundAmbient>
             <preExplosionSpawnSingleThingDef>CraterSmall</preExplosionSpawnSingleThingDef>
+        </projectile>
+    </ThingDef>
+
+    <ThingDef ParentName="BaseBullet">
+        <defName>ROCKET_Bullet_Bomb_Blockbuster</defName>
+        <label>blockbuster bomb</label>
+        <graphicData>
+            <texPath>Things/Projectile/ShellHighExplosive</texPath>
+            <graphicClass>Graphic_Single</graphicClass>
+            <shaderType>TransparentPostLight</shaderType>
+        </graphicData>
+        <thingClass>Projectile_Explosive</thingClass>
+        <projectile>
+            <damageDef>Bomb</damageDef>
+            <!-- 5x the explosive bomb (150 dmg, 0.2 AP, 4.8 radius -> 5x area). -->
+            <damageAmountBase>750</damageAmountBase>
+            <armorPenetrationBase>1.0</armorPenetrationBase>
+            <speed>30</speed>
+            <explosionRadius>10.7</explosionRadius>
+            <flyOverhead>true</flyOverhead>
+            <soundHitThickRoof>Artillery_HitThickRoof</soundHitThickRoof>
+            <soundExplode>Explosion_GiantBomb</soundExplode>
+            <soundImpactAnticipate>MortarRound_PreImpact</soundImpactAnticipate>
+            <soundAmbient>MortarRound_Ambient</soundAmbient>
+            <preExplosionSpawnSingleThingDef>CraterLarge</preExplosionSpawnSingleThingDef>
+            <screenShakeFactor>0.1</screenShakeFactor>
         </projectile>
     </ThingDef>
 

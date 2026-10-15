@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+    <!--
+        [LTS]Ammunition - Simple Ammo Pack compatibility.
+    -->
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>[LTS]Ammunition - Simple Ammo Pack</li>
+        </mods>
+        <match Class="PatchOperationSequence">
+            <operations>
+                <li Class="PatchOperationReplace">
+                    <xpath>Defs/Vehicles.VehicleDef[defName="ROCKET_Falcon"]/comps/li[@Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun"]/ammoDef</xpath>
+                    <value>
+                        <ammoDef>AmmoIndustrial</ammoDef>
+                    </value>
+                </li>
+                <li Class="PatchOperationAdd">
+                    <xpath>Defs/Vehicles.VehicleDef[defName="ROCKET_Falcon"]/comps/li[@Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun"]</xpath>
+                    <value>
+                        <ammoPerRound>20</ammoPerRound>
+                    </value>
+                </li>
+                <li Class="PatchOperationReplace">
+                    <success>Always</success>
+                    <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Warbird"]/comps/li[@Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun"]/ammoDef</xpath>
+                    <value>
+                        <ammoDef>AmmoIndustrial</ammoDef>
+                    </value>
+                </li>
+                <li Class="PatchOperationAdd">
+                    <success>Always</success>
+                    <xpath>Defs/Vehicles.VehicleDef[defName="VVE_Warbird"]/comps/li[@Class="AirstrikeMod.CompProperties_AirstrikeStrafingRun"]</xpath>
+                    <value>
+                        <ammoPerRound>20</ammoPerRound>
+                    </value>
+                </li>
+            </operations>
+        </match>
+    </Operation>
+</Patch>
